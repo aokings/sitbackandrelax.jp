@@ -1,106 +1,388 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sit Back and Relax</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --accent: #e94560;
+      --accent-hover: #d13a54;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
-      background: #1a1a2e;
-      color: #e0e0e0;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text-primary);
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* === Header === */
+    header {
+      padding: 1.5rem 2rem 0;
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      max-width: 720px;
+      margin: 0 auto;
     }
-    .container {
+
+    .lang-switcher {
+      display: flex;
+      background: var(--warm-gray);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .lang-btn:hover:not(.active) {
+      color: var(--text-secondary);
+    }
+
+    /* === Hero === */
+    .hero {
       text-align: center;
-      max-width: 600px;
+      padding: 3.5rem 2rem 1.5rem;
+      animation: fadeUp 0.8s ease-out;
     }
-    h1 {
-      font-size: 2.4rem;
-      color: #fff;
-      margin-bottom: 0.5rem;
+
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.6rem, 7vw, 4rem);
+      color: var(--text-primary);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.6rem;
     }
-    .tagline {
-      font-size: 1rem;
-      color: #888;
-      margin-bottom: 3rem;
+
+    .hero .tagline {
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
+
+    /* === Divider === */
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: var(--accent);
+      margin: 2rem auto 2.5rem;
+      border-radius: 2px;
+    }
+
+    /* === Game Card === */
+    .game-section {
+      display: flex;
+      justify-content: center;
+      padding: 0 2rem 4rem;
+      animation: fadeUp 0.8s ease-out 0.15s both;
+    }
+
     .game-card {
-      background: #16213e;
-      border: 1px solid #0f3460;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
+
+    .game-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    /* === Hero Image === */
+    .game-hero-img {
+      width: 100%;
+      display: block;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .game-card-body {
+      padding: 2rem 2.5rem 2.5rem;
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
     .game-title {
-      font-size: 1.8rem;
-      color: #e94560;
-      margin-bottom: 0.5rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
     }
-    .game-subtitle {
-      font-size: 1rem;
-      color: #aaa;
-      margin-bottom: 1.5rem;
-    }
-    .game-desc {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: #ccc;
-      margin-bottom: 1.5rem;
-    }
-    .play-link {
+
+    .game-badge {
       display: inline-block;
-      background: #e94560;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(233, 69, 96, 0.08);
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .game-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.3rem;
+      font-weight: 300;
+    }
+
+    .game-desc {
+      font-size: 0.92rem;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      margin-bottom: 1.8rem;
+    }
+
+    .game-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.8rem;
+    }
+
+    .game-tag {
+      font-size: 0.73rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--off-white);
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--warm-gray);
+    }
+
+    .play-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent);
       color: #fff;
       text-decoration: none;
-      padding: 0.7rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
-      transition: background 0.2s;
+      padding: 0.85rem 2rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.15s;
     }
+
     .play-link:hover {
-      background: #c73650;
+      background: var(--accent-hover);
+      transform: translateY(-1px);
     }
-    .coming-soon {
-      font-size: 1.2rem;
-      color: #555;
-      margin-top: 2rem;
+
+    .play-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
+
+    /* === Footer === */
     footer {
-      margin-top: 3rem;
-      font-size: 0.8rem;
-      color: #444;
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--warm-gray);
+    }
+
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: var(--accent);
+    }
+
+    /* === Language transition === */
+    [data-i18n] {
+      transition: opacity 0.2s ease;
+    }
+    .lang-fade {
+      opacity: 0;
+    }
+
+    /* === Animation === */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === Responsive === */
+    @media (max-width: 480px) {
+      header { padding: 1.2rem 1.2rem 0; }
+      .hero { padding: 2.5rem 1.5rem 1rem; }
+      .game-section { padding: 0 1rem 3rem; }
+      .game-card-body { padding: 1.5rem 1.5rem 2rem; }
+      .game-title { font-size: 1.7rem; }
+      .game-header { flex-wrap: wrap; gap: 0.5rem; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Sit Back and Relax</h1>
-    <p class="tagline">ボードゲーム &amp; デジタルゲーム</p>
 
-    <div class="game-card">
-      <div class="game-title">pfff!</div>
-      <div class="game-subtitle">ぷふー！ ふっ飛ばせ！カードゲーム</div>
-      <p class="game-desc">
-        家を建て、風で吹き飛ばし、鳥居で守る。<br>
-        3人の個性豊かなAIと繰り広げる戦略カードゲーム。<br>
-        Spiel Essen 2026 出展予定。
-      </p>
-      <a class="play-link" href="https://aokings.itch.io/pfff" target="_blank" rel="noopener">
-        ブラウザで遊ぶ（itch.io）
-      </a>
+  <header>
+    <div></div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">JP</button>
     </div>
+  </header>
 
-    <p class="coming-soon">— More games coming soon —</p>
-  </div>
+  <section class="hero">
+    <h1>Sit Back<br>and Relax</h1>
+    <p class="tagline" data-i18n="hero-tagline">Board Games &amp; Digital Play</p>
+  </section>
 
-  <footer>&copy; 2026 Sit Back and Relax</footer>
+  <div class="divider"></div>
+
+  <section class="game-section">
+    <div class="game-card">
+      <img class="game-hero-img" src="pfff_hero.jpg" alt="pfff! - Strategic Card Game">
+      <div class="game-card-body">
+        <div class="game-header">
+          <div class="game-title">pfff!</div>
+          <span class="game-badge">Spiel Essen 2026</span>
+        </div>
+        <div class="game-subtitle" data-i18n="game-subtitle">A strategic card game of bluffing &amp; sabotage</div>
+        <p class="game-desc" data-i18n="game-desc">
+          Draw cards, hide your best characters behind gates, and unleash clouds to wreck your opponents' plans. Read their bluffs, counter their moves, and be the first to empty your hand.<br><br>
+          Three AI rivals with distinct personalities are waiting. Quick rounds, deep strategy, zero luck.
+        </p>
+        <div class="game-tags">
+          <span class="game-tag" data-i18n="tag-card">Card Game</span>
+          <span class="game-tag" data-i18n="tag-strategy">Strategy</span>
+          <span class="game-tag" data-i18n="tag-bluff">Bluffing</span>
+          <span class="game-tag" data-i18n="tag-players">4 Players</span>
+          <span class="game-tag">5–10 min</span>
+          <span class="game-tag" data-i18n="tag-free">Free to Play</span>
+        </div>
+        <a class="play-link" href="https://masaruaoki.itch.io/pfff" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span data-i18n="play-btn">Play in Browser</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2026 Sit Back and Relax&ensp;·&ensp;
+    <a href="https://masaruaoki.itch.io" target="_blank" rel="noopener">itch.io</a>
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'hero-tagline': 'Board Games & Digital Play',
+        'game-subtitle': 'A strategic card game of bluffing & sabotage',
+        'game-desc': 'Draw cards, hide your best characters behind gates, and unleash clouds to wreck your opponents\' plans. Read their bluffs, counter their moves, and be the first to empty your hand.<br><br>Three AI rivals with distinct personalities are waiting. Quick rounds, deep strategy, zero luck.',
+        'tag-card': 'Card Game',
+        'tag-strategy': 'Strategy',
+        'tag-bluff': 'Bluffing',
+        'tag-players': '4 Players',
+        'tag-free': 'Free to Play',
+        'play-btn': 'Play in Browser'
+      },
+      ja: {
+        'hero-tagline': 'ボードゲーム & デジタルプレイ',
+        'game-subtitle': 'ブラフと妨害の戦略カードゲーム',
+        'game-desc': 'カードを引き、門（Gate）の奥にキャラクターを隠し、雲（Cloud）でライバルの計画を吹き飛ばせ。相手のブラフを読み、カウンターを仕掛け、誰よりも早く手札を空にしろ。<br><br>個性の異なる3人のAIが待ち受ける。短い勝負、深い戦略、運要素ゼロ。',
+        'tag-card': 'カードゲーム',
+        'tag-strategy': '戦略',
+        'tag-bluff': 'ブラフ',
+        'tag-players': '4人プレイ',
+        'tag-free': '無料',
+        'play-btn': 'ブラウザで遊ぶ'
+      }
+    };
+
+    let currentLang = 'en';
+
+    function setLanguage(lang) {
+      if (lang === currentLang) return;
+      currentLang = lang;
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => el.classList.add('lang-fade'));
+
+      setTimeout(() => {
+        elements.forEach(el => {
+          const key = el.dataset.i18n;
+          if (translations[lang][key]) {
+            el.innerHTML = translations[lang][key];
+          }
+        });
+        elements.forEach(el => el.classList.remove('lang-fade'));
+      }, 200);
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
+    // Auto-detect
+    const userLang = navigator.language || navigator.userLanguage;
+    if (userLang && userLang.startsWith('ja')) {
+      setLanguage('ja');
+    }
+  </script>
+
 </body>
 </html>
