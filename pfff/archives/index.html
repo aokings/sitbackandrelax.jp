@@ -232,6 +232,18 @@
       border: 1px solid var(--warm-gray);
     }
 
+    .version-thumb {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 0.8rem;
+      display: block;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .version-thumb:hover { opacity: 0.85; }
+
     .play-btn {
       display: inline-flex;
       align-items: center;
@@ -479,6 +491,7 @@
           </div>
           <div class="version-date">Feb 2026</div>
         </div>
+        <img class="version-thumb" src="thumbs/v3_1_0_0.jpg" alt="pfff! v3.1.0 screenshot" onclick="openGame('v3_1_0_0.html', 'pfff! v3.1.0')" loading="lazy">
         <p class="version-desc" data-i18n="v310-desc">
           Wind Ring rules introduced. Card back colors reveal tiers. Major visual polish with new card illustrations by Tetsuhei Nakao.
         </p>
@@ -506,6 +519,7 @@
           </div>
           <div class="version-date">Feb 2026</div>
         </div>
+        <!-- v3.0.0.2: no thumbnail (Babel render issue) -->
         <p class="version-desc" data-i18n="v300-desc">
           Rebranded from House &amp; Wind to pfff! New character roster and streamlined scoring system.
         </p>
@@ -532,6 +546,7 @@
           </div>
           <div class="version-date">Feb 2026</div>
         </div>
+        <img class="version-thumb" src="thumbs/v2_10_0_0.jpg" alt="pfff! v2.10.0 screenshot" onclick="openGame('v2_10_0_0.html', 'pfff! v2.10.0')" loading="lazy">
         <p class="version-desc" data-i18n="v2100-desc">
           The historic transition build &mdash; this is where "House &amp; Wind" became "pfff!" The name change, new visual identity, and updated character designs debuted here.
         </p>
@@ -561,6 +576,7 @@
           </div>
           <div class="version-date">Feb 2026</div>
         </div>
+        <img class="version-thumb" src="thumbs/v2_5_10_4.jpg" alt="House &amp; Wind v2.5 screenshot" onclick="openGame('v2_5_10_4.html', 'H&amp;W v2.5')" loading="lazy">
         <p class="version-desc" data-i18n="v2510-desc">
           Feature-rich period with refined Gate/Gust mechanics, tournament mode, and Nobby the companion advisor making early appearances.
         </p>
@@ -588,6 +604,7 @@
           </div>
           <div class="version-date">Jan 2026</div>
         </div>
+        <img class="version-thumb" src="thumbs/v2_0_9.jpg" alt="House &amp; Wind v2.0 screenshot" onclick="openGame('v2_0_9.html', 'H&amp;W v2.0')" loading="lazy">
         <p class="version-desc" data-i18n="v209-desc">
           Complete rewrite introducing the two-phase game structure (Exploration &#x2192; Old Maid Showdown), 4 AI opponents, and a dramatically improved UI.
         </p>
@@ -615,6 +632,7 @@
           </div>
           <div class="version-date">Jan 2026</div>
         </div>
+        <img class="version-thumb" src="thumbs/v1_5_5.jpg" alt="House &amp; Wind v1.5.5 screenshot" onclick="openGame('v1_5_5.html', 'H&amp;W v1.5.5')" loading="lazy">
         <p class="version-desc" data-i18n="v155-desc">
           Where it all began. The very first browser-playable version &mdash; simple UI, core card mechanics, and the foundation of everything that followed.
         </p>
