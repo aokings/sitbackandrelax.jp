@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pfff! Archives — Evolution of a Card Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --accent: #e94560;
+      --accent-hover: #d13a54;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+      --timeline-line: #d4cfc8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* === Header === */
+    .page-header {
+      text-align: center;
+      padding: 3rem 2rem 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .nav-back {
+      display: inline-block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--text-secondary); }
+
+    .page-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      margin-bottom: 0.3rem;
+    }
+
+    .page-header .subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      margin-bottom: 0.8rem;
+    }
+
+    .page-header .intro {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* === Era Dividers === */
+    .era-label {
+      text-align: center;
+      margin: 2rem 0 1rem;
+      position: relative;
+    }
+
+    .era-label::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--warm-gray);
+    }
+
+    .era-label span {
+      position: relative;
+      background: var(--off-white);
+      padding: 0 1rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* === Timeline === */
+    .timeline {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+      position: relative;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: calc(2rem + 11px);
+      top: 0;
+      bottom: 3rem;
+      width: 2px;
+      background: var(--timeline-line);
+    }
+
+    /* === Version Card === */
+    .version-card {
+      position: relative;
+      margin-bottom: 1.5rem;
+      padding-left: 2.5rem;
+    }
+
+    .version-dot {
+      position: absolute;
+      left: 0;
+      top: 1.3rem;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 3px solid var(--timeline-line);
+      z-index: 1;
+    }
+
+    .version-card.milestone .version-dot {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .version-card.milestone .version-dot::after {
+      content: '★';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 0.55rem;
+    }
+
+    .card-body {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+
+    .version-card:hover .card-body {
+      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+      gap: 0.8rem;
+    }
+
+    .card-top-left { flex: 1; }
+
+    .version-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .version-tag {
+      display: inline-block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(233, 69, 96, 0.08);
+      padding: 0.15rem 0.5rem;
+      border-radius: 20px;
+    }
+
+    .version-date {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 300;
+    }
+
+    .version-desc {
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 0.8rem;
+    }
+
+    .version-changes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .change-chip {
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--off-white);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid var(--warm-gray);
+    }
+
+    .play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .play-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .play-btn:active { transform: translateY(0); }
+
+    .play-btn .icon { font-size: 0.9rem; }
+
+    .size-info {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+
+    /* === Current Version Banner === */
+    .current-banner {
+      max-width: 720px;
+      margin: 0 auto 2rem;
+      padding: 0 2rem;
+    }
+
+    .current-banner-inner {
+      background: linear-gradient(135deg, #1a1a1a, #2d2520);
+      border-radius: 12px;
+      padding: 1.5rem 1.8rem;
+      text-align: center;
+      color: #fff;
+    }
+
+    .current-banner-inner h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .current-banner-inner p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 1rem;
+    }
+
+    .current-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.5rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+
+    .current-play-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    /* === Footer === */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--warm-gray);
+    }
+
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--text-secondary); }
+
+    /* === Language transition === */
+    [data-i18n] { transition: opacity 0.2s ease; }
+    .lang-fade { opacity: 0; }
+
+    .lang-switcher {
+      display: inline-flex;
+      background: var(--warm-gray);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.3rem 0.7rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--text-primary);
+      color: #fff;
+    }
+
+    .lang-btn:hover:not(.active) { color: var(--text-primary); }
+
+    /* === Responsive === */
+    @media (max-width: 600px) {
+      .page-header { padding: 2rem 1.2rem 1.5rem; }
+      .timeline { padding: 0 1.2rem 2rem; }
+      .timeline::before { left: calc(1.2rem + 11px); }
+      .card-top { flex-direction: column; gap: 0.3rem; }
+      .version-changes { gap: 0.3rem; }
+      .current-banner { padding: 0 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <a class="nav-back" href="/pfff/">&larr; <span data-i18n="nav-back">Back to pfff!</span></a>
+
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">JP</button>
+    </div>
+
+    <h1 data-i18n="title">Archives</h1>
+    <p class="subtitle" data-i18n="subtitle">Evolution of a Card Game</p>
+    <p class="intro" data-i18n="intro">
+      From "House &amp; Wind" to "pfff!" &mdash; trace the evolution of the game through 6 playable milestone versions. Every version runs in your browser, exactly as it was.
+    </p>
+  </header>
+
+  <!-- Current Version Banner -->
+  <div class="current-banner">
+    <div class="current-banner-inner">
+      <h3>pfff! v3.4.4</h3>
+      <p data-i18n="current-desc">The latest version &mdash; play the current release</p>
+      <a class="current-play-btn" href="/pfff/">
+        <span class="icon">&#x25B6;</span>
+        <span data-i18n="current-btn">Play Current Version</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline">
+
+    <!-- Era: pfff! -->
+    <div class="era-label"><span data-i18n="era-pfff">pfff! Era (2026)</span></div>
+
+    <!-- v3.1.0.0 -->
+    <div class="version-card milestone">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">pfff! v3.1.0</div>
+            <span class="version-tag" data-i18n="tag-rules-v6">Rules v6 &middot; Wind Ring</span>
+          </div>
+          <div class="version-date">Feb 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v310-desc">
+          Wind Ring rules introduced. Card back colors reveal tiers. Major visual polish with new card illustrations by Tetsuhei Nakao.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v310-c1">&#x1F0CF; Wind Ring rules</span>
+          <span class="change-chip" data-i18n="v310-c2">&#x1F3A8; New illustrations</span>
+          <span class="change-chip" data-i18n="v310-c3">&#x1F30D; Bilingual</span>
+        </div>
+        <a class="play-btn" href="v3_1_0_0.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">770KB</span>
+      </div>
+    </div>
+
+    <!-- v3.0.0.2 -->
+    <div class="version-card">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">pfff! v3.0.0</div>
+            <span class="version-tag" data-i18n="tag-rules-v5">Rules v5</span>
+          </div>
+          <div class="version-date">Feb 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v300-desc">
+          Rebranded from House &amp; Wind to pfff! New character roster and streamlined scoring system.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v300-c1">&#x2728; New brand "pfff!"</span>
+          <span class="change-chip" data-i18n="v300-c2">&#x1F916; AI overhaul</span>
+        </div>
+        <a class="play-btn" href="v3_0_0_2.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">602KB</span>
+      </div>
+    </div>
+
+    <!-- v2.10.0.0 -->
+    <div class="version-card milestone">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">pfff! v2.10.0</div>
+            <span class="version-tag" data-i18n="tag-rebrand">First "pfff!" Build</span>
+          </div>
+          <div class="version-date">Feb 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v2100-desc">
+          The historic transition build &mdash; this is where "House &amp; Wind" became "pfff!" The name change, new visual identity, and updated character designs debuted here.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v2100-c1">&#x1F680; Name change!</span>
+          <span class="change-chip" data-i18n="v2100-c2">&#x1F3AD; New identity</span>
+        </div>
+        <a class="play-btn" href="v2_10_0_0.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">623KB</span>
+      </div>
+    </div>
+
+    <!-- Era: House & Wind -->
+    <div class="era-label"><span data-i18n="era-hw">House &amp; Wind Era (2025&ndash;2026)</span></div>
+
+    <!-- v2.5.10.4 -->
+    <div class="version-card">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">House &amp; Wind v2.5</div>
+            <span class="version-tag" data-i18n="tag-mature">Mature Era</span>
+          </div>
+          <div class="version-date">Feb 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v2510-desc">
+          Feature-rich period with refined Gate/Gust mechanics, tournament mode, and Nobby the companion advisor making early appearances.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v2510-c1">&#x1F3C6; Tournament mode</span>
+          <span class="change-chip" data-i18n="v2510-c2">&#x1F3A9; Nobby appears</span>
+          <span class="change-chip" data-i18n="v2510-c3">&#x26EA; Gate system</span>
+        </div>
+        <a class="play-btn" href="v2_5_10_4.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">573KB</span>
+      </div>
+    </div>
+
+    <!-- v2.0.9 -->
+    <div class="version-card milestone">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">House &amp; Wind v2.0</div>
+            <span class="version-tag" data-i18n="tag-v2">Major Rewrite</span>
+          </div>
+          <div class="version-date">Jan 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v209-desc">
+          Complete rewrite introducing the two-phase game structure (Exploration &#x2192; Old Maid Showdown), 4 AI opponents, and a dramatically improved UI.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v209-c1">&#x1F504; Two-phase system</span>
+          <span class="change-chip" data-i18n="v209-c2">&#x1F916; 4 AI players</span>
+          <span class="change-chip" data-i18n="v209-c3">&#x1F3A8; New UI</span>
+        </div>
+        <a class="play-btn" href="v2_0_9.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">385KB</span>
+      </div>
+    </div>
+
+    <!-- v1.5.5 -->
+    <div class="version-card milestone">
+      <div class="version-dot"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-top-left">
+            <div class="version-name">House &amp; Wind v1.5.5</div>
+            <span class="version-tag" data-i18n="tag-origin">The Origin</span>
+          </div>
+          <div class="version-date">Jan 2026</div>
+        </div>
+        <p class="version-desc" data-i18n="v155-desc">
+          Where it all began. The very first browser-playable version &mdash; simple UI, core card mechanics, and the foundation of everything that followed.
+        </p>
+        <div class="version-changes">
+          <span class="change-chip" data-i18n="v155-c1">&#x1F331; First prototype</span>
+          <span class="change-chip" data-i18n="v155-c2">&#x1F0CF; Core mechanics</span>
+        </div>
+        <a class="play-btn" href="v1_5_5.html" target="_blank">
+          <span class="icon">&#x25B6;</span>
+          <span data-i18n="play">Play</span>
+        </a>
+        <span class="size-info">175KB</span>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <a href="/pfff/">pfff!</a> &nbsp;&middot;&nbsp;
+    <a href="/">Sit Back and Relax</a> &nbsp;&middot;&nbsp; &copy; 2026
+  </footer>
+
+  <script>
+    const translations = {
+      en: {
+        'nav-back': 'Back to pfff!',
+        'title': 'Archives',
+        'subtitle': 'Evolution of a Card Game',
+        'intro': 'From "House & Wind" to "pfff!" \u2014 trace the evolution of the game through 6 playable milestone versions. Every version runs in your browser, exactly as it was.',
+        'current-desc': 'The latest version \u2014 play the current release',
+        'current-btn': 'Play Current Version',
+        'era-pfff': 'pfff! Era (2026)',
+        'era-hw': 'House & Wind Era (2025\u20132026)',
+        'play': 'Play',
+
+        'tag-rules-v6': 'Rules v6 \u00B7 Wind Ring',
+        'v310-desc': 'Wind Ring rules introduced. Card back colors reveal tiers. Major visual polish with new card illustrations by Tetsuhei Nakao.',
+        'v310-c1': '\uD83C\uDCCF Wind Ring rules',
+        'v310-c2': '\uD83C\uDFA8 New illustrations',
+        'v310-c3': '\uD83C\uDF0D Bilingual',
+
+        'tag-rules-v5': 'Rules v5',
+        'v300-desc': 'Rebranded from House & Wind to pfff! New character roster and streamlined scoring system.',
+        'v300-c1': '\u2728 New brand "pfff!"',
+        'v300-c2': '\uD83E\uDD16 AI overhaul',
+
+        'tag-rebrand': 'First "pfff!" Build',
+        'v2100-desc': 'The historic transition build \u2014 this is where "House & Wind" became "pfff!" The name change, new visual identity, and updated character designs debuted here.',
+        'v2100-c1': '\uD83D\uDE80 Name change!',
+        'v2100-c2': '\uD83C\uDFAD New identity',
+
+        'tag-mature': 'Mature Era',
+        'v2510-desc': 'Feature-rich period with refined Gate/Gust mechanics, tournament mode, and Nobby the companion advisor making early appearances.',
+        'v2510-c1': '\uD83C\uDFC6 Tournament mode',
+        'v2510-c2': '\uD83C\uDFA9 Nobby appears',
+        'v2510-c3': '\u26EA Gate system',
+
+        'tag-v2': 'Major Rewrite',
+        'v209-desc': 'Complete rewrite introducing the two-phase game structure (Exploration \u2192 Old Maid Showdown), 4 AI opponents, and a dramatically improved UI.',
+        'v209-c1': '\uD83D\uDD04 Two-phase system',
+        'v209-c2': '\uD83E\uDD16 4 AI players',
+        'v209-c3': '\uD83C\uDFA8 New UI',
+
+        'tag-origin': 'The Origin',
+        'v155-desc': 'Where it all began. The very first browser-playable version \u2014 simple UI, core card mechanics, and the foundation of everything that followed.',
+        'v155-c1': '\uD83C\uDF31 First prototype',
+        'v155-c2': '\uD83C\uDCCF Core mechanics'
+      },
+      ja: {
+        'nav-back': 'pfff! に戻る',
+        'title': 'アーカイブス',
+        'subtitle': 'カードゲームの進化の記録',
+        'intro': '「House & Wind」から「pfff!」へ \u2014 6つのマイルストーン版で、ゲームの進化をたどれます。全バージョン、当時のままブラウザでプレイ可能です。',
+        'current-desc': '最新版 \u2014 現行リリースをプレイ',
+        'current-btn': '最新版をプレイ',
+        'era-pfff': 'pfff! 時代 (2026)',
+        'era-hw': 'House & Wind 時代 (2025\u20132026)',
+        'play': 'プレイ',
+
+        'tag-rules-v6': 'ルール v6 \u00B7 Wind Ring',
+        'v310-desc': 'Wind Ringルール導入。カード裏の色でティアが判別可能に。中尾哲平による新イラストで大幅にビジュアル強化。',
+        'v310-c1': '\uD83C\uDCCF Wind Ringルール',
+        'v310-c2': '\uD83C\uDFA8 新イラスト',
+        'v310-c3': '\uD83C\uDF0D 日英対応',
+
+        'tag-rules-v5': 'ルール v5',
+        'v300-desc': 'House & Windからpfff!にリブランド。新キャラクター陣とスコアリングシステムの刷新。',
+        'v300-c1': '\u2728 新ブランド「pfff!」',
+        'v300-c2': '\uD83E\uDD16 AI大改修',
+
+        'tag-rebrand': '初代「pfff!」ビルド',
+        'v2100-desc': '歴史的な転換点のビルド \u2014 「House & Wind」が「pfff!」になった瞬間。名前の変更、新ビジュアルアイデンティティ、キャラクターデザインの刷新がここから始まった。',
+        'v2100-c1': '\uD83D\uDE80 名称変更！',
+        'v2100-c2': '\uD83C\uDFAD 新アイデンティティ',
+
+        'tag-mature': '成熟期',
+        'v2510-desc': 'Gate/Gustメカニクスの洗練、トーナメントモード、相棒アドバイザー「ノビー」の初登場など、機能が充実した時期。',
+        'v2510-c1': '\uD83C\uDFC6 トーナメントモード',
+        'v2510-c2': '\uD83C\uDFA9 ノビー登場',
+        'v2510-c3': '\u26EA Gateシステム',
+
+        'tag-v2': '大改修',
+        'v209-desc': '二段階構成（探索フェーズ → ババ抜き対決）の導入、4体のAI対戦相手、UIの劇的な改善を含む完全書き直し。',
+        'v209-c1': '\uD83D\uDD04 二段階構成',
+        'v209-c2': '\uD83E\uDD16 AI 4体',
+        'v209-c3': '\uD83C\uDFA8 新UI',
+
+        'tag-origin': '原点',
+        'v155-desc': '全てはここから始まった。ブラウザで遊べる最初のバージョン \u2014 シンプルなUI、コアなカードメカニクス、その後の全ての土台。',
+        'v155-c1': '\uD83C\uDF31 初期プロトタイプ',
+        'v155-c2': '\uD83C\uDCCF コアメカニクス'
+      }
+    };
+
+    let currentLang = 'en';
+
+    function setLanguage(lang) {
+      if (lang === currentLang) return;
+      currentLang = lang;
+      document.documentElement.lang = lang;
+
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+
+      const elements = document.querySelectorAll('[data-i18n]');
+      elements.forEach(el => el.classList.add('lang-fade'));
+
+      setTimeout(() => {
+        elements.forEach(el => {
+          const key = el.dataset.i18n;
+          if (translations[lang][key]) {
+            el.innerHTML = translations[lang][key];
+          }
+        });
+        elements.forEach(el => el.classList.remove('lang-fade'));
+      }, 200);
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
+    // Auto-detect language
+    const userLang = navigator.language || navigator.userLanguage;
+    if (userLang && userLang.startsWith('ja')) {
+      setLanguage('ja');
+    }
+  </script>
+
+</body>
+</html>
