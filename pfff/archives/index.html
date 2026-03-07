@@ -358,6 +358,70 @@
 
     .lang-btn:hover:not(.active) { color: var(--text-primary); }
 
+    /* === Game Overlay (iframe modal) === */
+    .game-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      background: #1a1a1a;
+    }
+
+    .game-overlay.active { display: block; }
+
+    .game-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .overlay-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      z-index: 1010;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    }
+
+    .overlay-bar > * { pointer-events: auto; }
+
+    .overlay-version-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .overlay-close {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.4);
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+    }
+
+    .overlay-close:hover {
+      color: #fff;
+      background: rgba(0,0,0,0.6);
+    }
+
     /* === Responsive === */
     @media (max-width: 600px) {
       .page-header { padding: 2rem 1.2rem 1.5rem; }
@@ -423,10 +487,10 @@
           <span class="change-chip" data-i18n="v310-c2">&#x1F3A8; New illustrations</span>
           <span class="change-chip" data-i18n="v310-c3">&#x1F30D; Bilingual</span>
         </div>
-        <a class="play-btn" href="v3_1_0_0.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v3_1_0_0.html', 'pfff! v3.1.0')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">770KB</span>
       </div>
     </div>
@@ -449,10 +513,10 @@
           <span class="change-chip" data-i18n="v300-c1">&#x2728; New brand "pfff!"</span>
           <span class="change-chip" data-i18n="v300-c2">&#x1F916; AI overhaul</span>
         </div>
-        <a class="play-btn" href="v3_0_0_2.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v3_0_0_2.html', 'pfff! v3.0.0')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">602KB</span>
       </div>
     </div>
@@ -475,10 +539,10 @@
           <span class="change-chip" data-i18n="v2100-c1">&#x1F680; Name change!</span>
           <span class="change-chip" data-i18n="v2100-c2">&#x1F3AD; New identity</span>
         </div>
-        <a class="play-btn" href="v2_10_0_0.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v2_10_0_0.html', 'pfff! v2.10.0')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">623KB</span>
       </div>
     </div>
@@ -505,10 +569,10 @@
           <span class="change-chip" data-i18n="v2510-c2">&#x1F3A9; Nobby appears</span>
           <span class="change-chip" data-i18n="v2510-c3">&#x26EA; Gate system</span>
         </div>
-        <a class="play-btn" href="v2_5_10_4.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v2_5_10_4.html', 'H&amp;W v2.5')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">573KB</span>
       </div>
     </div>
@@ -532,10 +596,10 @@
           <span class="change-chip" data-i18n="v209-c2">&#x1F916; 4 AI players</span>
           <span class="change-chip" data-i18n="v209-c3">&#x1F3A8; New UI</span>
         </div>
-        <a class="play-btn" href="v2_0_9.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v2_0_9.html', 'H&amp;W v2.0')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">385KB</span>
       </div>
     </div>
@@ -558,14 +622,23 @@
           <span class="change-chip" data-i18n="v155-c1">&#x1F331; First prototype</span>
           <span class="change-chip" data-i18n="v155-c2">&#x1F0CF; Core mechanics</span>
         </div>
-        <a class="play-btn" href="v1_5_5.html" target="_blank">
+        <button class="play-btn" onclick="openGame('v1_5_5.html', 'H&amp;W v1.5.5')">
           <span class="icon">&#x25B6;</span>
           <span data-i18n="play">Play</span>
-        </a>
+        </button>
         <span class="size-info">175KB</span>
       </div>
     </div>
 
+  </div>
+
+  <!-- Game Overlay (iframe modal) -->
+  <div class="game-overlay" id="game-overlay">
+    <div class="overlay-bar">
+      <span class="overlay-version-label" id="overlay-label"></span>
+      <button class="overlay-close" onclick="closeGame()" data-i18n="close-btn">&times; Close</button>
+    </div>
+    <iframe id="game-frame" src="about:blank" allow="fullscreen"></iframe>
   </div>
 
   <footer>
@@ -617,7 +690,8 @@
         'tag-origin': 'The Origin',
         'v155-desc': 'Where it all began. The very first browser-playable version \u2014 simple UI, core card mechanics, and the foundation of everything that followed.',
         'v155-c1': '\uD83C\uDF31 First prototype',
-        'v155-c2': '\uD83C\uDCCF Core mechanics'
+        'v155-c2': '\uD83C\uDCCF Core mechanics',
+        'close-btn': '\u00D7 Close'
       },
       ja: {
         'nav-back': 'pfff! に戻る',
@@ -661,7 +735,8 @@
         'tag-origin': '原点',
         'v155-desc': '全てはここから始まった。ブラウザで遊べる最初のバージョン \u2014 シンプルなUI、コアなカードメカニクス、その後の全ての土台。',
         'v155-c1': '\uD83C\uDF31 初期プロトタイプ',
-        'v155-c2': '\uD83C\uDCCF コアメカニクス'
+        'v155-c2': '\uD83C\uDCCF コアメカニクス',
+        'close-btn': '\u00D7 閉じる'
       }
     };
 
@@ -692,6 +767,25 @@
 
     document.querySelectorAll('.lang-btn').forEach(btn => {
       btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    });
+
+    // Game overlay functions
+    function openGame(url, label) {
+      document.getElementById('overlay-label').textContent = label;
+      document.getElementById('game-frame').src = url;
+      document.getElementById('game-overlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGame() {
+      document.getElementById('game-overlay').classList.remove('active');
+      document.getElementById('game-frame').src = 'about:blank';
+      document.body.style.overflow = '';
+    }
+
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeGame();
     });
 
     // Auto-detect language
