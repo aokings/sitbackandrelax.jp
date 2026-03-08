@@ -96,37 +96,10 @@
 
     .lang-btn:hover:not(.active) { color: var(--text-primary); }
 
-    /* === JP Coming Soon Banner === */
-    .jp-banner {
-      display: none;
-      max-width: 720px;
-      margin: 0 auto 1.5rem;
-      padding: 0 2rem;
-    }
-
-    .jp-banner.visible { display: block; }
-
-    .jp-banner-inner {
-      background: linear-gradient(135deg, #1a1a1a, #2d2520);
-      border-radius: 12px;
-      padding: 1.5rem 1.8rem;
-      text-align: center;
-      color: #fff;
-    }
-
-    .jp-banner-inner p {
-      font-size: 0.9rem;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.8);
-    }
-
-    .jp-banner-inner p:first-child {
-      font-family: 'Outfit', sans-serif;
-      font-weight: 600;
-      font-size: 1rem;
-      color: #fff;
-      margin-bottom: 0.3rem;
-    }
+    /* === Language switching === */
+    .rulebook-ja { display: none; }
+    body.lang-ja .rulebook-en { display: none; }
+    body.lang-ja .rulebook-ja { display: block; }
 
     /* === Rulebook Content Card === */
     .rulebook-container {
@@ -287,8 +260,6 @@
       .page-header { padding: 2rem 1.2rem 1.5rem; }
       .rulebook-container { padding: 0 1rem 2rem; }
       .rulebook-card { padding: 1.5rem 1.2rem; }
-      .jp-banner { padding: 0 1rem; }
-
       .rulebook-card h1 { font-size: 1.3rem; }
       .rulebook-card h2 { font-size: 1.1rem; }
 
@@ -321,17 +292,9 @@
     <p class="subtitle" data-i18n="subtitle">Rules v7.1 &mdash; "Stay Stall"</p>
   </header>
 
-  <!-- JP Coming Soon Banner -->
-  <div class="jp-banner" id="jp-banner">
-    <div class="jp-banner-inner">
-      <p>Japanese version coming soon</p>
-      <p>&#x65E5;&#x672C;&#x8A9E;&#x7248;&#x306F;&#x6E96;&#x5099;&#x4E2D;&#x3067;&#x3059;</p>
-    </div>
-  </div>
-
   <!-- Rulebook Content -->
   <div class="rulebook-container" id="rulebook-content">
-    <div class="rulebook-card">
+    <div class="rulebook-card rulebook-en">
 
       <h1>pfff! ~Stay Stall~ &mdash; Official Rulebook</h1>
 
@@ -1246,6 +1209,1042 @@
       </table>
 
     </div>
+
+    <div class="rulebook-card rulebook-ja">
+
+      <h1>pfff! ～Stay Stall～ &mdash; 公式ルールブック</h1>
+
+      <p class="rulebook-meta">
+        <strong>バージョン:</strong> v7.1 "Stay Stall"<br>
+        <strong>制作:</strong> Masaru<br>
+        <strong>更新日:</strong> 2026年2月26日<br>
+        <strong>ライセンス:</strong> CC BY 4.0
+      </p>
+
+      <hr>
+
+      <h2>📝 v7.1の主な変更点</h2>
+
+      <h3>v7.0からの変更（ルール明文化）</h3>
+
+      <ol>
+        <li><strong>雲上は「種類不問」に明文化</strong>
+          <ul>
+            <li>雲上にはキャラ・鳥居・風のいずれのカードも置かれる</li>
+            <li>v7.0では「キャラカードのみ」と記載されていたが、実際の運用に合わせて修正</li>
+          </ul>
+        </li>
+        <li><strong>雲上交換の行き先を明確化</strong>
+          <ul>
+            <li>鳥居使用時の雲上交換で取得したカードは<strong>手札ではなく鳥居に格納</strong>される</li>
+            <li>鳥居は「手札から1枚を格納し、雲上から1枚を同じ鳥居に格納する」仕組み</li>
+          </ul>
+        </li>
+        <li><strong>鳥居内カードの扱いを追記</strong>
+          <ul>
+            <li>鳥居に置かれたカードは手札ではない（手札枚数・失点計算の対象外）</li>
+            <li>回収・再格納のルールを明文化</li>
+          </ul>
+        </li>
+        <li><strong>格納対象を「キャラカード」から「カード」に修正</strong>
+          <ul>
+            <li>鳥居に格納できるカードの種類制限を撤廃（実運用に合わせて明文化）</li>
+          </ul>
+        </li>
+      </ol>
+
+      <hr>
+
+      <h2>📝 v7.0の主な変更点</h2>
+
+      <h3>v6.6.1からの変更（カードデザイン全面刷新）</h3>
+
+      <ol>
+        <li><strong>カテゴリ制の導入</strong>
+          <ul>
+            <li>従来の「一般市民・上級市民・特殊人物」 → <strong>Mob・Elite・Legend</strong> の3カテゴリに再編</li>
+            <li>カテゴリごとに<strong>裏面の色が異なる</strong>（3色システム）</li>
+            <li>表面の上帯にもカテゴリ色を表示 → 表から見ても裏の色がわかる</li>
+          </ul>
+        </li>
+        <li><strong>全カード名・絵文字の刷新</strong>
+          <ul>
+            <li>動物・ファンタジー・職業が混在する「ごちゃ混ぜ世界」にリブランディング</li>
+            <li>旧名称との対応は「付録：旧名称対応表」を参照</li>
+          </ul>
+        </li>
+        <li><strong>名称変更</strong>
+          <ul>
+            <li>屋台 → <strong>鳥居⛩️</strong></li>
+            <li>市場 → <strong>雲上（Cloud）</strong></li>
+            <li>効果ペア名を全面刷新（竜の息吹 / 不死の契約 / 蝦蟇の術 / 狐の取引）</li>
+          </ul>
+        </li>
+        <li><strong>ルール自体は v6.6.1 から変更なし</strong>
+          <ul>
+            <li>カウンターシステム、空鳥居の再格納、Stay Stall等はすべて継続</li>
+          </ul>
+        </li>
+      </ol>
+
+      <hr>
+
+      <h2>📖 この世界の物語</h2>
+
+      <p>この世界には、吸血鬼がひとりだけいる。</p>
+      <p>人々は吸血鬼の呪いから逃れるため、<br>ペアを組み、この世界を去っていく。</p>
+      <p>あなたは「導き手」として、<br>人々を安全に逃がす役割を担う。</p>
+      <p>全ての人を逃がした者が、勝者となる。</p>
+      <p>吸血鬼は危険だが、ニンニクと出会えば<br>その力は封じられ、共に去っていく。</p>
+      <p>ドラゴンと炎が出会えば、竜の息吹が風の力を呼び覚ます。</p>
+      <p>忍者がカエルに乗れば、蝦蟇の術で風と鳥居の両方の力を得られる。</p>
+      <p>キツネが宝石を手にすれば、雲の上の恵みを受けられる。</p>
+      <p>あなたは人々を雲の上で交換し、<br>時には鳥居に匿いながら、<br>全員を逃がすことを目指す。</p>
+      <p>しかし&mdash;&mdash;風が吹けば、<br>鳥居は壊され、中の人は奪われてしまう。<br>空の鳥居さえも、風に奪われることがある。</p>
+      <p>ただし、あなたも風を持っていれば、<br>風で風を打ち返し、鳥居を守ることができる。</p>
+      <p>空になった鳥居も油断は禁物。<br>風に奪われれば、あなたの鳥居ではなくなる。</p>
+      <p>選択は、あなた次第。</p>
+
+      <hr>
+
+      <h2>1. ゲームの概要</h2>
+
+      <p>このゲームは、キャラカードをペアにして捨てていき、<br>誰よりも早くキャラカードをすべてなくすことを目指す<br><strong>心理戦型ババ抜き</strong>です。</p>
+      <p>「鳥居カード」による雲上との交換と、<br>「風カード」による強奪・防御によって、<br>駆け引きに満ちたプレイが楽しめます。</p>
+      <p>鳥居は回収後も場に残り続けるため、<br>終盤まで風の脅威が維持され、より緊張感のあるゲームになります。</p>
+
+      <hr>
+
+      <h2>2. 基本情報</h2>
+
+      <p><strong>推奨プレイ人数:</strong> 2〜5人（3〜4人が最適）<br>
+      <strong>推奨年齢:</strong> 8歳以上<br>
+      <strong>1ゲームあたりの時間:</strong> 約3-8分（平均5-6分）<br>
+      <strong>1セット（3ゲーム）の時間:</strong> 約15-20分</p>
+
+      <h3>「セット制」が標準</h3>
+
+      <p><strong>スコアモード（セット制）が標準ルールです。</strong><br>
+      複数ゲームをプレイすることで運の要素が平準化され、<br>より戦略的なプレイが求められます。</p>
+
+      <hr>
+
+      <h2>3. カード構成（全54枚）</h2>
+
+      <h3>3色の裏面</h3>
+
+      <p>すべてのカードはカテゴリに応じて<strong>裏面の色が異なります</strong>。<br>これにより、裏向きの状態でもカードのカテゴリがわかります。</p>
+
+      <table>
+        <tr><th>カテゴリ</th><th>裏面の色</th><th>アクセント色</th></tr>
+        <tr><td>Mob</td><td>バーガンディ（暗赤）</td><td>ピンク</td></tr>
+        <tr><td>Elite</td><td>ネイビー（紺）</td><td>ライトブルー</td></tr>
+        <tr><td>Legend・鳥居・風</td><td>パープル（紫）</td><td>ライトパープル</td></tr>
+      </table>
+
+      <p><strong>表面の上帯</strong>にもアクセント色が表示されるため、<br>表向きのカードからも裏の色を推測できます。</p>
+
+      <hr>
+
+      <h3>Mob（21枚・各1点）</h3>
+
+      <p>動物や庶民が集うカテゴリ。枚数が多く、ペアを作りやすい。</p>
+
+      <table>
+        <tr><th>カード名</th><th>絵文字</th><th>枚数</th><th>略称</th><th>ペア</th></tr>
+        <tr><td>ペンギン</td><td>🐧</td><td>4</td><td>FAR</td><td>同名</td></tr>
+        <tr><td>作業員</td><td>👷</td><td>4</td><td>CAR</td><td>同名</td></tr>
+        <tr><td>カメ</td><td>🐢</td><td>4</td><td>TRV</td><td>同名</td></tr>
+        <tr><td>ゾンビ</td><td>🧟</td><td>4</td><td>BUT</td><td>同名</td></tr>
+        <tr><td>ネズミ</td><td>🐭</td><td>4</td><td>MAI</td><td>同名</td></tr>
+        <tr><td>キツネ</td><td>🦊</td><td>1</td><td>MER</td><td>宝石のみ（効果ペア）</td></tr>
+      </table>
+
+      <p>※ 宝石（BAL）はLegendカテゴリですが1点です。</p>
+
+      <h3>Elite（15枚・各5点）</h3>
+
+      <p>力ある者たちのカテゴリ。点数が高く、失点リスクも大きい。</p>
+
+      <table>
+        <tr><th>カード名</th><th>絵文字</th><th>枚数</th><th>略称</th><th>ペア</th></tr>
+        <tr><td>ライオン</td><td>🦁</td><td>4</td><td>NOB</td><td>同名</td></tr>
+        <tr><td>忍者</td><td>🥷</td><td>3</td><td>KNI</td><td>同名 or カエル（効果ペア）</td></tr>
+        <tr><td>魔法使い</td><td>🧙</td><td>4</td><td>PRI</td><td>同名</td></tr>
+        <tr><td>フクロウ</td><td>🦉</td><td>4</td><td>SCH</td><td>同名</td></tr>
+      </table>
+
+      <h3>Legend（6枚・点数は個別）</h3>
+
+      <p>伝説の存在たち。1枚しかないカードが多く、効果ペアの鍵を握る。</p>
+
+      <table>
+        <tr><th>カード名</th><th>絵文字</th><th>枚数</th><th>点数</th><th>略称</th><th>ペア</th></tr>
+        <tr><td>ドラゴン</td><td>🐉</td><td>1</td><td>10点</td><td>KIN</td><td>炎のみ（効果ペア）</td></tr>
+        <tr><td>炎</td><td>🔥</td><td>1</td><td>10点</td><td>QUE</td><td>ドラゴンのみ（効果ペア）</td></tr>
+        <tr><td>吸血鬼</td><td>🧛</td><td>1</td><td>15点</td><td>WIT</td><td>ニンニクのみ（効果ペア）</td></tr>
+        <tr><td>ニンニク</td><td>🧄</td><td>1</td><td>5点</td><td>HOL</td><td>吸血鬼のみ（効果ペア）</td></tr>
+        <tr><td>カエル</td><td>🐸</td><td>1</td><td>5点</td><td>HOR</td><td>忍者のみ（効果ペア）</td></tr>
+        <tr><td>宝石</td><td>💎</td><td>1</td><td>1点</td><td>BAL</td><td>キツネのみ（効果ペア）</td></tr>
+      </table>
+
+      <hr>
+
+      <h3>鳥居カード（6枚）</h3>
+
+      <ul>
+        <li>⛩️鳥居（Torii）：6枚</li>
+      </ul>
+
+      <h3>風カード（6枚）</h3>
+
+      <ul>
+        <li>🌀風（Ghibli）：6枚 - 強奪 / カウンター</li>
+      </ul>
+
+      <p>※ 鳥居カード・風カードはキャラカードではなく、ペアにはなりません。<br>
+      ※ 鳥居・風はLegendと同じ<strong>パープル</strong>の裏面です。</p>
+
+      <hr>
+
+      <h2>4. ペアのルール</h2>
+
+      <h3>通常ペア</h3>
+
+      <p><strong>同じ名前のカード2枚でペア成立</strong></p>
+
+      <ul>
+        <li>ペンギン＋ペンギン、ライオン＋ライオン など</li>
+        <li>忍者＋忍者も通常ペア（効果なし）</li>
+      </ul>
+
+      <p><strong>注意：</strong> 以下のカードは1枚しかないため、同名ペアは成立しません。</p>
+      <ul>
+        <li>ドラゴン、炎、吸血鬼、ニンニク、カエル、宝石、キツネ</li>
+      </ul>
+
+      <h3>効果ペア</h3>
+
+      <p><strong>異なるカード同士でペアを形成し、特殊効果が発動</strong></p>
+
+      <table>
+        <tr><th>ペア</th><th>効果名</th><th>効果</th><th>ペアの行き先</th></tr>
+        <tr><td>🐉ドラゴン＋🔥炎</td><td>竜の息吹</td><td>使用済み風カード最大2枚を手札に加える</td><td>捨て札</td></tr>
+        <tr><td>🧛吸血鬼＋🧄ニンニク</td><td>不死の契約</td><td>使用済み鳥居カード最大2枚を手札に加える</td><td>捨て札</td></tr>
+        <tr><td>🥷忍者＋🐸カエル</td><td>蝦蟇の術</td><td>使用済み風1枚＋鳥居1枚を手札に加える</td><td>捨て札</td></tr>
+        <tr><td>🦊キツネ＋💎宝石</td><td>狐の取引</td><td>雲上から最大2枚を手札に加える</td><td><strong>雲上へ</strong></td></tr>
+      </table>
+
+      <p><strong>効果ペアのルール：</strong></p>
+      <ul>
+        <li>ペア成立と同時に効果が<strong>即時発動</strong></li>
+        <li>使用済みカードプールにカードがない場合、あるだけ獲得（0枚の場合もある）</li>
+        <li>獲得したカードはすぐに使用可能</li>
+      </ul>
+
+      <hr>
+
+      <h3>キツネ＋宝石（狐の取引）の詳細ルール</h3>
+
+      <p><strong>「交換」であることが重要</strong></p>
+
+      <ol>
+        <li>キツネ＋宝石のペアが成立</li>
+        <li>ペアカード（キツネ・宝石）を<strong>雲上に置く</strong></li>
+        <li><strong>元々雲上にあったカード</strong>から最大2枚を選んで手札に加える</li>
+        <li>キツネ・宝石自身は取得対象にならない（交換のため）</li>
+      </ol>
+
+      <table>
+        <tr><th>雲上の状況</th><th>結果</th></tr>
+        <tr><td>雲上に[A, B, C]</td><td>→ 雲上は[C, キツネ, 宝石]、手札に[A, B]追加</td></tr>
+        <tr><td>雲上に[A]</td><td>→ 雲上は[キツネ, 宝石]、手札に[A]追加</td></tr>
+        <tr><td>雲上が空</td><td>→ 雲上は[キツネ, 宝石]、<strong>何も取得できない</strong></td></tr>
+      </table>
+
+      <hr>
+
+      <h3>使用済みカードプール</h3>
+
+      <p><strong>プールに入るタイミング：</strong></p>
+      <ul>
+        <li><strong>風カード</strong>：使用された時点でプールへ（攻撃・カウンター両方）</li>
+        <li><strong>鳥居カード</strong>：<strong>風カードで破壊された時点</strong>でプールへ</li>
+      </ul>
+
+      <p><strong>プールに入らないケース：</strong></p>
+      <ul>
+        <li><strong>鳥居からカードを回収した時</strong>：鳥居は場に残る（空の状態）</li>
+      </ul>
+
+      <p><strong>プールから出るタイミング：</strong></p>
+      <ul>
+        <li>効果ペア成立時に獲得される</li>
+      </ul>
+
+      <p><strong>注意：</strong> 使用済みカードプールはゲーム内の概念であり、物理的に分ける必要はありません（捨て札として管理してもOK）。</p>
+
+      <hr>
+
+      <h2>5. ゲームの準備</h2>
+
+      <h3>1セットの準備</h3>
+
+      <ol>
+        <li><strong>セット条件を決める</strong>
+          <ul>
+            <li>固定ゲーム数：3ゲームまたは5ゲーム（推奨）</li>
+            <li>目標得点：+50点到達（オプション）</li>
+            <li>時間制限：20分（オプション）</li>
+          </ul>
+        </li>
+        <li><strong>スコアシートを用意</strong>
+          <ul>
+            <li>各プレイヤーの累積得点を記録</li>
+          </ul>
+        </li>
+        <li><strong>先手を決める</strong>
+          <ul>
+            <li>最初のゲームはじゃんけんで先手を決定</li>
+            <li>以降、時計回りでローテーション</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h3>各ゲームの準備</h3>
+
+      <ol>
+        <li>全カードをよく混ぜる</li>
+        <li>山札から6枚を表向きで「雲上」として中央に置く<br>
+          ※ 雲上カードは種類を問わない（キャラ／鳥居／風 いずれも置かれる）</li>
+        <li>各プレイヤーに <strong>7枚ずつ</strong> 配る</li>
+        <li>配られた時点で手札にペアがあれば捨てる（効果ペアは効果発動）</li>
+        <li>残りを <strong>山札</strong> として中央に伏せて置く</li>
+      </ol>
+
+      <hr>
+
+      <h2>6. ゲームの進行</h2>
+
+      <p>ゲームは2つのフェーズで進行します。</p>
+
+      <ul>
+        <li><strong>探索フェーズ</strong>（山札がある間）</li>
+        <li><strong>ババ抜きフェーズ</strong>（山札がなくなった後）</li>
+      </ul>
+
+      <hr>
+
+      <h3>6.1 探索フェーズ（山札がある間）</h3>
+
+      <p>自分の番が来たら、以下を <strong>順番どおり</strong> 行います。</p>
+
+      <h4>1. ドロー</h4>
+      <p>山札からカードを1枚引く</p>
+
+      <h4>2. ペア捨て</h4>
+      <p>ペア（通常ペアまたは効果ペア）があれば捨てる<br>
+      <strong>効果ペアの場合、効果が即時発動</strong></p>
+
+      <h4>3. アクション（任意）</h4>
+      <p><strong>鳥居カードまたは風カードを1枚だけ使用できる</strong></p>
+
+      <hr>
+
+      <h3>6.2 ババ抜きフェーズ（山札がなくなった後）</h3>
+
+      <p>自分の番が来たら、以下を <strong>順番どおり</strong> 行います。</p>
+
+      <h4>1. ドロー</h4>
+      <p><strong>任意の相手プレイヤー1人を選び、そのプレイヤーの手札から裏向きでカードを1枚引く</strong></p>
+
+      <ul>
+        <li>右隣でなくてもOK</li>
+        <li>どのプレイヤーからでも引ける</li>
+        <li>手札が0枚のプレイヤーからは引けない</li>
+      </ul>
+
+      <p><strong>裏面の色に注目！</strong><br>
+      ババ抜きでは、相手の手札は裏向きに見えますが、<strong>裏面の色でカテゴリがわかります</strong>。</p>
+
+      <ul>
+        <li>バーガンディ → Mob（1点カード）</li>
+        <li>ネイビー → Elite（5点カード）</li>
+        <li>パープル → Legend・鳥居・風</li>
+      </ul>
+
+      <p>欲しいカテゴリの色を狙って引くか、あえて別の色を選ぶか&mdash;&mdash;<br>これもまた重要な駆け引きです。</p>
+
+      <h4>2. ペア捨て</h4>
+      <p>ペア（通常ペアまたは効果ペア）があれば捨てる<br>
+      <strong>効果ペアの場合、効果が即時発動</strong></p>
+
+      <h4>3. アクション（任意）</h4>
+      <p><strong>鳥居カードまたは風カードを1枚だけ使用できる</strong></p>
+
+      <hr>
+
+      <h2>7. 鳥居カードの使い方</h2>
+
+      <h3>基本ルール</h3>
+
+      <ul>
+        <li><strong>探索フェーズ</strong>：鳥居カード使用可能</li>
+        <li><strong>ババ抜きフェーズ</strong>：鳥居カード使用可能</li>
+        <li><strong>1人最大3基まで</strong>配置可能</li>
+      </ul>
+
+      <h3>⛩️鳥居（Torii）</h3>
+
+      <p><strong>効果：</strong> 手札から1枚を鳥居に格納し、雲上から1枚を選んで<strong>同じ鳥居に格納する</strong></p>
+
+      <p><strong>特徴：</strong></p>
+      <ul>
+        <li>中身が<strong>公開</strong>される</li>
+        <li><strong>次の自分のターン以降</strong>、取り出し可能</li>
+        <li>風カード（強奪）で破壊され、中身を奪われる</li>
+        <li><strong>カウンターで防御可能</strong></li>
+        <li><strong>破壊された鳥居カードは使用済みカードプールへ</strong></li>
+      </ul>
+
+      <p><strong>使い方：</strong></p>
+      <ol>
+        <li>手札から鳥居カードを場に出す</li>
+        <li>手札からカード1枚を選び、鳥居の上に<strong>公開</strong>で置く</li>
+        <li><strong>雲上からカード1枚を選び、</strong>手札には加えず<strong>同じ鳥居に置く</strong>（公開）</li>
+      </ol>
+
+      <hr>
+
+      <h3>鳥居内カードの扱い</h3>
+
+      <ul>
+        <li>鳥居に置かれたカードは<strong>手札ではない</strong>（手札枚数・失点計算の対象外）</li>
+        <li>自分のターンのアクションとして、鳥居内のカードを1枚回収して手札に加えられる</li>
+        <li>回収した鳥居は空のまま場に残る</li>
+        <li>回収したターンは再格納できない。再格納は次の自分のターン以降</li>
+      </ul>
+
+      <hr>
+
+      <h3>鳥居からの取り出し</h3>
+
+      <p><strong>自分のターンの「アクション」として、自分の鳥居からカードを1枚取り出せる</strong></p>
+
+      <ul>
+        <li><strong>配置した次のターン以降</strong>のみ取り出し可能（配置ターンは不可）</li>
+        <li>取り出したカードは手札に戻る</li>
+        <li><strong>鳥居カードは場に残る（空の状態）</strong></li>
+      </ul>
+
+      <hr>
+
+      <h3>空鳥居への再格納</h3>
+
+      <p><strong>空の鳥居に再びカードを格納できる</strong></p>
+
+      <p><strong>条件：</strong></p>
+      <ul>
+        <li><strong>次の自分のターン以降</strong>に再格納可能（回収したターンは不可）</li>
+      </ul>
+
+      <p><strong>手順：</strong></p>
+      <ol>
+        <li>自分の空鳥居を選ぶ</li>
+        <li>手札からカード1枚を選び、鳥居の上に<strong>公開</strong>で置く</li>
+        <li><strong>雲上からカード1枚を選び、同じ鳥居に置く</strong>（雲上交換あり）</li>
+      </ol>
+
+      <p><strong>ポイント：</strong></p>
+      <ul>
+        <li>新規配置と同様に<strong>雲上交換が発生</strong>する</li>
+        <li>空鳥居を活用することで、鳥居カードを消費せずに雲上交換できる</li>
+      </ul>
+
+      <hr>
+
+      <h2>8. 風カードの使い方</h2>
+
+      <h3>基本ルール</h3>
+
+      <ul>
+        <li><strong>探索フェーズ</strong>：風カード使用可能</li>
+        <li><strong>ババ抜きフェーズ</strong>：風カード使用可能</li>
+        <li><strong>攻撃にも防御（カウンター）にも使える</strong></li>
+        <li><strong>使用した風カードは使用済みカードプールへ</strong></li>
+      </ul>
+
+      <hr>
+
+      <h3>🌀風（Ghibli）- 強奪</h3>
+
+      <p><strong>効果：</strong> 相手の鳥居を破壊し、中のカードを奪う</p>
+
+      <p><strong>使用条件：</strong></p>
+      <ul>
+        <li>相手の鳥居が場にある（中身あり or 空の鳥居）</li>
+      </ul>
+
+      <p><strong>使い方（中身がある鳥居の場合）：</strong></p>
+      <ol>
+        <li>対象の鳥居を選ぶ</li>
+        <li><strong>相手はカウンターするか選択</strong>（後述）</li>
+        <li>カウンターされなければ：
+          <ul>
+            <li>その鳥居を破壊し、<strong>使用済みカードプールに入れる</strong></li>
+            <li>中にあったカードを自分の手札に加える</li>
+            <li><strong>使用した風カードも使用済みカードプールに入れる</strong></li>
+          </ul>
+        </li>
+      </ol>
+
+      <p><strong>使い方（空鳥居の場合）：</strong></p>
+      <ol>
+        <li>対象の空鳥居を選ぶ</li>
+        <li><strong>相手はカウンターするか選択</strong></li>
+        <li>カウンターされなければ：
+          <ul>
+            <li><strong>鳥居カード自体を自分の手札に加える</strong>（強奪）</li>
+            <li><strong>使用した風カードは使用済みカードプールに入れる</strong></li>
+          </ul>
+        </li>
+      </ol>
+
+      <hr>
+
+      <h3>カウンター（打ち返し）</h3>
+
+      <p><strong>風カードで攻撃された時、手札の風カードで打ち返して無効化できる</strong></p>
+
+      <p><strong>発動条件：</strong></p>
+      <ul>
+        <li>自分の鳥居が風カードで攻撃された（中身あり or 空の鳥居）</li>
+        <li>手札に風カードを持っている</li>
+      </ul>
+
+      <p><strong>カウンターの流れ：</strong></p>
+      <ol>
+        <li>プレイヤーAが風カードで、プレイヤーBの鳥居を攻撃</li>
+        <li>プレイヤーBは「カウンター」と宣言し、手札から風カードを出す</li>
+        <li><strong>両方の風カードが使用済みプールへ</strong></li>
+        <li><strong>鳥居と中身はそのまま残る</strong>（攻撃無効化）</li>
+      </ol>
+
+      <p><strong>重要なルール：</strong></p>
+      <ul>
+        <li>カウンターは<strong>任意</strong>（持っていても出さなくてOK）</li>
+        <li>カウンターの<strong>カウンターはなし</strong>（1回で終了）</li>
+        <li>カウンターしない場合は通常通り強奪される</li>
+      </ul>
+
+      <hr>
+
+      <h3>風カードの戦略的価値</h3>
+
+      <p>風カードは<strong>攻撃と防御の両方に使える</strong>貴重なリソースです。</p>
+
+      <table>
+        <tr><th>使い方</th><th>メリット</th><th>デメリット</th></tr>
+        <tr><td><strong>攻撃に使う（中身あり）</strong></td><td>相手のカードを奪える</td><td>防御手段がなくなる</td></tr>
+        <tr><td><strong>攻撃に使う（空鳥居）</strong></td><td>鳥居カード自体を奪える</td><td>キャラカードは得られない</td></tr>
+        <tr><td><strong>防御に使う</strong></td><td>自分の鳥居を守れる</td><td>攻撃できなくなる</td></tr>
+        <tr><td><strong>温存する</strong></td><td>相手を牽制できる</td><td>使わないと意味がない</td></tr>
+      </table>
+
+      <p><strong>駆け引きのポイント：</strong></p>
+      <ul>
+        <li>空鳥居を奪うか、中身のある鳥居を狙うかの選択</li>
+        <li>空鳥居を守るためにカウンターするかの判断</li>
+        <li>鳥居が場に残り続けるので、終盤まで風の価値が高い</li>
+      </ul>
+
+      <hr>
+
+      <h2>9. 雲上システム</h2>
+
+      <h3>雲上（Cloud）とは</h3>
+
+      <p>ゲーム開始時に山札から6枚を表向きで配置する共有エリアです。</p>
+
+      <h3>雲上の特徴</h3>
+
+      <ul>
+        <li>全員に公開されている</li>
+        <li><strong>カードの種類は問わない</strong>（キャラ／鳥居／風 いずれも含まれる）</li>
+        <li>鳥居カード使用時に交換できる</li>
+        <li>ゲーム中、枚数は変動する</li>
+      </ul>
+
+      <h3>雲上交換（鳥居アクション時）</h3>
+
+      <p>鳥居カードを使用する際（新規配置・再格納どちらも）：</p>
+      <ol>
+        <li>手札からカード1枚を鳥居に置く（公開）</li>
+        <li>雲上からカード1枚を選ぶ</li>
+        <li>選んだカードは<strong>手札ではなく鳥居に置く</strong>（公開）</li>
+      </ol>
+
+      <p>※ 雲上交換は「手札補充」ではなく「鳥居内カードの入れ替え・更新」です。</p>
+
+      <hr>
+
+      <h2>10. あがりと終了条件</h2>
+
+      <h3>あがり</h3>
+
+      <p><strong>自分のターン中の処理</strong>（ペア捨て／鳥居からの取り出し／風カードなど）によって、<br>
+      <strong>手札のキャラカード（吸血鬼・ニンニクを含む）がすべて0枚</strong><br>
+      になった瞬間、そのプレイヤーは <strong>あがり</strong> となります。</p>
+
+      <p><strong>重要：</strong></p>
+      <ul>
+        <li>「自分のターン中」であることが条件です</li>
+        <li><strong>鳥居の中のカードは手札ではない</strong>ため、あがり判定に含まれません</li>
+        <li>手札のキャラカードさえ0枚になればあがりです</li>
+      </ul>
+
+      <h3>終了</h3>
+
+      <p>誰か1人があがった瞬間に、<br>
+      <strong>ゲームは即座に終了</strong> します。</p>
+
+      <hr>
+
+      <h2>11. 得点計算（スコアモード）</h2>
+
+      <h3>得点の計算方法</h3>
+
+      <p><strong>あがったプレイヤー：</strong></p>
+      <ul>
+        <li>他の全プレイヤーの失点の合計を獲得する（総取り）</li>
+      </ul>
+
+      <p><strong>あがれなかったプレイヤー：</strong></p>
+      <ul>
+        <li><strong>手札に残っているカード</strong>で失点を計算する</li>
+        <li><strong>鳥居の中にあるカードは失点にならない</strong>（手札ではないため）</li>
+      </ul>
+
+      <hr>
+
+      <h3>カードの点数表</h3>
+
+      <p><strong>失点の対象：手札に残っているカードのみ</strong></p>
+
+      <table>
+        <tr><th>カテゴリ</th><th>カード</th><th>点数</th><th>備考</th></tr>
+        <tr><td>Mob</td><td>🐧ペンギン、👷作業員、🐢カメ、🧟ゾンビ、🐭ネズミ、🦊キツネ</td><td>各1点</td><td></td></tr>
+        <tr><td>Elite</td><td>🦁ライオン、🥷忍者、🧙魔法使い、🦉フクロウ</td><td>各5点</td><td></td></tr>
+        <tr><td>Legend</td><td>🐉ドラゴン</td><td>10点</td><td></td></tr>
+        <tr><td>Legend</td><td>🔥炎</td><td>10点</td><td></td></tr>
+        <tr><td>Legend</td><td>🧛吸血鬼</td><td>15点</td><td>最高失点</td></tr>
+        <tr><td>Legend</td><td>🧄ニンニク、🐸カエル</td><td>各5点</td><td></td></tr>
+        <tr><td>Legend</td><td>💎宝石</td><td>1点</td><td></td></tr>
+        <tr><td>鳥居</td><td>⛩️鳥居</td><td>3点</td><td>手札にある場合のみ</td></tr>
+        <tr><td>風</td><td>🌀風</td><td>3点</td><td>手札にある場合のみ</td></tr>
+      </table>
+
+      <hr>
+
+      <h2>12. 戦略ガイド</h2>
+
+      <h3>基本戦略</h3>
+
+      <p><strong>1. 風カードの使い分けが鍵</strong></p>
+      <ul>
+        <li>攻撃に使うか、防御に温存するか</li>
+        <li>高価値カード（ドラゴン、吸血鬼など）を守るためにカウンター用に取っておく</li>
+        <li>低価値カードなら、あえてカウンターしないのも手</li>
+      </ul>
+
+      <p><strong>2. 鳥居を積極的に配置する</strong></p>
+      <ul>
+        <li>統計上、<strong>鳥居を多く配置した人が勝ちやすい</strong></li>
+        <li>雲上交換で鳥居内のカードを入れ替え、ペアを揃える</li>
+        <li>カウンターで守れるので、恐れずに配置</li>
+      </ul>
+
+      <p><strong>3. 空鳥居を活用する</strong></p>
+      <ul>
+        <li>回収後の空鳥居に再格納すれば、鳥居カードを消費せずに雲上交換できる</li>
+        <li>ただし空鳥居は風で奪われるリスクがある</li>
+        <li>再格納のタイミングを見極める</li>
+      </ul>
+
+      <p><strong>4. 相手の風カードを読む</strong></p>
+      <ul>
+        <li>相手が風カードを持っているか推測する</li>
+        <li>持っていそうなら攻撃を控える</li>
+        <li>持っていなさそうなら積極的に攻撃</li>
+      </ul>
+
+      <p><strong>5. 効果ペアを狙う</strong></p>
+      <ul>
+        <li>ドラゴン＋炎、吸血鬼＋ニンニク、忍者＋カエルを積極的に狙う</li>
+        <li>効果で得たカードを活用してさらに有利に</li>
+      </ul>
+
+      <p><strong>6. 裏面の色を活用する（ババ抜き時）</strong></p>
+      <ul>
+        <li>相手の手札の裏面色から、どのカテゴリか推測できる</li>
+        <li>自分がペアを作りやすいカテゴリの色を狙う</li>
+        <li>パープル（紫）は鳥居や風の可能性もあるので注意</li>
+      </ul>
+
+      <hr>
+
+      <h3>上級者向け戦略</h3>
+
+      <p><strong>1. カウンターの判断基準</strong></p>
+      <ul>
+        <li>高価値カード（5点以上）→ カウンター推奨</li>
+        <li>低価値カード（1点）→ あえて見送りも有効</li>
+        <li>終盤で風カードが貴重な時 → 慎重に判断</li>
+        <li><strong>空鳥居を守るか</strong> → 状況次第（下記参照）</li>
+      </ul>
+
+      <p><strong>空鳥居へのカウンター判断例：</strong></p>
+
+      <table>
+        <tr><th>状況</th><th>判断</th><th>理由</th></tr>
+        <tr><td>手札に鳥居カードがない</td><td>カウンター推奨</td><td>空鳥居を失うと再格納の機会を失う</td></tr>
+        <tr><td>手札に鳥居カードがある</td><td>見送りも可</td><td>別の鳥居を配置できる</td></tr>
+        <tr><td>風カードが残り1枚</td><td>状況次第</td><td>攻撃用に温存するか守りに使うか</td></tr>
+        <tr><td>終盤（山札残り少）</td><td>カウンター推奨</td><td>鳥居カードの補充が難しい</td></tr>
+      </table>
+
+      <p><strong>2. 空鳥居への攻撃判断</strong></p>
+      <ul>
+        <li>自分に鳥居カードがない時 → 空鳥居を奪うメリット大</li>
+        <li>相手の再格納を妨害したい時 → 空鳥居を強奪</li>
+        <li>中身のある鳥居がある時 → そちらを優先する方が得な場合も</li>
+      </ul>
+
+      <p><strong>3. ブラフの活用</strong></p>
+      <ul>
+        <li>風カードがなくても堂々としていると、相手が攻撃を躊躇する</li>
+        <li>逆に、風カードがあるのに弱そうに振る舞い、攻撃を誘う</li>
+      </ul>
+
+      <p><strong>4. 攻撃のタイミング</strong></p>
+      <ul>
+        <li>相手が風カードを使った直後は狙い目</li>
+        <li>山札が少なくなってからの攻撃は通りやすい</li>
+        <li>ペアになるカードを狙って強奪（確実に得する時だけ）</li>
+      </ul>
+
+      <p><strong>5. 裏面色の読み合い（上級）</strong></p>
+      <ul>
+        <li>相手の手札のバーガンディが多い → Mobを多く抱えている（ペアの端数？）</li>
+        <li>ネイビーが見える → 5点カード保持（狙い目 or 警戒）</li>
+        <li>パープルが見える → Legend、鳥居、風のどれか（不確実性が高い）</li>
+        <li>自分の欲しいペアのカテゴリ色を優先的に引く</li>
+      </ul>
+
+      <p><strong>6. 勝者の特徴（統計より）</strong></p>
+      <ul>
+        <li><strong>鳥居配置が多い</strong> → 雲上交換を活用</li>
+        <li><strong>雲上からの獲得が多い</strong> → 鳥居のカードを効率的に入れ替え</li>
+        <li><strong>カウンターが上手い</strong> → 防御で風を有効活用</li>
+        <li><strong>風攻撃は控えめ</strong> → 無駄打ちしない</li>
+      </ul>
+
+      <hr>
+
+      <h2>13. よくある質問（FAQ）</h2>
+
+      <p><strong>Q1. カウンターはいつ宣言できますか？</strong><br>
+      A. 風カードで攻撃された<strong>直後</strong>に宣言します。攻撃者が「この鳥居を攻撃」と宣言したら、すぐに「カウンター」と言って風カードを出します。</p>
+
+      <p><strong>Q2. カウンターにカウンターできますか？</strong><br>
+      A. いいえ。カウンターは<strong>1回で終了</strong>です。攻撃→カウンターで決着します。</p>
+
+      <p><strong>Q3. 風カードを持っていてもカウンターしなくていいですか？</strong><br>
+      A. はい。カウンターは<strong>任意</strong>です。低価値カードなら、風カードを温存するためにあえて奪わせることも戦略です。</p>
+
+      <p><strong>Q4. カウンター時、両方の風カードはどうなりますか？</strong><br>
+      A. <strong>両方とも使用済みプールに入ります</strong>。効果ペア（ドラゴン＋炎など）で回収可能です。</p>
+
+      <p><strong>Q5. 鳥居からカードを回収したら、鳥居カードはどうなりますか？</strong><br>
+      A. <strong>鳥居カードは場に残ります（空の状態）</strong>。風で破壊されない限り、使用済みプールには入りません。</p>
+
+      <p><strong>Q6. 空鳥居にいつ再格納できますか？</strong><br>
+      A. <strong>次の自分のターン以降</strong>です。回収したターンには再格納できません。</p>
+
+      <p><strong>Q7. 空鳥居への再格納で雲上交換はありますか？</strong><br>
+      A. <strong>はい、あります</strong>。新規配置と同様に、雲上から1枚を鳥居に格納できます。</p>
+
+      <p><strong>Q8. 空鳥居を風で攻撃したらどうなりますか？</strong><br>
+      A. <strong>鳥居カード自体を強奪</strong>できます。攻撃者の手札に鳥居カードが入ります。</p>
+
+      <p><strong>Q9. 空鳥居へのカウンターはできますか？</strong><br>
+      A. <strong>はい、できます</strong>。空鳥居も風カードで守れます。カウンターすれば鳥居は場に残ります。</p>
+
+      <p><strong>Q10. 効果ペアはいつ効果が発動しますか？</strong><br>
+      A. ペアを捨てた瞬間に即時発動します。獲得したカードはそのターンから使用可能です。</p>
+
+      <p><strong>Q11. 使用済みカードプールにカードがない場合はどうなりますか？</strong><br>
+      A. あるだけ獲得します。0枚の場合は効果なしでペアが消化されます。</p>
+
+      <p><strong>Q12. キツネ＋宝石で雲上が空の場合は？</strong><br>
+      A. ペアカード（キツネ・宝石）は雲上に置かれますが、<strong>何も取得できません</strong>。手札が2枚減るだけです。</p>
+
+      <p><strong>Q13. キツネ＋宝石で自分が出したキツネ・宝石は取れますか？</strong><br>
+      A. いいえ。「交換」なので、<strong>元々雲上にあったカード</strong>からのみ取得できます。</p>
+
+      <p><strong>Q14. 鳥居に入れたカードはいつ取り出せますか？</strong><br>
+      A. 配置した<strong>次の自分のターン以降</strong>です。配置したターンには取り出せません。</p>
+
+      <p><strong>Q15. 雲上のカードがなくなったらどうなりますか？</strong><br>
+      A. 雲上が空の場合、鳥居カードを使用しても雲上からカードは取れません（鳥居にカードを入れるだけ）。</p>
+
+      <p><strong>Q16. ババ抜きで裏面の色を見てカードを選んでいいですか？</strong><br>
+      A. <strong>はい、自由に見て選べます</strong>。裏面の色はゲームの重要な情報です。ただし、相手のカードを表向きに見ることはできません。</p>
+
+      <p><strong>Q17. 雲上から取ったカードはどこへ行きますか？</strong><br>
+      A. <strong>手札には入りません</strong>。選択中の鳥居に格納されます（公開）。</p>
+
+      <p><strong>Q18. 雲上に鳥居カードや風カードは出ますか？</strong><br>
+      A. <strong>出ます</strong>。雲上カードの種類は問いません（キャラ／鳥居／風 いずれも置かれます）。</p>
+
+      <hr>
+
+      <h2>14. バリアントルール</h2>
+
+      <h3>推奨プリセット</h3>
+
+      <p>1000ゲームのシミュレーション結果に基づく<strong>推奨プリセット</strong>です。<br>
+      デジタル版では設定画面でワンタッチで切り替えられます。</p>
+
+      <table>
+        <tr><th>プリセット</th><th>雲上</th><th>風</th><th>鳥居</th><th>特徴</th><th>総合スコア</th></tr>
+        <tr><td><strong>標準</strong></td><td>6</td><td>6</td><td>6</td><td>デフォルト設定</td><td>84.3</td></tr>
+        <tr><td><strong>戦略</strong> 🏆</td><td>4</td><td>6</td><td>6</td><td>効果ペア活発、選択に重み</td><td><strong>88.0</strong></td></tr>
+        <tr><td><strong>公平</strong></td><td>6</td><td>6</td><td>7</td><td>勝率偏差最小、運の要素少</td><td>87.5</td></tr>
+        <tr><td><strong>激戦</strong></td><td>6</td><td>8</td><td>6</td><td>カウンター活発、攻防激化</td><td>87.0</td></tr>
+      </table>
+
+      <p><strong>プリセットの詳細：</strong></p>
+
+      <h4>🏆 戦略モード（推奨）</h4>
+      <ul>
+        <li><strong>雲上4枚</strong>：選択肢が絞られ、「どれを取るか」の判断に重みが増す</li>
+        <li>効果ペア発動が平均19.6回/ゲーム（標準は16回）</li>
+        <li>攻防比率2.93（理想の3:1に近い）</li>
+        <li>平均39.4ターンで戦略を練る余裕がある</li>
+      </ul>
+
+      <h4>公平モード</h4>
+      <ul>
+        <li><strong>鳥居7枚</strong>：防御側に有利で、勝率のばらつきが最小</li>
+        <li>初心者混合の卓や、実力差がある時に推奨</li>
+        <li>カウンターとの相乗効果で守りやすい</li>
+      </ul>
+
+      <h4>激戦モード</h4>
+      <ul>
+        <li><strong>風8枚</strong>：攻撃が頻繁、カウンターも活発</li>
+        <li>カウンター率12.8%（標準の11%より高い）</li>
+        <li>上級者同士のスリリングな対戦向け</li>
+      </ul>
+
+      <hr>
+
+      <h3>カード枚数の調整（カスタム）</h3>
+
+      <table>
+        <tr><th>パラメータ</th><th>デフォルト</th><th>調整範囲</th><th>効果</th></tr>
+        <tr><td>雲上</td><td>6枚</td><td>2〜8枚</td><td><strong>少ないと選択に重み</strong>、多いと欲しいカードを取りやすい</td></tr>
+        <tr><td>風カード</td><td>6枚</td><td>2〜8枚</td><td>少ないと守りやすい、<strong>多いとカウンター活発</strong></td></tr>
+        <tr><td>鳥居カード</td><td>6枚</td><td>2〜8枚</td><td><strong>多いと交換機会増加</strong>、公平性向上</td></tr>
+      </table>
+
+      <hr>
+
+      <h3>簡易版（初心者向け・6〜7歳）</h3>
+
+      <p><strong>変更点：</strong></p>
+
+      <ul>
+        <li>風カードを除外（カウンターなし）</li>
+        <li>雲上システムなし（鳥居に入れるだけ）</li>
+        <li>効果ペアの効果なし（通常のペアとして扱う）</li>
+      </ul>
+
+      <hr>
+
+      <h2>15. カード構成の変更履歴</h2>
+
+      <h3>v7.1（現行版）⭐</h3>
+
+      <ul>
+        <li><strong>雲上「種類不問」を明文化</strong>：雲上にはキャラ・鳥居・風のいずれも置かれる</li>
+        <li><strong>雲上交換の行き先を明確化</strong>：雲上から取ったカードは鳥居に格納（手札ではない）</li>
+        <li><strong>鳥居内カードの扱いを追記</strong>：手札ではない・回収・再格納のルール明文化</li>
+        <li><strong>格納対象を「カード」に修正</strong>：種類制限を撤廃し実運用に合わせて明文化</li>
+      </ul>
+
+      <h3>v7.0</h3>
+
+      <ul>
+        <li><strong>カテゴリ制導入</strong>：Mob / Elite / Legend の3カテゴリ</li>
+        <li><strong>裏面3色</strong>：バーガンディ / ネイビー / パープル（ババ抜きの戦略要素に）</li>
+        <li><strong>全カード名・絵文字刷新</strong>（旧名称対応表は付録を参照）</li>
+        <li><strong>名称変更</strong>：屋台→鳥居、市場→雲上、効果ペア名全面刷新</li>
+        <li>ルール自体はv6.6.1から変更なし</li>
+      </ul>
+
+      <h3>v6.6.1</h3>
+
+      <ul>
+        <li><strong>屋台回収時の挙動変更</strong>：回収後も屋台が場に残る</li>
+        <li><strong>空屋台への再格納</strong>：翌ターン以降、再格納可能（市場交換あり）</li>
+        <li><strong>空屋台への風攻撃</strong>：屋台カード自体を強奪可能</li>
+      </ul>
+
+      <h3>v6.6</h3>
+
+      <ul>
+        <li><strong>カウンターシステムの導入</strong>：風で攻撃された時、風で打ち返せる</li>
+        <li><strong>商人枚数変更</strong>：3枚→1枚</li>
+        <li><strong>カード総数</strong>：57枚→54枚</li>
+        <li><strong>パラメータ調整機能</strong>：風・屋台・市場の枚数を変更可能</li>
+      </ul>
+
+      <h3>v6.5</h3>
+
+      <ul>
+        <li>効果ペアの導入（王＋王妃、魔女＋聖母、騎士＋馬、商人＋天秤）</li>
+        <li>カード追加：王（1枚）、王妃（1枚）、馬（1枚）、天秤（1枚）</li>
+        <li>騎士枚数変更：4枚→3枚</li>
+        <li>商人枚数変更：4枚→3枚</li>
+        <li>使用済みカードプールの導入</li>
+      </ul>
+
+      <h3>v6.4</h3>
+
+      <ul>
+        <li>2段階破壊システムの廃止</li>
+        <li>家カードの統合（6枚）</li>
+        <li>風カードの簡素化（Ghibliのみ6枚）</li>
+        <li>市場システムの拡充（6枚）</li>
+      </ul>
+
+      <hr>
+
+      <h2>16. 制作者の想い</h2>
+
+      <p>このゲームで、世界中の人々が笑顔になりますように。</p>
+      <p>吸血鬼とニンニクの出会いが、呪いを解く奇跡を。</p>
+      <p>ドラゴンと炎が再会し、竜の息吹が世界を駆ける。</p>
+      <p>忍者がカエルに乗り、蝦蟇の術で道を拓く。</p>
+      <p>キツネが宝石を掲げ、雲の上の恵みをもたらす。</p>
+      <p>風は時に脅威となり、時に盾となる。<br>その選択が、勝敗を分ける。</p>
+      <p>空になった鳥居も、また新たな命を吹き込める。<br>そして奪う者もいる&mdash;&mdash;それもまた、風の力。</p>
+      <p>シンプルなルールの中に、<br>深い駆け引きが生まれることを願って。</p>
+
+      <hr>
+
+      <p class="rulebook-meta">
+        <strong>制作：</strong> Masaru<br>
+        <strong>バージョン：</strong> v7.1 "Stay Stall"<br>
+        <strong>更新日:</strong> 2026年2月26日<br>
+        <strong>ライセンス:</strong> CC BY 4.0
+      </p>
+
+      <hr>
+
+      <h2>付録：カードリファレンス</h2>
+
+      <h3>キャラカード早見表</h3>
+
+      <table>
+        <tr><th>カテゴリ</th><th>カード名</th><th>絵文字</th><th>枚数</th><th>失点</th><th>略称</th><th>ペア</th></tr>
+        <tr><td>Mob</td><td>ペンギン</td><td>🐧</td><td>4</td><td>1点</td><td>FAR</td><td>同名</td></tr>
+        <tr><td>Mob</td><td>作業員</td><td>👷</td><td>4</td><td>1点</td><td>CAR</td><td>同名</td></tr>
+        <tr><td>Mob</td><td>カメ</td><td>🐢</td><td>4</td><td>1点</td><td>TRV</td><td>同名</td></tr>
+        <tr><td>Mob</td><td>ゾンビ</td><td>🧟</td><td>4</td><td>1点</td><td>BUT</td><td>同名</td></tr>
+        <tr><td>Mob</td><td>ネズミ</td><td>🐭</td><td>4</td><td>1点</td><td>MAI</td><td>同名</td></tr>
+        <tr><td>Mob</td><td>キツネ</td><td>🦊</td><td>1</td><td>1点</td><td>MER</td><td>宝石のみ</td></tr>
+        <tr><td>Elite</td><td>ライオン</td><td>🦁</td><td>4</td><td>5点</td><td>NOB</td><td>同名</td></tr>
+        <tr><td>Elite</td><td>忍者</td><td>🥷</td><td>3</td><td>5点</td><td>KNI</td><td>同名 or カエル</td></tr>
+        <tr><td>Elite</td><td>魔法使い</td><td>🧙</td><td>4</td><td>5点</td><td>PRI</td><td>同名</td></tr>
+        <tr><td>Elite</td><td>フクロウ</td><td>🦉</td><td>4</td><td>5点</td><td>SCH</td><td>同名</td></tr>
+        <tr><td>Legend</td><td>ドラゴン</td><td>🐉</td><td>1</td><td>10点</td><td>KIN</td><td>炎のみ</td></tr>
+        <tr><td>Legend</td><td>炎</td><td>🔥</td><td>1</td><td>10点</td><td>QUE</td><td>ドラゴンのみ</td></tr>
+        <tr><td>Legend</td><td>吸血鬼</td><td>🧛</td><td>1</td><td>15点</td><td>WIT</td><td>ニンニクのみ</td></tr>
+        <tr><td>Legend</td><td>ニンニク</td><td>🧄</td><td>1</td><td>5点</td><td>HOL</td><td>吸血鬼のみ</td></tr>
+        <tr><td>Legend</td><td>カエル</td><td>🐸</td><td>1</td><td>5点</td><td>HOR</td><td>忍者のみ</td></tr>
+        <tr><td>Legend</td><td>宝石</td><td>💎</td><td>1</td><td>1点</td><td>BAL</td><td>キツネのみ</td></tr>
+      </table>
+
+      <h3>効果ペア早見表</h3>
+
+      <table>
+        <tr><th>ペア</th><th>効果名</th><th>得られるカード</th><th>ペアの行き先</th></tr>
+        <tr><td>🐉ドラゴン＋🔥炎</td><td>竜の息吹</td><td>使用済み風カード最大2枚</td><td>捨て札</td></tr>
+        <tr><td>🧛吸血鬼＋🧄ニンニク</td><td>不死の契約</td><td>使用済み鳥居カード最大2枚</td><td>捨て札</td></tr>
+        <tr><td>🥷忍者＋🐸カエル</td><td>蝦蟇の術</td><td>使用済み風1枚＋鳥居1枚</td><td>捨て札</td></tr>
+        <tr><td>🦊キツネ＋💎宝石</td><td>狐の取引</td><td>雲上から最大2枚（交換）</td><td>雲上へ</td></tr>
+      </table>
+
+      <h3>特殊カード早見表</h3>
+
+      <table>
+        <tr><th>種類</th><th>絵文字</th><th>枚数</th><th>失点</th><th>効果</th><th>略称</th></tr>
+        <tr><td>鳥居</td><td>⛩️</td><td>6</td><td>3点</td><td>公開格納 + 雲上交換 / <strong>空でも再格納可</strong></td><td>HOU</td></tr>
+        <tr><td>風</td><td>🌀</td><td>6</td><td>3点</td><td>鳥居を破壊＆カードを奪う / <strong>空鳥居なら鳥居自体を強奪</strong> / カウンター可能</td><td>GHI</td></tr>
+      </table>
+
+      <h3>鳥居の状態早見表</h3>
+
+      <table>
+        <tr><th>状態</th><th>風攻撃</th><th>カウンター</th><th>再格納</th></tr>
+        <tr><td>中身あり</td><td>カード強奪</td><td>可能</td><td>&mdash;</td></tr>
+        <tr><td>空（回収直後）</td><td>鳥居カード強奪</td><td>可能</td><td><strong>不可</strong>（次の自分のターンから）</td></tr>
+        <tr><td>空（次の自分のターン以降）</td><td>鳥居カード強奪</td><td>可能</td><td><strong>可能</strong>（雲上交換あり）</td></tr>
+      </table>
+
+      <h3>裏面カラー早見表</h3>
+
+      <table>
+        <tr><th>裏面色</th><th>カテゴリ</th><th>含まれるカード</th><th>枚数</th></tr>
+        <tr><td>バーガンディ（暗赤）</td><td>Mob</td><td>ペンギン&times;4, 作業員&times;4, カメ&times;4, ゾンビ&times;4, ネズミ&times;4, キツネ&times;1</td><td>21枚</td></tr>
+        <tr><td>ネイビー（紺）</td><td>Elite</td><td>ライオン&times;4, 忍者&times;3, 魔法使い&times;4, フクロウ&times;4</td><td>15枚</td></tr>
+        <tr><td>パープル（紫）</td><td>Legend＋鳥居＋風</td><td>ドラゴン&times;1, 炎&times;1, 吸血鬼&times;1, ニンニク&times;1, カエル&times;1, 宝石&times;1, 鳥居&times;6, 風&times;6</td><td>18枚</td></tr>
+      </table>
+
+      <hr>
+
+      <h3>付録：旧名称対応表（v6.6.1 → v7.0）</h3>
+
+      <table>
+        <tr><th>旧名称</th><th>新名称</th><th>絵文字</th><th>略称</th></tr>
+        <tr><td>農民（Farmer）</td><td>ペンギン（Penguin）</td><td>🐧</td><td>FAR</td></tr>
+        <tr><td>商人（Merchant）</td><td>キツネ（Fox）</td><td>🦊</td><td>MER</td></tr>
+        <tr><td>大工（Carpenter）</td><td>作業員（Worker）</td><td>👷</td><td>CAR</td></tr>
+        <tr><td>旅人（Traveler）</td><td>カメ（Turtle）</td><td>🐢</td><td>TRV</td></tr>
+        <tr><td>執事（Butler）</td><td>ゾンビ（Zombie）</td><td>🧟</td><td>BUT</td></tr>
+        <tr><td>メイド（Maid）</td><td>ネズミ（Mouse）</td><td>🐭</td><td>MAI</td></tr>
+        <tr><td>貴族（Noble）</td><td>ライオン（Lion）</td><td>🦁</td><td>NOB</td></tr>
+        <tr><td>騎士（Knight）</td><td>忍者（Ninja）</td><td>🥷</td><td>KNI</td></tr>
+        <tr><td>司祭（Priest）</td><td>魔法使い（Mage）</td><td>🧙</td><td>PRI</td></tr>
+        <tr><td>学者（Scholar）</td><td>フクロウ（Owl）</td><td>🦉</td><td>SCH</td></tr>
+        <tr><td>魔女（Witch）</td><td>吸血鬼（Vampire）</td><td>🧛</td><td>WIT</td></tr>
+        <tr><td>聖母（Holy Mother）</td><td>ニンニク（Garlic）</td><td>🧄</td><td>HOL</td></tr>
+        <tr><td>王（King）</td><td>ドラゴン（Dragon）</td><td>🐉</td><td>KIN</td></tr>
+        <tr><td>王妃（Queen）</td><td>炎（Flame）</td><td>🔥</td><td>QUE</td></tr>
+        <tr><td>馬（Horse）</td><td>カエル（Frog）</td><td>🐸</td><td>HOR</td></tr>
+        <tr><td>天秤（Balance）</td><td>宝石（Gem）</td><td>💎</td><td>BAL</td></tr>
+        <tr><td>屋台（Stall）</td><td>鳥居（Torii）</td><td>⛩️</td><td>HOU</td></tr>
+        <tr><td>風の召喚</td><td>竜の息吹</td><td>&mdash;</td><td>windSummon</td></tr>
+        <tr><td>家の再生</td><td>不死の契約</td><td>&mdash;</td><td>houseRebirth</td></tr>
+        <tr><td>騎乗の恩恵</td><td>蝦蟇の術</td><td>&mdash;</td><td>ridingBlessing</td></tr>
+        <tr><td>商いの才覚</td><td>狐の取引</td><td>&mdash;</td><td>merchantGift</td></tr>
+        <tr><td>市場</td><td>雲上（Cloud）</td><td>&mdash;</td><td>&mdash;</td></tr>
+      </table>
+
+    </div>
   </div>
 
   <footer>
@@ -1256,7 +2255,6 @@
   </footer>
 
   <script>
-    // Language switcher
     const translations = {
       en: {
         'nav-back': 'Back to pfff!',
@@ -1265,54 +2263,51 @@
       },
       ja: {
         'nav-back': 'pfff! \u306B\u623B\u308B',
-        'title': 'Official Rulebook',
-        'subtitle': 'Rules v7.1 \u2014 "Stay Stall"'
+        'title': '\u516C\u5F0F\u30EB\u30FC\u30EB\u30D6\u30C3\u30AF',
+        'subtitle': '\u30EB\u30FC\u30EB v7.1 \u2014 "Stay Stall"'
       }
     };
 
     let currentLang = 'en';
 
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lang = btn.dataset.lang;
-        if (lang === currentLang) return;
+    function setLanguage(lang) {
+      if (lang === currentLang) return;
+      currentLang = lang;
 
-        currentLang = lang;
+      document.querySelectorAll('.lang-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.lang === lang);
+      });
 
-        // Update active button
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+      const els = document.querySelectorAll('[data-i18n]');
+      els.forEach(el => el.classList.add('lang-fade'));
 
-        // Fade out, swap text, fade in
-        const els = document.querySelectorAll('[data-i18n]');
-        els.forEach(el => el.classList.add('lang-fade'));
-
-        setTimeout(() => {
-          els.forEach(el => {
-            const key = el.dataset.i18n;
-            if (translations[lang] && translations[lang][key]) {
-              el.textContent = translations[lang][key];
-            }
-          });
-          els.forEach(el => el.classList.remove('lang-fade'));
-        }, 200);
-
-        // Show/hide JP banner and rulebook content
-        const jpBanner = document.getElementById('jp-banner');
-        const rulebookContent = document.getElementById('rulebook-content');
+      setTimeout(() => {
+        els.forEach(el => {
+          const key = el.dataset.i18n;
+          if (translations[lang] && translations[lang][key]) {
+            el.textContent = translations[lang][key];
+          }
+        });
 
         if (lang === 'ja') {
-          jpBanner.classList.add('visible');
-          rulebookContent.style.opacity = '0.4';
-          rulebookContent.style.pointerEvents = 'none';
-          rulebookContent.style.transition = 'opacity 0.3s ease';
+          document.body.classList.add('lang-ja');
         } else {
-          jpBanner.classList.remove('visible');
-          rulebookContent.style.opacity = '1';
-          rulebookContent.style.pointerEvents = 'auto';
+          document.body.classList.remove('lang-ja');
         }
-      });
+
+        els.forEach(el => el.classList.remove('lang-fade'));
+      }, 200);
+    }
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
     });
+
+    // Auto-detect Japanese browser language
+    const userLang = navigator.language || navigator.userLanguage;
+    if (userLang && userLang.startsWith('ja')) {
+      setLanguage('ja');
+    }
   </script>
 
 </body>
