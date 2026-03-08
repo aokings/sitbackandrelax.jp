@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pfff! — Official Rulebook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --accent: #e94560;
+      --accent-hover: #d13a54;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* === Header === */
+    .page-header {
+      text-align: center;
+      padding: 3rem 2rem 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .nav-back {
+      display: inline-block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--text-secondary); }
+
+    .page-header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      margin-bottom: 0.3rem;
+    }
+
+    .page-header .subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 300;
+      color: var(--text-secondary);
+      margin-bottom: 0.8rem;
+    }
+
+    /* === Language Switcher === */
+    .lang-switcher {
+      display: inline-flex;
+      background: var(--warm-gray);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.3rem 0.7rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--text-primary);
+      color: #fff;
+    }
+
+    .lang-btn:hover:not(.active) { color: var(--text-primary); }
+
+    /* === JP Coming Soon Banner === */
+    .jp-banner {
+      display: none;
+      max-width: 720px;
+      margin: 0 auto 1.5rem;
+      padding: 0 2rem;
+    }
+
+    .jp-banner.visible { display: block; }
+
+    .jp-banner-inner {
+      background: linear-gradient(135deg, #1a1a1a, #2d2520);
+      border-radius: 12px;
+      padding: 1.5rem 1.8rem;
+      text-align: center;
+      color: #fff;
+    }
+
+    .jp-banner-inner p {
+      font-size: 0.9rem;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .jp-banner-inner p:first-child {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 0.3rem;
+    }
+
+    /* === Rulebook Content Card === */
+    .rulebook-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+    }
+
+    .rulebook-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 2.5rem 2.5rem;
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* === Rulebook Typography === */
+    .rulebook-card h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: var(--text-primary);
+      margin-bottom: 0.8rem;
+      line-height: 1.3;
+    }
+
+    .rulebook-card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      margin-top: 2.5rem;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--warm-gray);
+    }
+
+    .rulebook-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin-top: 1.8rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .rulebook-card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      margin-top: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .rulebook-card p {
+      font-size: 0.88rem;
+      line-height: 1.85;
+      color: var(--text-secondary);
+      margin-bottom: 0.8rem;
+    }
+
+    .rulebook-card strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .rulebook-card em {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .rulebook-card ul, .rulebook-card ol {
+      margin: 0.5rem 0 1rem 1.4rem;
+      font-size: 0.88rem;
+      line-height: 1.85;
+      color: var(--text-secondary);
+    }
+
+    .rulebook-card li {
+      margin-bottom: 0.3rem;
+    }
+
+    .rulebook-card li ul, .rulebook-card li ol {
+      margin-top: 0.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .rulebook-card hr {
+      border: none;
+      height: 1px;
+      background: var(--warm-gray);
+      margin: 2rem 0;
+    }
+
+    /* === Meta info (version, author, etc.) === */
+    .rulebook-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 1rem;
+    }
+
+    /* === Tables === */
+    .rulebook-card table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.2rem;
+      font-size: 0.82rem;
+    }
+
+    .rulebook-card table th {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.75rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--off-white);
+      padding: 0.6rem 0.8rem;
+      text-align: left;
+      border-bottom: 2px solid var(--warm-gray);
+    }
+
+    .rulebook-card table td {
+      padding: 0.5rem 0.8rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--warm-gray);
+      line-height: 1.6;
+    }
+
+    .rulebook-card table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .rulebook-card table tr:hover td {
+      background: rgba(242, 240, 237, 0.5);
+    }
+
+    /* === Footer === */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--warm-gray);
+    }
+
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--text-secondary); }
+
+    /* === Language transition === */
+    [data-i18n] { transition: opacity 0.2s ease; }
+    .lang-fade { opacity: 0; }
+
+    /* === Responsive === */
+    @media (max-width: 600px) {
+      .page-header { padding: 2rem 1.2rem 1.5rem; }
+      .rulebook-container { padding: 0 1rem 2rem; }
+      .rulebook-card { padding: 1.5rem 1.2rem; }
+      .jp-banner { padding: 0 1rem; }
+
+      .rulebook-card h1 { font-size: 1.3rem; }
+      .rulebook-card h2 { font-size: 1.1rem; }
+
+      .rulebook-card table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .rulebook-card table th,
+      .rulebook-card table td {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="page-header">
+    <a class="nav-back" href="/pfff/">&larr; <span data-i18n="nav-back">Back to pfff!</span></a>
+
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">JP</button>
+    </div>
+
+    <h1 data-i18n="title">Official Rulebook</h1>
+    <p class="subtitle" data-i18n="subtitle">Rules v7.1 &mdash; "Stay Stall"</p>
+  </header>
+
+  <!-- JP Coming Soon Banner -->
+  <div class="jp-banner" id="jp-banner">
+    <div class="jp-banner-inner">
+      <p>Japanese version coming soon</p>
+      <p>&#x65E5;&#x672C;&#x8A9E;&#x7248;&#x306F;&#x6E96;&#x5099;&#x4E2D;&#x3067;&#x3059;</p>
+    </div>
+  </div>
+
+  <!-- Rulebook Content -->
+  <div class="rulebook-container" id="rulebook-content">
+    <div class="rulebook-card">
+
+      <h1>pfff! ~Stay Stall~ &mdash; Official Rulebook</h1>
+
+      <p class="rulebook-meta">
+        <strong>Version:</strong> v7.1 "Stay Stall"<br>
+        <strong>Created by:</strong> Masaru<br>
+        <strong>Last Updated:</strong> February 26, 2026<br>
+        <strong>License:</strong> CC BY 4.0
+      </p>
+
+      <hr>
+
+      <h2>The Story</h2>
+
+      <p>In this world, there is only one Vampire.</p>
+
+      <p>To escape the Vampire's curse,<br>
+      people form pairs and leave this world behind.</p>
+
+      <p>You are a "guide,"<br>
+      tasked with helping people escape safely.</p>
+
+      <p>The one who helps all their people escape wins.</p>
+
+      <p>The Vampire is dangerous, but when it meets the Garlic,<br>
+      its power is sealed, and both depart together.</p>
+
+      <p>When Dragon meets Flame, Dragon's Breath awakens the power of the wind.</p>
+
+      <p>When Ninja rides the Frog, Toad Jutsu grants the power of both Gust and Gate.</p>
+
+      <p>When Fox takes hold of the Gem, it receives blessings from the Cloud above.</p>
+
+      <p>You swap people in the Cloud,<br>
+      sometimes shelter them behind Gates,<br>
+      and aim to help everyone escape.</p>
+
+      <p>But when the wind blows,<br>
+      Gates are destroyed, and those inside are taken.<br>
+      Even empty Gates can be stolen by the wind.</p>
+
+      <p>However, if you also hold the wind,<br>
+      you can counter Gust with Gust and protect your Gate.</p>
+
+      <p>Do not let your guard down even with an empty Gate.<br>
+      If the wind takes it, that Gate is no longer yours.</p>
+
+      <p>The choice is yours.</p>
+
+      <hr>
+
+      <h2>1. Game Overview</h2>
+
+      <p>This is a <strong>psychological Old Maid-style card game</strong> where you pair up Character cards and discard them, racing to be the first to empty your hand of all Character cards.</p>
+
+      <p>Gate cards let you exchange with the Cloud, while Gust cards enable stealing and defense, creating a game rich with bluffing and strategy.</p>
+
+      <p>Gates remain on the field even after retrieval, so the threat of Gust persists until the end, keeping tension high throughout the game.</p>
+
+      <hr>
+
+      <h2>2. Basic Information</h2>
+
+      <p><strong>Recommended Players:</strong> 2-5 (3-4 is optimal)<br>
+      <strong>Recommended Age:</strong> 8+<br>
+      <strong>Time per Game:</strong> Approx. 3-8 minutes (average 5-6 min)<br>
+      <strong>Time per Set (3 games):</strong> Approx. 15-20 minutes</p>
+
+      <h3>Set Play is Standard</h3>
+
+      <p><strong>Score Mode (set play) is the standard rule.</strong><br>
+      Playing multiple games evens out the luck factor<br>
+      and demands more strategic play.</p>
+
+      <hr>
+
+      <h2>3. Card Composition (54 cards total)</h2>
+
+      <h3>Three Card Back Colors</h3>
+
+      <p>All cards have <strong>different back colors depending on their tier</strong>.<br>
+      This lets you identify a card's tier even when face-down.</p>
+
+      <table>
+        <tr><th>Tier</th><th>Back Color</th><th>Accent Color</th></tr>
+        <tr><td>Mob</td><td>Burgundy (dark red)</td><td>Pink</td></tr>
+        <tr><td>Elite</td><td>Navy (dark blue)</td><td>Light Blue</td></tr>
+        <tr><td>Legend / Gate / Gust</td><td>Purple</td><td>Light Purple</td></tr>
+      </table>
+
+      <p>The <strong>accent color also appears on the top banner</strong> of the card face,<br>
+      so you can infer the back color even when looking at the front.</p>
+
+      <hr>
+
+      <h3>Mob (21 cards, 1 point each)</h3>
+
+      <p>A tier of animals and common folk. Many cards make pairs easy to form.</p>
+
+      <table>
+        <tr><th>Card Name</th><th>Emoji</th><th>Count</th><th>Code</th><th>Pair</th></tr>
+        <tr><td>Penguin</td><td>&#x1F427;</td><td>4</td><td>FAR</td><td>Same name</td></tr>
+        <tr><td>Worker</td><td>&#x1F477;</td><td>4</td><td>CAR</td><td>Same name</td></tr>
+        <tr><td>Turtle</td><td>&#x1F422;</td><td>4</td><td>TRV</td><td>Same name</td></tr>
+        <tr><td>Zombie</td><td>&#x1F9DF;</td><td>4</td><td>BUT</td><td>Same name</td></tr>
+        <tr><td>Mouse</td><td>&#x1F42D;</td><td>4</td><td>MAI</td><td>Same name</td></tr>
+        <tr><td>Fox</td><td>&#x1F98A;</td><td>1</td><td>MER</td><td>Gem only (Effect Pair)</td></tr>
+      </table>
+
+      <p><em>Note: Gem (BAL) is in the Legend tier but is worth 1 point.</em></p>
+
+      <h3>Elite (15 cards, 5 points each)</h3>
+
+      <p>A tier of powerful beings. High point values mean high penalty risk.</p>
+
+      <table>
+        <tr><th>Card Name</th><th>Emoji</th><th>Count</th><th>Code</th><th>Pair</th></tr>
+        <tr><td>Lion</td><td>&#x1F981;</td><td>4</td><td>NOB</td><td>Same name</td></tr>
+        <tr><td>Ninja</td><td>&#x1F977;</td><td>3</td><td>KNI</td><td>Same name or Frog (Effect Pair)</td></tr>
+        <tr><td>Mage</td><td>&#x1F9D9;</td><td>4</td><td>PRI</td><td>Same name</td></tr>
+        <tr><td>Owl</td><td>&#x1F989;</td><td>4</td><td>SCH</td><td>Same name</td></tr>
+      </table>
+
+      <h3>Legend (6 cards, points vary)</h3>
+
+      <p>Beings of legend. Most exist as single copies and hold the key to Effect Pairs.</p>
+
+      <table>
+        <tr><th>Card Name</th><th>Emoji</th><th>Count</th><th>Points</th><th>Code</th><th>Pair</th></tr>
+        <tr><td>Dragon</td><td>&#x1F409;</td><td>1</td><td>10 pts</td><td>KIN</td><td>Flame only (Effect Pair)</td></tr>
+        <tr><td>Flame</td><td>&#x1F525;</td><td>1</td><td>10 pts</td><td>QUE</td><td>Dragon only (Effect Pair)</td></tr>
+        <tr><td>Vampire</td><td>&#x1F9DB;</td><td>1</td><td>15 pts</td><td>WIT</td><td>Garlic only (Effect Pair)</td></tr>
+        <tr><td>Garlic</td><td>&#x1F9C4;</td><td>1</td><td>5 pts</td><td>HOL</td><td>Vampire only (Effect Pair)</td></tr>
+        <tr><td>Frog</td><td>&#x1F438;</td><td>1</td><td>5 pts</td><td>HOR</td><td>Ninja only (Effect Pair)</td></tr>
+        <tr><td>Gem</td><td>&#x1F48E;</td><td>1</td><td>1 pt</td><td>BAL</td><td>Fox only (Effect Pair)</td></tr>
+      </table>
+
+      <hr>
+
+      <h3>Gate Cards (6 cards)</h3>
+
+      <ul>
+        <li>&#x26E9;&#xFE0F;Gate: 6 cards</li>
+      </ul>
+
+      <h3>Gust Cards (6 cards)</h3>
+
+      <ul>
+        <li>&#x1F300;Gust: 6 cards &mdash; Steal / Counter</li>
+      </ul>
+
+      <p><em>Gate and Gust cards are not Character cards and cannot form pairs.</em><br>
+      <em>Gate and Gust have the same <strong>Purple</strong> back as Legend cards.</em></p>
+
+      <hr>
+
+      <h2>4. Pair Rules</h2>
+
+      <h3>Normal Pairs</h3>
+
+      <p><strong>Two cards with the same name form a pair</strong></p>
+
+      <ul>
+        <li>Penguin + Penguin, Lion + Lion, etc.</li>
+        <li>Ninja + Ninja is also a normal pair (no special effect)</li>
+      </ul>
+
+      <p><strong>Note:</strong> The following cards exist as single copies, so same-name pairs are impossible:</p>
+      <ul>
+        <li>Dragon, Flame, Vampire, Garlic, Frog, Gem, Fox</li>
+      </ul>
+
+      <h3>Effect Pairs</h3>
+
+      <p><strong>Different cards pair together and trigger a special effect</strong></p>
+
+      <table>
+        <tr><th>Pair</th><th>Effect Name</th><th>Effect</th><th>Pair Destination</th></tr>
+        <tr><td>&#x1F409;Dragon + &#x1F525;Flame</td><td>Dragon's Breath</td><td>Recover up to 2 Gust cards from the Discard Pool to your hand</td><td>Discarded</td></tr>
+        <tr><td>&#x1F9DB;Vampire + &#x1F9C4;Garlic</td><td>Undead Pact</td><td>Recover up to 2 Gate cards from the Discard Pool to your hand</td><td>Discarded</td></tr>
+        <tr><td>&#x1F977;Ninja + &#x1F438;Frog</td><td>Toad Jutsu</td><td>Recover 1 Gust + 1 Gate from the Discard Pool to your hand</td><td>Discarded</td></tr>
+        <tr><td>&#x1F98A;Fox + &#x1F48E;Gem</td><td>Fox's Deal</td><td>Take up to 2 cards from Cloud to your hand</td><td><strong>To Cloud</strong></td></tr>
+      </table>
+
+      <p><strong>Effect Pair Rules:</strong></p>
+      <ul>
+        <li>The effect triggers <strong>immediately</strong> when the pair is formed</li>
+        <li>If the Discard Pool has fewer cards than the maximum, take as many as available (may be 0)</li>
+        <li>Recovered cards can be used immediately</li>
+      </ul>
+
+      <hr>
+
+      <h3>Fox + Gem (Fox's Deal) &mdash; Detailed Rules</h3>
+
+      <p><strong>The key point: it is an "exchange"</strong></p>
+
+      <ol>
+        <li>Fox + Gem pair is formed</li>
+        <li>The pair cards (Fox and Gem) are <strong>placed on Cloud</strong></li>
+        <li>Choose up to 2 cards <strong>that were originally on Cloud</strong> and add them to your hand</li>
+        <li>You cannot take the Fox or Gem you just placed (because it is an exchange)</li>
+      </ol>
+
+      <table>
+        <tr><th>Cloud Situation</th><th>Result</th></tr>
+        <tr><td>Cloud has [A, B, C]</td><td>Cloud becomes [C, Fox, Gem], [A, B] added to hand</td></tr>
+        <tr><td>Cloud has [A]</td><td>Cloud becomes [Fox, Gem], [A] added to hand</td></tr>
+        <tr><td>Cloud is empty</td><td>Cloud becomes [Fox, Gem], <strong>nothing gained</strong></td></tr>
+      </table>
+
+      <hr>
+
+      <h3>Discard Pool</h3>
+
+      <p><strong>When cards enter the Pool:</strong></p>
+      <ul>
+        <li><strong>Gust cards</strong>: Enter the Pool when used (both attack and Counter)</li>
+        <li><strong>Gate cards</strong>: Enter the Pool <strong>when destroyed by a Gust card</strong></li>
+      </ul>
+
+      <p><strong>When cards do NOT enter the Pool:</strong></p>
+      <ul>
+        <li><strong>When retrieving cards from a Gate</strong>: The Gate stays on the field (empty)</li>
+      </ul>
+
+      <p><strong>When cards leave the Pool:</strong></p>
+      <ul>
+        <li>Recovered via Effect Pairs</li>
+      </ul>
+
+      <p><strong>Note:</strong> The Discard Pool is a game concept and does not need to be physically separated (you can manage it as a discard pile).</p>
+
+      <hr>
+
+      <h2>5. Game Setup</h2>
+
+      <h3>Set Preparation</h3>
+
+      <ol>
+        <li><strong>Decide set conditions</strong>
+          <ul>
+            <li>Fixed game count: 3 or 5 games (recommended)</li>
+            <li>Target score: +50 points (optional)</li>
+            <li>Time limit: 20 minutes (optional)</li>
+          </ul>
+        </li>
+        <li><strong>Prepare a score sheet</strong>
+          <ul>
+            <li>Record each player's cumulative score</li>
+          </ul>
+        </li>
+        <li><strong>Determine first player</strong>
+          <ul>
+            <li>First game: Decide by rock-paper-scissors</li>
+            <li>Subsequent games: Rotate clockwise</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h3>Individual Game Setup</h3>
+
+      <ol>
+        <li>Shuffle all cards thoroughly</li>
+        <li>Place 6 cards face-up from the deck as the "Cloud" in the center<br>
+        <em>Any card type may appear on Cloud (Character / Gate / Gust)</em></li>
+        <li>Deal <strong>7 cards</strong> to each player</li>
+        <li>If any pairs exist in the dealt hand, discard them (Effect Pairs trigger their effects)</li>
+        <li>Place the remaining cards face-down in the center as the <strong>draw pile</strong></li>
+      </ol>
+
+      <hr>
+
+      <h2>6. Game Flow</h2>
+
+      <p>The game proceeds through two phases:</p>
+
+      <ul>
+        <li><strong>Exploration Phase</strong> (while the draw pile remains)</li>
+        <li><strong>Old Maid Phase</strong> (after the draw pile is exhausted)</li>
+      </ul>
+
+      <hr>
+
+      <h3>6.1 Exploration Phase (while the draw pile remains)</h3>
+
+      <p>On your turn, perform the following steps <strong>in order</strong>:</p>
+
+      <h4>1. Draw</h4>
+      <p>Draw 1 card from the draw pile</p>
+
+      <h4>2. Discard Pairs</h4>
+      <p>If you have any pairs (normal or Effect Pairs), discard them<br>
+      <strong>If it is an Effect Pair, the effect triggers immediately</strong></p>
+
+      <h4>3. Action (optional)</h4>
+      <p><strong>You may use 1 Gate card or 1 Gust card</strong></p>
+
+      <hr>
+
+      <h3>6.2 Old Maid Phase (after the draw pile is exhausted)</h3>
+
+      <p>On your turn, perform the following steps <strong>in order</strong>:</p>
+
+      <h4>1. Draw</h4>
+      <p><strong>Choose any opponent and draw 1 card face-down from their hand</strong></p>
+
+      <ul>
+        <li>Does not have to be the player to your right</li>
+        <li>You can draw from any player</li>
+        <li>Cannot draw from a player with 0 cards in hand</li>
+      </ul>
+
+      <p><strong>Pay attention to back colors!</strong><br>
+      During the Old Maid Phase, opponents' cards are face-down, but <strong>back colors reveal the tier</strong>:</p>
+      <ul>
+        <li>Burgundy = Mob (1-point cards)</li>
+        <li>Navy = Elite (5-point cards)</li>
+        <li>Purple = Legend / Gate / Gust</li>
+      </ul>
+
+      <p>Whether you aim for the tier you want or deliberately choose another color is yet another layer of strategy.</p>
+
+      <h4>2. Discard Pairs</h4>
+      <p>If you have any pairs (normal or Effect Pairs), discard them<br>
+      <strong>If it is an Effect Pair, the effect triggers immediately</strong></p>
+
+      <h4>3. Action (optional)</h4>
+      <p><strong>You may use 1 Gate card or 1 Gust card</strong></p>
+
+      <hr>
+
+      <h2>7. How to Use Gate Cards</h2>
+
+      <h3>Basic Rules</h3>
+
+      <ul>
+        <li><strong>Exploration Phase</strong>: Gate cards can be used</li>
+        <li><strong>Old Maid Phase</strong>: Gate cards can be used</li>
+        <li><strong>Maximum 3 Gates</strong> per player on the field</li>
+      </ul>
+
+      <h3>&#x26E9;&#xFE0F;Gate</h3>
+
+      <p><strong>Effect:</strong> Store 1 card from your hand in the Gate, then select 1 card from Cloud and <strong>store it in the same Gate</strong></p>
+
+      <p><strong>Features:</strong></p>
+      <ul>
+        <li>Contents are <strong>revealed</strong> (public)</li>
+        <li>Can be retrieved <strong>from your next turn onward</strong></li>
+        <li>Can be destroyed and contents stolen by Gust cards</li>
+        <li><strong>Can be defended with a Counter</strong></li>
+        <li><strong>Destroyed Gate cards go to the Discard Pool</strong></li>
+      </ul>
+
+      <p><strong>How to use:</strong></p>
+      <ol>
+        <li>Play a Gate card from your hand onto the field</li>
+        <li>Choose 1 card from your hand and place it on the Gate <strong>face-up</strong></li>
+        <li><strong>Choose 1 card from Cloud</strong> and place it in the <strong>same Gate</strong> (not in your hand) &mdash; face-up</li>
+      </ol>
+
+      <hr>
+
+      <h3>Cards Inside a Gate</h3>
+
+      <ul>
+        <li>Cards placed in a Gate are <strong>not part of your hand</strong> (not counted for hand size or penalty calculation)</li>
+        <li>On your turn, as your Action, you may retrieve 1 card from your Gate and add it to your hand</li>
+        <li>After retrieval, the Gate remains on the field (empty)</li>
+        <li>You cannot re-store on the same turn you retrieved; re-storing is possible from your next turn onward</li>
+      </ul>
+
+      <hr>
+
+      <h3>Retrieving from a Gate</h3>
+
+      <p><strong>As your turn's "Action," you may take 1 card from your own Gate</strong></p>
+
+      <ul>
+        <li>Only possible <strong>from the turn after placement</strong> (not on the placement turn)</li>
+        <li>The retrieved card returns to your hand</li>
+        <li><strong>The Gate card stays on the field (empty)</strong></li>
+      </ul>
+
+      <hr>
+
+      <h3>Re-storing in an Empty Gate</h3>
+
+      <p><strong>You can store cards again in an empty Gate</strong></p>
+
+      <p><strong>Conditions:</strong></p>
+      <ul>
+        <li>Re-storing is possible <strong>from your next turn onward</strong> (not on the turn you retrieved)</li>
+      </ul>
+
+      <p><strong>Procedure:</strong></p>
+      <ol>
+        <li>Select your empty Gate</li>
+        <li>Choose 1 card from your hand and place it on the Gate <strong>face-up</strong></li>
+        <li><strong>Choose 1 card from Cloud and place it in the same Gate</strong> (Cloud exchange included)</li>
+      </ol>
+
+      <p><strong>Key Points:</strong></p>
+      <ul>
+        <li>Cloud exchange occurs just like with a new placement</li>
+        <li>By utilizing empty Gates, you can perform Cloud exchanges without consuming additional Gate cards</li>
+      </ul>
+
+      <hr>
+
+      <h2>8. How to Use Gust Cards</h2>
+
+      <h3>Basic Rules</h3>
+
+      <ul>
+        <li><strong>Exploration Phase</strong>: Gust cards can be used</li>
+        <li><strong>Old Maid Phase</strong>: Gust cards can be used</li>
+        <li><strong>Can be used for both attack and defense (Counter)</strong></li>
+        <li><strong>Used Gust cards go to the Discard Pool</strong></li>
+      </ul>
+
+      <hr>
+
+      <h3>&#x1F300;Gust &mdash; Stealing</h3>
+
+      <p><strong>Effect:</strong> Destroy an opponent's Gate and steal the contents</p>
+
+      <p><strong>Usage Conditions:</strong></p>
+      <ul>
+        <li>An opponent has a Gate on the field (with contents or empty)</li>
+      </ul>
+
+      <p><strong>How to use (Gate with contents):</strong></p>
+      <ol>
+        <li>Choose the target Gate</li>
+        <li><strong>The opponent decides whether to Counter</strong> (see below)</li>
+        <li>If not countered:
+          <ul>
+            <li>The Gate is destroyed and <strong>goes to the Discard Pool</strong></li>
+            <li>The cards inside are added to your hand</li>
+            <li><strong>The used Gust card also goes to the Discard Pool</strong></li>
+          </ul>
+        </li>
+      </ol>
+
+      <p><strong>How to use (empty Gate):</strong></p>
+      <ol>
+        <li>Choose the target empty Gate</li>
+        <li><strong>The opponent decides whether to Counter</strong></li>
+        <li>If not countered:
+          <ul>
+            <li><strong>The Gate card itself is added to your hand</strong> (stolen)</li>
+            <li><strong>The used Gust card goes to the Discard Pool</strong></li>
+          </ul>
+        </li>
+      </ol>
+
+      <hr>
+
+      <h3>Counter</h3>
+
+      <p><strong>When attacked by a Gust card, you can play a Gust card from your hand to negate the attack</strong></p>
+
+      <p><strong>Activation Conditions:</strong></p>
+      <ul>
+        <li>Your Gate is being attacked by a Gust card (with contents or empty)</li>
+        <li>You have a Gust card in your hand</li>
+      </ul>
+
+      <p><strong>Counter Flow:</strong></p>
+      <ol>
+        <li>Player A attacks Player B's Gate with a Gust card</li>
+        <li>Player B declares "Counter" and plays a Gust card from their hand</li>
+        <li><strong>Both Gust cards go to the Discard Pool</strong></li>
+        <li><strong>The Gate and its contents remain intact</strong> (attack negated)</li>
+      </ol>
+
+      <p><strong>Important Rules:</strong></p>
+      <ul>
+        <li>Counter is <strong>optional</strong> (you can choose not to Counter even if you have a Gust card)</li>
+        <li><strong>No counter to a Counter</strong> (resolved in one exchange)</li>
+        <li>If no Counter is played, the steal proceeds as normal</li>
+      </ul>
+
+      <hr>
+
+      <h3>Strategic Value of Gust Cards</h3>
+
+      <p>Gust cards are a valuable resource that can be used <strong>for both attack and defense</strong>.</p>
+
+      <table>
+        <tr><th>Usage</th><th>Advantage</th><th>Disadvantage</th></tr>
+        <tr><td><strong>Attack (Gate with contents)</strong></td><td>Steal opponent's cards</td><td>Lose defensive capability</td></tr>
+        <tr><td><strong>Attack (empty Gate)</strong></td><td>Steal the Gate card itself</td><td>No Character cards gained</td></tr>
+        <tr><td><strong>Defend (Counter)</strong></td><td>Protect your Gate</td><td>Lose attack capability</td></tr>
+        <tr><td><strong>Hold in reserve</strong></td><td>Deters opponents</td><td>Useless if never played</td></tr>
+      </table>
+
+      <p><strong>Strategic Considerations:</strong></p>
+      <ul>
+        <li>Choosing between stealing an empty Gate or targeting one with contents</li>
+        <li>Deciding whether to Counter to protect an empty Gate</li>
+        <li>Gates remain on the field, so Gust retains high value until late game</li>
+      </ul>
+
+      <hr>
+
+      <h2>9. Cloud System</h2>
+
+      <h3>What is the Cloud?</h3>
+
+      <p>A shared area where 6 cards from the draw pile are placed face-up at the start of the game.</p>
+
+      <h3>Cloud Features</h3>
+
+      <ul>
+        <li>Visible to all players</li>
+        <li><strong>Any card type may be present</strong> (Character / Gate / Gust)</li>
+        <li>Can be exchanged when using Gate cards</li>
+        <li>The number of cards may change during the game</li>
+      </ul>
+
+      <h3>Cloud Exchange (during Gate actions)</h3>
+
+      <p>When using a Gate card (both new placement and re-storing):</p>
+      <ol>
+        <li>Place 1 card from your hand on the Gate (face-up)</li>
+        <li>Choose 1 card from Cloud</li>
+        <li>The chosen card <strong>goes into the Gate, not your hand</strong> (face-up)</li>
+      </ol>
+
+      <p><em>Cloud exchange is "updating/swapping Gate contents," not "adding to your hand."</em></p>
+
+      <hr>
+
+      <h2>10. Going Out and End Conditions</h2>
+
+      <h3>Going Out (Win)</h3>
+
+      <p>When, during your turn, through any actions (discarding pairs / retrieving from Gates / Gust cards, etc.),<br>
+      <strong>all Character cards in your hand (including Vampire and Garlic) reach 0</strong>,<br>
+      that player <strong>goes out</strong> (wins).</p>
+
+      <p><strong>Important:</strong></p>
+      <ul>
+        <li>It must be <strong>during your own turn</strong></li>
+        <li><strong>Cards inside Gates are not part of your hand</strong>, so they are not counted for the win condition</li>
+        <li>You go out as soon as the Character cards in your hand reach 0</li>
+      </ul>
+
+      <h3>Game End</h3>
+
+      <p>The moment any player goes out,<br>
+      <strong>the game ends immediately</strong>.</p>
+
+      <hr>
+
+      <h2>11. Scoring (Score Mode)</h2>
+
+      <h3>How to Calculate Scores</h3>
+
+      <p><strong>The player who goes out:</strong></p>
+      <ul>
+        <li>Gains the sum of all other players' penalties (takes all)</li>
+      </ul>
+
+      <p><strong>Players who did not go out:</strong></p>
+      <ul>
+        <li>Penalties are calculated based on <strong>cards remaining in their hand</strong></li>
+        <li><strong>Cards inside Gates do not count as penalties</strong> (they are not in your hand)</li>
+      </ul>
+
+      <hr>
+
+      <h3>Point Values Table</h3>
+
+      <p><strong>Penalties apply only to cards remaining in hand</strong></p>
+
+      <table>
+        <tr><th>Tier</th><th>Card</th><th>Points</th><th>Notes</th></tr>
+        <tr><td>Mob</td><td>&#x1F427;Penguin, &#x1F477;Worker, &#x1F422;Turtle, &#x1F9DF;Zombie, &#x1F42D;Mouse, &#x1F98A;Fox</td><td>1 pt each</td><td></td></tr>
+        <tr><td>Elite</td><td>&#x1F981;Lion, &#x1F977;Ninja, &#x1F9D9;Mage, &#x1F989;Owl</td><td>5 pts each</td><td></td></tr>
+        <tr><td>Legend</td><td>&#x1F409;Dragon</td><td>10 pts</td><td></td></tr>
+        <tr><td>Legend</td><td>&#x1F525;Flame</td><td>10 pts</td><td></td></tr>
+        <tr><td>Legend</td><td>&#x1F9DB;Vampire</td><td>15 pts</td><td>Highest penalty</td></tr>
+        <tr><td>Legend</td><td>&#x1F9C4;Garlic, &#x1F438;Frog</td><td>5 pts each</td><td></td></tr>
+        <tr><td>Legend</td><td>&#x1F48E;Gem</td><td>1 pt</td><td></td></tr>
+        <tr><td>Gate</td><td>&#x26E9;&#xFE0F;Gate</td><td>3 pts</td><td>Only if in hand</td></tr>
+        <tr><td>Gust</td><td>&#x1F300;Gust</td><td>3 pts</td><td>Only if in hand</td></tr>
+      </table>
+
+      <hr>
+
+      <h2>12. Strategy Guide</h2>
+
+      <h3>Basic Strategy</h3>
+
+      <p><strong>1. How you use Gust cards is the key</strong></p>
+      <ul>
+        <li>Attack or save for defense?</li>
+        <li>Keep one for Counter to protect high-value cards (Dragon, Vampire, etc.)</li>
+        <li>For low-value cards, it may be worth letting them be stolen</li>
+      </ul>
+
+      <p><strong>2. Place Gates aggressively</strong></p>
+      <ul>
+        <li>Statistically, <strong>players who place more Gates tend to win</strong></li>
+        <li>Use Cloud exchanges to swap Gate contents and complete pairs</li>
+        <li>You can defend with Counter, so don't be afraid to place Gates</li>
+      </ul>
+
+      <p><strong>3. Utilize empty Gates</strong></p>
+      <ul>
+        <li>Re-storing in empty Gates lets you perform Cloud exchanges without spending Gate cards</li>
+        <li>However, empty Gates risk being stolen by Gust</li>
+        <li>Time your re-storing carefully</li>
+      </ul>
+
+      <p><strong>4. Read your opponent's Gust cards</strong></p>
+      <ul>
+        <li>Try to guess whether opponents hold Gust cards</li>
+        <li>If they likely do, hold back on attacks</li>
+        <li>If they likely don't, attack aggressively</li>
+      </ul>
+
+      <p><strong>5. Aim for Effect Pairs</strong></p>
+      <ul>
+        <li>Actively pursue Dragon + Flame, Vampire + Garlic, Ninja + Frog</li>
+        <li>Use recovered cards to gain further advantage</li>
+      </ul>
+
+      <p><strong>6. Use back colors strategically (Old Maid Phase)</strong></p>
+      <ul>
+        <li>Infer the tier from opponents' card back colors</li>
+        <li>Target the tier color most likely to complete your pairs</li>
+        <li>Purple may be Gate or Gust as well, so proceed with caution</li>
+      </ul>
+
+      <hr>
+
+      <h3>Advanced Strategy</h3>
+
+      <p><strong>1. Counter Decision Framework</strong></p>
+      <ul>
+        <li>High-value cards (5+ points) = Counter recommended</li>
+        <li>Low-value cards (1 point) = Consider letting them go</li>
+        <li>Late game when Gust cards are scarce = Decide carefully</li>
+        <li><strong>Protecting an empty Gate</strong> = Depends on the situation (see below)</li>
+      </ul>
+
+      <p><strong>Empty Gate Counter Decision Examples:</strong></p>
+
+      <table>
+        <tr><th>Situation</th><th>Decision</th><th>Reason</th></tr>
+        <tr><td>No Gate cards in hand</td><td>Counter recommended</td><td>Losing the empty Gate means losing re-store opportunities</td></tr>
+        <tr><td>Gate cards in hand</td><td>Letting it go is an option</td><td>You can place a different Gate</td></tr>
+        <tr><td>Only 1 Gust card left</td><td>Situational</td><td>Save for offense or use for defense?</td></tr>
+        <tr><td>Late game (few cards in draw pile)</td><td>Counter recommended</td><td>Hard to obtain replacement Gate cards</td></tr>
+      </table>
+
+      <p><strong>2. Attacking Empty Gates</strong></p>
+      <ul>
+        <li>When you have no Gate cards = High value in stealing an empty Gate</li>
+        <li>When you want to disrupt opponent's re-storing = Steal the empty Gate</li>
+        <li>When a Gate with contents is available = That may be the better target</li>
+      </ul>
+
+      <p><strong>3. Bluffing</strong></p>
+      <ul>
+        <li>Acting confident even without Gust cards can deter opponents from attacking</li>
+        <li>Conversely, appearing vulnerable when holding Gust can bait an attack</li>
+      </ul>
+
+      <p><strong>4. Attack Timing</strong></p>
+      <ul>
+        <li>Right after an opponent uses their Gust card is a prime opportunity</li>
+        <li>Attacks in late game are more likely to succeed</li>
+        <li>Target cards that complete your pairs (only attack when the gain is certain)</li>
+      </ul>
+
+      <p><strong>5. Reading Back Colors (Advanced)</strong></p>
+      <ul>
+        <li>Opponent has many Burgundy cards = Holding many Mob cards (odd pairs?)</li>
+        <li>Navy visible = Holding 5-point cards (opportunity or threat)</li>
+        <li>Purple visible = Could be Legend, Gate, or Gust (high uncertainty)</li>
+        <li>Prioritize drawing the tier color that matches the pairs you need</li>
+      </ul>
+
+      <p><strong>6. Winner Characteristics (Based on Statistics)</strong></p>
+      <ul>
+        <li><strong>More Gate placements</strong> = Leveraging Cloud exchanges</li>
+        <li><strong>More acquisitions from Cloud</strong> = Efficiently swapping Gate contents</li>
+        <li><strong>Skilled Counter play</strong> = Effective defensive use of Gust</li>
+        <li><strong>Fewer Gust attacks</strong> = No wasted attacks</li>
+      </ul>
+
+      <hr>
+
+      <h2>13. Frequently Asked Questions (FAQ)</h2>
+
+      <p><strong>Q1. When can I declare a Counter?</strong><br>
+      A. Declare it <strong>immediately after</strong> being attacked with a Gust card. As soon as the attacker announces "I attack this Gate," respond with "Counter" and play your Gust card.</p>
+
+      <p><strong>Q2. Can you Counter a Counter?</strong><br>
+      A. No. Counters are resolved in <strong>one exchange</strong>. Attack then Counter settles it.</p>
+
+      <p><strong>Q3. Can I choose not to Counter even if I have a Gust card?</strong><br>
+      A. Yes. Counter is <strong>optional</strong>. For low-value cards, deliberately letting them be stolen to save your Gust card is a valid strategy.</p>
+
+      <p><strong>Q4. What happens to both Gust cards during a Counter?</strong><br>
+      A. <strong>Both go to the Discard Pool.</strong> They can be recovered via Effect Pairs (Dragon + Flame, etc.).</p>
+
+      <p><strong>Q5. What happens to the Gate card when I retrieve cards from it?</strong><br>
+      A. <strong>The Gate card remains on the field (empty).</strong> It does not go to the Discard Pool unless destroyed by Gust.</p>
+
+      <p><strong>Q6. When can I re-store in an empty Gate?</strong><br>
+      A. <strong>From your next turn onward.</strong> You cannot re-store on the same turn you retrieved.</p>
+
+      <p><strong>Q7. Does re-storing in an empty Gate include a Cloud exchange?</strong><br>
+      A. <strong>Yes, it does.</strong> Just like a new placement, you can store 1 card from Cloud in the Gate.</p>
+
+      <p><strong>Q8. What happens when you attack an empty Gate with Gust?</strong><br>
+      A. <strong>You steal the Gate card itself.</strong> The Gate card goes into the attacker's hand.</p>
+
+      <p><strong>Q9. Can you Counter an attack on an empty Gate?</strong><br>
+      A. <strong>Yes, you can.</strong> Empty Gates can be defended with Gust cards. If countered, the Gate remains on the field.</p>
+
+      <p><strong>Q10. When do Effect Pair abilities trigger?</strong><br>
+      A. They trigger instantly when the pair is discarded. Recovered cards can be used immediately that turn.</p>
+
+      <p><strong>Q11. What if the Discard Pool has no cards when an Effect Pair triggers?</strong><br>
+      A. You take as many as available. If there are 0 cards, the pair is consumed with no effect.</p>
+
+      <p><strong>Q12. What if Cloud is empty when Fox + Gem is played?</strong><br>
+      A. The pair cards (Fox and Gem) are placed on Cloud, but <strong>nothing is gained</strong>. Your hand simply loses 2 cards.</p>
+
+      <p><strong>Q13. Can I take back the Fox or Gem I just placed on Cloud?</strong><br>
+      A. No. Since it is an "exchange," you can only take cards that were <strong>originally on Cloud</strong>.</p>
+
+      <p><strong>Q14. When can I retrieve a card stored in a Gate?</strong><br>
+      A. <strong>From the turn after placement onward.</strong> You cannot retrieve on the same turn you placed it.</p>
+
+      <p><strong>Q15. What if Cloud runs out of cards?</strong><br>
+      A. If Cloud is empty, using a Gate card does not let you take anything from Cloud (you simply store your card in the Gate).</p>
+
+      <p><strong>Q16. Can I look at back colors to choose cards during Old Maid?</strong><br>
+      A. <strong>Yes, you can freely look and choose.</strong> Back colors are an important piece of game information. However, you cannot look at the front of an opponent's cards.</p>
+
+      <p><strong>Q17. Where do cards taken from Cloud go?</strong><br>
+      A. <strong>They do not go to your hand.</strong> They are stored in the Gate you are currently using (face-up).</p>
+
+      <p><strong>Q18. Can Gate or Gust cards appear on Cloud?</strong><br>
+      A. <strong>Yes, they can.</strong> Cloud cards are not restricted by type (Character / Gate / Gust may all appear).</p>
+
+      <hr>
+
+      <h2>14. Variant Rules</h2>
+
+      <h3>Recommended Presets</h3>
+
+      <p>These are <strong>recommended presets</strong> based on simulation results from 1,000 games.<br>
+      In the digital version, they can be switched with one tap in the settings menu.</p>
+
+      <table>
+        <tr><th>Preset</th><th>Cloud</th><th>Gust</th><th>Gate</th><th>Features</th><th>Overall Score</th></tr>
+        <tr><td><strong>Standard</strong></td><td>6</td><td>6</td><td>6</td><td>Default settings</td><td>84.3</td></tr>
+        <tr><td><strong>Strategic</strong> &#x1F3C6;</td><td>4</td><td>6</td><td>6</td><td>Active Effect Pairs, weightier choices</td><td><strong>88.0</strong></td></tr>
+        <tr><td><strong>Fair</strong></td><td>6</td><td>6</td><td>7</td><td>Lowest win-rate variance, less luck</td><td>87.5</td></tr>
+        <tr><td><strong>Intense</strong></td><td>6</td><td>8</td><td>6</td><td>Active Counters, fierce offense and defense</td><td>87.0</td></tr>
+      </table>
+
+      <p><strong>Preset Details:</strong></p>
+
+      <h4>&#x1F3C6; Strategic Mode (Recommended)</h4>
+      <ul>
+        <li><strong>4 Cloud cards</strong>: Fewer options make each choice more meaningful</li>
+        <li>Effect Pair activations average 19.6 per game (Standard is 16)</li>
+        <li>Offense/defense ratio of 2.93 (close to ideal 3:1)</li>
+        <li>Average 39.4 turns gives room for strategic planning</li>
+      </ul>
+
+      <h4>Fair Mode</h4>
+      <ul>
+        <li><strong>7 Gate cards</strong>: Favors defenders, minimizes win-rate variance</li>
+        <li>Recommended for mixed-skill tables or when there is a skill gap</li>
+        <li>Synergizes with Counter for easier defense</li>
+      </ul>
+
+      <h4>Intense Mode</h4>
+      <ul>
+        <li><strong>8 Gust cards</strong>: Frequent attacks and active Counters</li>
+        <li>Counter rate of 12.8% (higher than Standard's 11%)</li>
+        <li>Designed for thrilling matches between experienced players</li>
+      </ul>
+
+      <hr>
+
+      <h3>Card Count Adjustments (Custom)</h3>
+
+      <table>
+        <tr><th>Parameter</th><th>Default</th><th>Range</th><th>Effect</th></tr>
+        <tr><td>Cloud</td><td>6 cards</td><td>2-8</td><td><strong>Fewer = weightier choices</strong>, more = easier to find desired cards</td></tr>
+        <tr><td>Gust cards</td><td>6 cards</td><td>2-8</td><td>Fewer = easier to defend, <strong>more = active Counters</strong></td></tr>
+        <tr><td>Gate cards</td><td>6 cards</td><td>2-8</td><td><strong>More = more exchange opportunities</strong>, improved fairness</td></tr>
+      </table>
+
+      <hr>
+
+      <h3>Simplified Version (Beginner / Ages 6-7)</h3>
+
+      <p><strong>Changes:</strong></p>
+
+      <ul>
+        <li>Remove Gust cards (no Counter mechanic)</li>
+        <li>No Cloud system (simply store in Gates)</li>
+        <li>No Effect Pair abilities (treat as normal pairs)</li>
+      </ul>
+
+      <hr>
+
+      <h2>15. Designer's Note</h2>
+
+      <p>May this game bring smiles to people all around the world.</p>
+
+      <p>The meeting of Vampire and Garlic, a miracle that breaks the curse.</p>
+
+      <p>Dragon and Flame reunited, Dragon's Breath sweeping across the world.</p>
+
+      <p>Ninja riding Frog, Toad Jutsu carving a path forward.</p>
+
+      <p>Fox raising the Gem, bringing blessings from the Cloud above.</p>
+
+      <p>The wind is sometimes a threat, sometimes a shield.<br>
+      That choice determines victory and defeat.</p>
+
+      <p>Even an emptied Gate can be filled with new life once more.<br>
+      And there are those who steal it &mdash; that too is the power of the wind.</p>
+
+      <p>Within simple rules,<br>
+      may deep strategy be born.</p>
+
+      <hr>
+
+      <p class="rulebook-meta">
+        <strong>Created by:</strong> Masaru<br>
+        <strong>Version:</strong> v7.1 "Stay Stall"<br>
+        <strong>Last Updated:</strong> February 26, 2026<br>
+        <strong>License:</strong> CC BY 4.0
+      </p>
+
+      <hr>
+
+      <h2>Appendix: Card Reference</h2>
+
+      <h3>Character Card Quick Reference</h3>
+
+      <table>
+        <tr><th>Tier</th><th>Card Name</th><th>Emoji</th><th>Count</th><th>Penalty</th><th>Code</th><th>Pair</th></tr>
+        <tr><td>Mob</td><td>Penguin</td><td>&#x1F427;</td><td>4</td><td>1 pt</td><td>FAR</td><td>Same name</td></tr>
+        <tr><td>Mob</td><td>Worker</td><td>&#x1F477;</td><td>4</td><td>1 pt</td><td>CAR</td><td>Same name</td></tr>
+        <tr><td>Mob</td><td>Turtle</td><td>&#x1F422;</td><td>4</td><td>1 pt</td><td>TRV</td><td>Same name</td></tr>
+        <tr><td>Mob</td><td>Zombie</td><td>&#x1F9DF;</td><td>4</td><td>1 pt</td><td>BUT</td><td>Same name</td></tr>
+        <tr><td>Mob</td><td>Mouse</td><td>&#x1F42D;</td><td>4</td><td>1 pt</td><td>MAI</td><td>Same name</td></tr>
+        <tr><td>Mob</td><td>Fox</td><td>&#x1F98A;</td><td>1</td><td>1 pt</td><td>MER</td><td>Gem only</td></tr>
+        <tr><td>Elite</td><td>Lion</td><td>&#x1F981;</td><td>4</td><td>5 pts</td><td>NOB</td><td>Same name</td></tr>
+        <tr><td>Elite</td><td>Ninja</td><td>&#x1F977;</td><td>3</td><td>5 pts</td><td>KNI</td><td>Same name or Frog</td></tr>
+        <tr><td>Elite</td><td>Mage</td><td>&#x1F9D9;</td><td>4</td><td>5 pts</td><td>PRI</td><td>Same name</td></tr>
+        <tr><td>Elite</td><td>Owl</td><td>&#x1F989;</td><td>4</td><td>5 pts</td><td>SCH</td><td>Same name</td></tr>
+        <tr><td>Legend</td><td>Dragon</td><td>&#x1F409;</td><td>1</td><td>10 pts</td><td>KIN</td><td>Flame only</td></tr>
+        <tr><td>Legend</td><td>Flame</td><td>&#x1F525;</td><td>1</td><td>10 pts</td><td>QUE</td><td>Dragon only</td></tr>
+        <tr><td>Legend</td><td>Vampire</td><td>&#x1F9DB;</td><td>1</td><td>15 pts</td><td>WIT</td><td>Garlic only</td></tr>
+        <tr><td>Legend</td><td>Garlic</td><td>&#x1F9C4;</td><td>1</td><td>5 pts</td><td>HOL</td><td>Vampire only</td></tr>
+        <tr><td>Legend</td><td>Frog</td><td>&#x1F438;</td><td>1</td><td>5 pts</td><td>HOR</td><td>Ninja only</td></tr>
+        <tr><td>Legend</td><td>Gem</td><td>&#x1F48E;</td><td>1</td><td>1 pt</td><td>BAL</td><td>Fox only</td></tr>
+      </table>
+
+      <h3>Effect Pair Quick Reference</h3>
+
+      <table>
+        <tr><th>Pair</th><th>Effect Name</th><th>Cards Recovered</th><th>Pair Destination</th></tr>
+        <tr><td>&#x1F409;Dragon + &#x1F525;Flame</td><td>Dragon's Breath</td><td>Up to 2 Gust cards from Discard Pool</td><td>Discarded</td></tr>
+        <tr><td>&#x1F9DB;Vampire + &#x1F9C4;Garlic</td><td>Undead Pact</td><td>Up to 2 Gate cards from Discard Pool</td><td>Discarded</td></tr>
+        <tr><td>&#x1F977;Ninja + &#x1F438;Frog</td><td>Toad Jutsu</td><td>1 Gust + 1 Gate from Discard Pool</td><td>Discarded</td></tr>
+        <tr><td>&#x1F98A;Fox + &#x1F48E;Gem</td><td>Fox's Deal</td><td>Up to 2 cards from Cloud (exchange)</td><td>To Cloud</td></tr>
+      </table>
+
+      <h3>Special Card Quick Reference</h3>
+
+      <table>
+        <tr><th>Type</th><th>Emoji</th><th>Count</th><th>Penalty</th><th>Effect</th><th>Code</th></tr>
+        <tr><td>Gate</td><td>&#x26E9;&#xFE0F;</td><td>6</td><td>3 pts</td><td>Public storage + Cloud exchange / <strong>Re-storing in empty Gates allowed</strong></td><td>HOU</td></tr>
+        <tr><td>Gust</td><td>&#x1F300;</td><td>6</td><td>3 pts</td><td>Destroy Gate &amp; steal cards / <strong>Empty Gate = steal the Gate itself</strong> / Counter available</td><td>GHI</td></tr>
+      </table>
+
+      <h3>Gate State Quick Reference</h3>
+
+      <table>
+        <tr><th>State</th><th>Gust Attack</th><th>Counter</th><th>Re-store</th></tr>
+        <tr><td>With contents</td><td>Cards stolen</td><td>Available</td><td>&mdash;</td></tr>
+        <tr><td>Empty (just retrieved)</td><td>Gate card stolen</td><td>Available</td><td><strong>Not allowed</strong> (from your next turn onward)</td></tr>
+        <tr><td>Empty (from your next turn onward)</td><td>Gate card stolen</td><td>Available</td><td><strong>Allowed</strong> (Cloud exchange included)</td></tr>
+      </table>
+
+      <h3>Card Back Color Quick Reference</h3>
+
+      <table>
+        <tr><th>Back Color</th><th>Tier</th><th>Cards Included</th><th>Count</th></tr>
+        <tr><td>Burgundy (dark red)</td><td>Mob</td><td>Penguin x4, Worker x4, Turtle x4, Zombie x4, Mouse x4, Fox x1</td><td>21 cards</td></tr>
+        <tr><td>Navy (dark blue)</td><td>Elite</td><td>Lion x4, Ninja x3, Mage x4, Owl x4</td><td>15 cards</td></tr>
+        <tr><td>Purple</td><td>Legend + Gate + Gust</td><td>Dragon x1, Flame x1, Vampire x1, Garlic x1, Frog x1, Gem x1, Gate x6, Gust x6</td><td>18 cards</td></tr>
+      </table>
+
+    </div>
+  </div>
+
+  <footer>
+    <a href="/pfff/">pfff!</a> &nbsp;&middot;&nbsp;
+    <a href="/pfff/rules/">Rulebook</a> &nbsp;&middot;&nbsp;
+    <a href="/pfff/archives/">Archives</a> &nbsp;&middot;&nbsp;
+    <a href="/">Sit Back and Relax</a> &nbsp;&middot;&nbsp; &copy; 2026
+  </footer>
+
+  <script>
+    // Language switcher
+    const translations = {
+      en: {
+        'nav-back': 'Back to pfff!',
+        'title': 'Official Rulebook',
+        'subtitle': 'Rules v7.1 \u2014 "Stay Stall"'
+      },
+      ja: {
+        'nav-back': 'pfff! \u306B\u623B\u308B',
+        'title': 'Official Rulebook',
+        'subtitle': 'Rules v7.1 \u2014 "Stay Stall"'
+      }
+    };
+
+    let currentLang = 'en';
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.lang;
+        if (lang === currentLang) return;
+
+        currentLang = lang;
+
+        // Update active button
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Fade out, swap text, fade in
+        const els = document.querySelectorAll('[data-i18n]');
+        els.forEach(el => el.classList.add('lang-fade'));
+
+        setTimeout(() => {
+          els.forEach(el => {
+            const key = el.dataset.i18n;
+            if (translations[lang] && translations[lang][key]) {
+              el.textContent = translations[lang][key];
+            }
+          });
+          els.forEach(el => el.classList.remove('lang-fade'));
+        }, 200);
+
+        // Show/hide JP banner and rulebook content
+        const jpBanner = document.getElementById('jp-banner');
+        const rulebookContent = document.getElementById('rulebook-content');
+
+        if (lang === 'ja') {
+          jpBanner.classList.add('visible');
+          rulebookContent.style.opacity = '0.4';
+          rulebookContent.style.pointerEvents = 'none';
+          rulebookContent.style.transition = 'opacity 0.3s ease';
+        } else {
+          jpBanner.classList.remove('visible');
+          rulebookContent.style.opacity = '1';
+          rulebookContent.style.pointerEvents = 'auto';
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
