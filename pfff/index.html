@@ -2173,6 +2173,22 @@
     }
 
   </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-47W51SJ517"></script>
+<script>
+  window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());gtag('config','G-47W51SJ517');
+  // Screen orientation tracking (custom event)
+  (function(){
+    var lastO='';
+    function send(){
+      var o=window.innerWidth>window.innerHeight?'landscape':'portrait';
+      if(o!==lastO){lastO=o;gtag('event','screen_orientation',{orientation:o,screen_w:window.innerWidth,screen_h:window.innerHeight});}
+    }
+    window.addEventListener('load',send);
+    window.addEventListener('orientationchange',function(){setTimeout(send,150);});
+  })();
+</script>
 </head>
 <body>
   <div id="root"></div>
