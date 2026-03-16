@@ -300,6 +300,104 @@
       opacity: 1;
     }
 
+    .palette-btn .color-delete {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid white;
+      background: #e53935;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: white;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      animation: fadeUp 0.15s ease-out;
+    }
+
+    .palette-add {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: 2px dashed var(--card-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      font-weight: 300;
+      transition: all 0.15s;
+    }
+
+    .palette-add:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(76,175,80,0.04);
+    }
+
+    /* === Add Type Input Overlay === */
+    .add-type-overlay {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) scale(0.92);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      padding: 0.8rem;
+      z-index: 60;
+      width: min(260px, calc(100vw - 40px));
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .add-type-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
+    }
+
+    .add-type-overlay label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .add-type-overlay input {
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--off-white);
+      color: var(--text-primary);
+      outline: none;
+      margin-bottom: 0.5rem;
+    }
+
+    .add-type-overlay input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.12);
+    }
+
+    .add-type-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
     /* === 256-Color Picker (Overlay) === */
     .palette-wrap {
       position: relative;
@@ -875,6 +973,14 @@
 
           <div class="palette-wrap">
             <div class="palette" id="palette"></div>
+            <div class="add-type-overlay" id="addTypeOverlay">
+              <label id="addTypeLabel">Name this color type</label>
+              <input type="text" id="addTypeInput" maxlength="8" placeholder="e.g. Hair">
+              <div class="add-type-row">
+                <button class="btn btn-primary btn-sm" onclick="confirmAddType()" style="flex:1" id="addTypeConfirm">Add</button>
+                <button class="btn btn-sm" onclick="closeAddType()">✕</button>
+              </div>
+            </div>
             <div class="color-picker-overlay" id="colorPickerOverlay">
               <div class="color-picker-header">
                 <span class="color-picker-label" id="colorPickerLabel">Change color</span>
@@ -1046,6 +1152,11 @@
       'toast-gif-need': 'Save 2+ frames first',
       'placement': 'Drag to position, tap to place',
       'pick-color': 'Pick color for',
+      'add-type': 'Name this color type',
+      'add-btn': 'Add',
+      'toast-type-added': 'Color type added!',
+      'toast-type-removed': 'Color type removed',
+      'toast-type-max': 'Max 12 types',
     },
     ja: {
       back: 'Home',
@@ -1071,6 +1182,11 @@
       'toast-gif-need': '2コマ以上保存してください',
       'placement': 'ドラッグで配置、タップで確定',
       'pick-color': 'の色を選択',
+      'add-type': 'カラータイプの名前',
+      'add-btn': '追加',
+      'toast-type-added': 'カラータイプを追加しました！',
+      'toast-type-removed': 'カラータイプを削除しました',
+      'toast-type-max': '最大12タイプです',
     }
   };
 
@@ -1163,12 +1279,20 @@
   const customColors = {};
   CELL_TYPE_DEFAULTS.forEach(ct => { customColors[ct.value] = ct.color; });
 
-  // Build a live CELL_TYPES that reads from customColors
-  const CELL_TYPES = CELL_TYPE_DEFAULTS.map(ct => ({
-    ...ct,
-    get color() { return customColors[ct.value]; },
-    get textColor() { return getContrastText(customColors[ct.value]); },
-  }));
+  // Dynamic CELL_TYPES array (mutable — user can add/remove custom types)
+  const CELL_TYPES = CELL_TYPE_DEFAULTS.map(ct => makeCellType(ct));
+  let nextTypeValue = 5; // next available value for new types
+
+  function makeCellType(ct) {
+    return {
+      value: ct.value,
+      label: ct.label,
+      labelJa: ct.labelJa,
+      custom: ct.custom || false,
+      get color() { return customColors[ct.value]; },
+      get textColor() { return getContrastText(customColors[ct.value]); },
+    };
+  }
 
   // Contrast text helper: white or black text depending on background brightness
   function getContrastText(hex) {
@@ -1282,6 +1406,11 @@
   // Color picker state
   let colorPickerTarget = null; // which cell type is being edited
 
+  // Long-press state for palette delete
+  let palLpTimer = null;
+  let palLpTriggered = false;
+  let deleteMode = false; // when true, shows delete badges on custom types
+
   function buildPalette() {
     const el = document.getElementById('palette');
     el.innerHTML = '';
@@ -1309,12 +1438,146 @@
         btn.appendChild(dot);
       }
 
+      // Delete badge for custom types (shown in delete mode)
+      if (ct.custom && deleteMode) {
+        const del = document.createElement('span');
+        del.className = 'color-delete';
+        del.textContent = '×';
+        del.onclick = (e) => {
+          e.stopPropagation();
+          removeCellType(ct.value);
+        };
+        btn.appendChild(del);
+      }
+
+      // Long-press on custom types to enter delete mode
+      if (ct.custom) {
+        btn.addEventListener('mousedown', (e) => startPalLongPress(e, ct.value));
+        btn.addEventListener('touchstart', (e) => { e.preventDefault(); startPalLongPress(e, ct.value); }, { passive: false });
+        btn.addEventListener('mouseup', endPalLongPress);
+        btn.addEventListener('touchend', endPalLongPress);
+        btn.addEventListener('mouseleave', cancelPalLongPress);
+        btn.addEventListener('touchcancel', cancelPalLongPress);
+      }
+
       btn.onclick = () => {
+        if (deleteMode) {
+          deleteMode = false;
+          buildPalette();
+          return;
+        }
         selectedColor = ct.value;
         buildPalette();
       };
       el.appendChild(btn);
     });
+
+    // Add "+" button
+    const addBtn = document.createElement('button');
+    addBtn.className = 'palette-add';
+    addBtn.textContent = '+';
+    addBtn.onclick = () => openAddType();
+    el.appendChild(addBtn);
+  }
+
+  function startPalLongPress(e, typeValue) {
+    palLpTriggered = false;
+    palLpTimer = setTimeout(() => {
+      palLpTriggered = true;
+      deleteMode = true;
+      buildPalette();
+    }, 500);
+  }
+
+  function cancelPalLongPress() {
+    if (palLpTimer) { clearTimeout(palLpTimer); palLpTimer = null; }
+  }
+
+  function endPalLongPress() {
+    cancelPalLongPress();
+  }
+
+  // =========================================================================
+  // Add / Remove custom cell types
+  // =========================================================================
+  function openAddType() {
+    if (CELL_TYPES.length >= 12) {
+      toast(i18n[lang]['toast-type-max']);
+      return;
+    }
+    const overlay = document.getElementById('addTypeOverlay');
+    const input = document.getElementById('addTypeInput');
+    document.getElementById('addTypeLabel').textContent = i18n[lang]['add-type'];
+    document.getElementById('addTypeConfirm').textContent = i18n[lang]['add-btn'];
+    input.value = '';
+    overlay.classList.add('open');
+    setTimeout(() => input.focus(), 200);
+    setTimeout(() => document.addEventListener('pointerdown', closeAddTypeOutside), 0);
+  }
+
+  function closeAddType() {
+    document.getElementById('addTypeOverlay').classList.remove('open');
+    document.removeEventListener('pointerdown', closeAddTypeOutside);
+  }
+
+  function closeAddTypeOutside(e) {
+    const overlay = document.getElementById('addTypeOverlay');
+    if (!overlay.contains(e.target) && !e.target.closest('.palette-add')) {
+      closeAddType();
+    }
+  }
+
+  function confirmAddType() {
+    const input = document.getElementById('addTypeInput');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const val = nextTypeValue++;
+    const defaultColor = '#888888';
+    customColors[val] = defaultColor;
+
+    CELL_TYPES.push(makeCellType({
+      value: val,
+      label: name,
+      labelJa: name,
+      color: defaultColor,
+      custom: true,
+    }));
+
+    closeAddType();
+    selectedColor = val;
+    buildPalette();
+    // Auto-open color picker for the new type
+    openColorPicker(val);
+    toast(i18n[lang]['toast-type-added']);
+  }
+
+  // Enter key in input confirms
+  document.getElementById('addTypeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') confirmAddType();
+    if (e.key === 'Escape') closeAddType();
+  });
+
+  function removeCellType(val) {
+    const idx = CELL_TYPES.findIndex(ct => ct.value === val);
+    if (idx === -1) return;
+    if (!CELL_TYPES[idx].custom) return; // can't remove defaults
+
+    CELL_TYPES.splice(idx, 1);
+    delete customColors[val];
+
+    // Clear grid cells that used this type → set to 0
+    for (let r = 0; r < INTERNAL; r++)
+      for (let c = 0; c < INTERNAL; c++)
+        if (grid[r][c] === val) grid[r][c] = 0;
+
+    // If selected color was this type, reset to body
+    if (selectedColor === val) selectedColor = 1;
+
+    deleteMode = false;
+    buildPalette();
+    render();
+    toast(i18n[lang]['toast-type-removed']);
   }
 
   // =========================================================================
@@ -1774,12 +2037,9 @@
           const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
           grad.addColorStop(0, pal.light); grad.addColorStop(1, pal.dark);
           ctx.fillStyle = grad;
-        } else if (val === 2) {
-          ctx.fillStyle = customColors[2] || '#1A1A1A';
-        } else if (val === 3) {
-          ctx.fillStyle = customColors[3] || '#333333';
-        } else if (val === 4) {
-          ctx.fillStyle = customColors[4] || pal.highlight;
+        } else {
+          // Eye, Mouth, Highlight, or custom types — use customColors
+          ctx.fillStyle = customColors[val] || '#888';
         }
         ctx.fillRect(x, y, bw, bh);
       }
@@ -1932,17 +2192,9 @@
               }
             }
           }
-        } else if (val === 2) {
-          // Eye — use custom color
-          ctx.fillStyle = customColors[2] || '#1A1A1A';
-          ctx.fillRect(x, y, bw, bh);
-        } else if (val === 3) {
-          // Mouth — use custom color
-          ctx.fillStyle = customColors[3] || '#333333';
-          ctx.fillRect(x, y, bw, bh);
-        } else if (val === 4) {
-          // Highlight — use custom or palette
-          ctx.fillStyle = customColors[4] || pal.highlight;
+        } else {
+          // Eye, Mouth, Highlight, or custom types — use customColors
+          ctx.fillStyle = customColors[val] || '#888';
           ctx.fillRect(x, y, bw, bh);
         }
 
@@ -2208,7 +2460,10 @@
     const cols = gridData[0].length;
     // Include color mapping as comments so semantic info is preserved
     let s = `// ${cols}x${rows}\n`;
-    s += `// 0=empty, 1=body(${customColors[1]}), 2=eye(${customColors[2]}), 3=mouth(${customColors[3]}), 4=hi(${customColors[4]})\n`;
+    const typeMap = CELL_TYPES.map(ct =>
+      `${ct.value}=${ct.label.toLowerCase()}(${customColors[ct.value] || '#000'})`
+    ).join(', ');
+    s += `// ${typeMap}\n`;
     s += `static const _expression = [\n`;
     for (let r = 0; r < rows; r++) {
       s += '  [' + gridData[r].join(', ') + '],\n';
