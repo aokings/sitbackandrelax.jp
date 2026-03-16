@@ -16,7 +16,9 @@ sitbackandrelax.jp/
     rules/                # ルール説明
     archives/             # アーカイブ
   frog-editor/            # Frog Pixel Editor（ピクセルアートツール）
-    index.html
+    index.html            # エディタ本体（HTML+CSS+JS 1ファイル完結、約3100行）
+    about.html            # 使い方ガイド（EN/JP対応、サイトからリンク）
+    SPEC.md               # 技術仕様書（Claude向け、次セッション用）
 ```
 
 ## デザイン仕様

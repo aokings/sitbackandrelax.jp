@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Frog Pixel Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f0ed;
+      --card-bg: #fff;
+      --card-border: #e5e0da;
+      --text: #1a1a1a;
+      --text-muted: #888;
+      --accent: #4CAF50;
+      --accent-light: #E8F5E9;
+      --shadow: rgba(0,0,0,0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--card-border);
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .back-link {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .lang-switcher {
+      display: flex;
+      background: var(--bg);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .lang-btn.active {
+      background: var(--card-bg);
+      color: var(--text);
+      box-shadow: 0 1px 3px var(--shadow);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 3rem 2rem 2rem;
+    }
+
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.1;
+    }
+
+    .hero .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .hero .cta {
+      display: inline-block;
+      margin-top: 1.5rem;
+      padding: 0.7rem 2rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+    }
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(76,175,80,0.4);
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      padding: 2rem;
+      margin-top: 2rem;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+
+    .card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card h3 {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .card p, .card li {
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .card ul {
+      padding-left: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .card li {
+      margin-bottom: 0.4rem;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .feature-item {
+      background: var(--accent-light);
+      border-radius: 12px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+
+    .feature-item .icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .feature-item .label {
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .feature-item .desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .shortcut-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .shortcut-table th {
+      text-align: left;
+      font-weight: 700;
+      padding: 0.5rem 0.8rem;
+      border-bottom: 2px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .shortcut-table td {
+      padding: 0.5rem 0.8rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    kbd {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      padding: 0.15rem 0.4rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .emoji { font-style: normal; }
+
+    .tech-badge {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin: 0.2rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--text-muted); }
+
+    /* Language toggle */
+    [data-lang-content="en"] { display: none; }
+    [data-lang-content="ja"] { display: block; }
+    body.en [data-lang-content="en"] { display: block; }
+    body.en [data-lang-content="ja"] { display: none; }
+
+    @media (max-width: 600px) {
+      header { padding: 1rem; }
+      .hero { padding: 2rem 1rem 1.5rem; }
+      .card { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="back-link" href="/frog-editor/">&#8592; Editor</a>
+  <div class="lang-switcher">
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn active" data-lang="ja" onclick="setLang('ja')">JP</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>
+    <span data-lang-content="ja">Frog Pixel Editor について</span>
+    <span data-lang-content="en">About Frog Pixel Editor</span>
+  </h1>
+  <p class="subtitle">
+    <span data-lang-content="ja">8ビットのカエルを描いて、動かそう</span>
+    <span data-lang-content="en">Draw and animate your own 8-bit frog</span>
+  </p>
+  <a class="cta" href="/frog-editor/">
+    <span data-lang-content="ja">エディタを開く</span>
+    <span data-lang-content="en">Open Editor</span>
+  </a>
+</div>
+
+<div class="container">
+
+  <!-- What is this? -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">Frog Pixel Editor ってなに？</span>
+      <span data-lang-content="en">What is Frog Pixel Editor?</span>
+    </h2>
+    <div data-lang-content="ja">
+      <p>
+        Frog Pixel Editor は、8×8ピクセルのカエルの表情をブラウザ上で描けるツールです。
+        「<a href="https://yrkr.ai" target="_blank">やりくりかぞく</a>」アプリのキャラクター
+        「やりくりカエル」の表情データを作るために生まれました。
+      </p>
+      <p style="margin-top:0.8rem;">
+        描いた絵はPNG画像やGIFアニメーションとしてダウンロードしたり、
+        アプリで使えるDart配列としてコピーしたりできます。
+      </p>
+    </div>
+    <div data-lang-content="en">
+      <p>
+        Frog Pixel Editor is a browser-based tool for drawing 8×8 pixel frog expressions.
+        It was created to design facial expression data for the "Yarikuri Frog" character
+        in the <a href="https://yrkr.ai" target="_blank">Yarikuri Kazoku</a> app.
+      </p>
+      <p style="margin-top:0.8rem;">
+        Your artwork can be downloaded as PNG images or GIF animations,
+        or copied as Dart arrays for use in the app.
+      </p>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">できること</span>
+      <span data-lang-content="en">Features</span>
+    </h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="icon">&#x1F3A8;</div>
+        <div class="label" data-lang-content="ja">ピクセルお絵かき</div>
+        <div class="label" data-lang-content="en">Pixel Drawing</div>
+        <div class="desc" data-lang-content="ja">8×8 / 16×16 / 32×32 の3サイズ</div>
+        <div class="desc" data-lang-content="en">3 sizes: 8×8, 16×16, 32×32</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">&#x1F438;</div>
+        <div class="label" data-lang-content="ja">7つのプリセット</div>
+        <div class="label" data-lang-content="en">7 Presets</div>
+        <div class="desc" data-lang-content="ja">ふつう・びっくり・うれしい等</div>
+        <div class="desc" data-lang-content="en">Normal, Surprised, Happy, etc.</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">&#x1F3AC;</div>
+        <div class="label" data-lang-content="ja">GIFアニメ作成</div>
+        <div class="label" data-lang-content="en">GIF Animation</div>
+        <div class="desc" data-lang-content="ja">コマを並べてアニメーション出力</div>
+        <div class="desc" data-lang-content="en">Combine frames into animations</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">&#x1F308;</div>
+        <div class="label" data-lang-content="ja">256色カラーピッカー</div>
+        <div class="label" data-lang-content="en">256-Color Picker</div>
+        <div class="desc" data-lang-content="ja">各パーツの色を自由にカスタマイズ</div>
+        <div class="desc" data-lang-content="en">Customize colors for each part</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">&#x2728;</div>
+        <div class="label" data-lang-content="ja">エフェクト</div>
+        <div class="label" data-lang-content="en">Effects</div>
+        <div class="desc" data-lang-content="ja">グラデーション・エンボス・スキャンライン</div>
+        <div class="desc" data-lang-content="en">Gradient, Emboss, Scanlines</div>
+      </div>
+      <div class="feature-item">
+        <div class="icon">&#x1F4BE;</div>
+        <div class="label" data-lang-content="ja">Dart配列エクスポート</div>
+        <div class="label" data-lang-content="en">Dart Array Export</div>
+        <div class="desc" data-lang-content="ja">Flutterアプリで使えるデータ形式</div>
+        <div class="desc" data-lang-content="en">Data format for Flutter apps</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to Use -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">使い方</span>
+      <span data-lang-content="en">How to Use</span>
+    </h2>
+
+    <div data-lang-content="ja">
+      <h3>1. 描く</h3>
+      <ul>
+        <li>上部のパレットから使いたい色（体・目・口など）を選ぶ</li>
+        <li>グリッドをタッチ／クリックしてドラッグで塗る</li>
+        <li>「空」を選ぶと消しゴムになる</li>
+        <li>プリセットをタップすると、カエルの表情が読み込まれる</li>
+      </ul>
+
+      <h3>2. カスタマイズ</h3>
+      <ul>
+        <li>パレットの色をタップすると256色カラーピッカーが開く（小さい丸が目印）</li>
+        <li><kbd>+</kbd> ボタンで独自のカラータイプを追加できる（「髪」「帽子」など）</li>
+        <li>パレットを長押しすると削除モードに切り替わる</li>
+      </ul>
+
+      <h3>3. コマを保存してアニメにする</h3>
+      <ul>
+        <li>「コマを保存」で現在の絵をフレームとして保存</li>
+        <li>保存したコマの「Edit」で再編集、◀▶ で順番入れ替え</li>
+        <li>2コマ以上保存したら「GIFアニメーション」でアニメ出力</li>
+        <li>GIFはダウンロードされ、プレビュー欄でも再生される</li>
+      </ul>
+
+      <h3>4. エクスポート＆インポート</h3>
+      <ul>
+        <li><strong>PNG ダウンロード</strong> — 現在の絵を画像として保存</li>
+        <li><strong>Dart配列コピー</strong> — Flutterアプリ用のデータをクリップボードにコピー</li>
+        <li><strong>全コマコピー</strong> — 保存したコマ全部をまとめてコピー</li>
+        <li><strong>Dart配列インポート</strong> — 以前コピーした配列を貼り付けて復元</li>
+      </ul>
+    </div>
+
+    <div data-lang-content="en">
+      <h3>1. Draw</h3>
+      <ul>
+        <li>Select a color type (Body, Eye, Mouth, etc.) from the palette at the top</li>
+        <li>Touch/click and drag on the grid to paint</li>
+        <li>Select "Empty" to use as an eraser</li>
+        <li>Tap a preset to load a frog expression</li>
+      </ul>
+
+      <h3>2. Customize</h3>
+      <ul>
+        <li>Tap a palette color to open the 256-color picker (look for the small dot)</li>
+        <li>Press <kbd>+</kbd> to add custom color types (e.g., "Hair", "Hat")</li>
+        <li>Long-press the palette to enter delete mode</li>
+      </ul>
+
+      <h3>3. Save Frames &amp; Animate</h3>
+      <ul>
+        <li>"Save Frame" stores the current drawing as a frame</li>
+        <li>Use "Edit" on saved frames to re-edit, ◀▶ to reorder</li>
+        <li>With 2+ frames saved, "GIF Animation" exports an animated GIF</li>
+        <li>The GIF downloads and also plays in the preview area</li>
+      </ul>
+
+      <h3>4. Export &amp; Import</h3>
+      <ul>
+        <li><strong>PNG Download</strong> — Save the current drawing as an image</li>
+        <li><strong>Copy Dart Array</strong> — Copy data for Flutter apps to clipboard</li>
+        <li><strong>Copy All</strong> — Copy all saved frames at once</li>
+        <li><strong>Import Dart Array</strong> — Paste a previously copied array to restore</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Canvas Sizes -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">キャンバスサイズ</span>
+      <span data-lang-content="en">Canvas Sizes</span>
+    </h2>
+    <table class="shortcut-table">
+      <thead>
+        <tr>
+          <th data-lang-content="ja">サイズ</th>
+          <th data-lang-content="en">Size</th>
+          <th data-lang-content="ja">用途</th>
+          <th data-lang-content="en">Use Case</th>
+          <th data-lang-content="ja">操作</th>
+          <th data-lang-content="en">How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>8×8</td>
+          <td data-lang-content="ja">カエルの表情（基本）</td>
+          <td data-lang-content="en">Frog expressions (default)</td>
+          <td data-lang-content="ja">最初のボタンをタップ</td>
+          <td data-lang-content="en">Tap the first button</td>
+        </tr>
+        <tr>
+          <td>16×8 / 8×16</td>
+          <td data-lang-content="ja">横長・縦長のデザイン</td>
+          <td data-lang-content="en">Wide or tall designs</td>
+          <td data-lang-content="ja">最初のボタンを長押し</td>
+          <td data-lang-content="en">Long-press the first button</td>
+        </tr>
+        <tr>
+          <td>16×16</td>
+          <td data-lang-content="ja">より細かい絵</td>
+          <td data-lang-content="en">More detailed art</td>
+          <td data-lang-content="ja">2番目のボタンをタップ</td>
+          <td data-lang-content="en">Tap the second button</td>
+        </tr>
+        <tr>
+          <td>32×32</td>
+          <td data-lang-content="ja">フルサイズピクセルアート</td>
+          <td data-lang-content="en">Full-size pixel art</td>
+          <td data-lang-content="ja">3番目のボタンをタップ</td>
+          <td data-lang-content="en">Tap the third button</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Semantic Colors -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">セマンティックカラー</span>
+      <span data-lang-content="en">Semantic Colors</span>
+    </h2>
+    <div data-lang-content="ja">
+      <p>
+        このエディタでは、ピクセルに「色」ではなく「役割」を塗ります。
+        たとえば「体」「目」「口」といった意味を持たせることで、
+        あとからカラーバリエーション（緑・ピンク・赤）を一括で切り替えられます。
+      </p>
+      <p style="margin-top:0.8rem;">
+        Dart配列にエクスポートするとき、数字は色ではなく意味を表します:
+      </p>
+    </div>
+    <div data-lang-content="en">
+      <p>
+        This editor paints "roles" rather than colors. Each pixel has a
+        semantic meaning like "Body", "Eye", or "Mouth". This allows
+        you to switch color variations (green, pink, red) all at once.
+      </p>
+      <p style="margin-top:0.8rem;">
+        When exported as a Dart array, numbers represent meaning, not color:
+      </p>
+    </div>
+    <table class="shortcut-table" style="margin-top:0.8rem;">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th data-lang-content="ja">役割</th>
+          <th data-lang-content="en">Role</th>
+          <th data-lang-content="ja">デフォルト色</th>
+          <th data-lang-content="en">Default Color</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>0</td>
+          <td data-lang-content="ja">空（透明）</td><td data-lang-content="en">Empty</td>
+          <td><span style="display:inline-block;width:16px;height:16px;background:#F5F5F5;border:1px solid #ccc;border-radius:3px;vertical-align:middle;"></span> #F5F5F5</td>
+        </tr>
+        <tr><td>1</td>
+          <td data-lang-content="ja">体</td><td data-lang-content="en">Body</td>
+          <td><span style="display:inline-block;width:16px;height:16px;background:#4CAF50;border-radius:3px;vertical-align:middle;"></span> #4CAF50</td>
+        </tr>
+        <tr><td>2</td>
+          <td data-lang-content="ja">目</td><td data-lang-content="en">Eye</td>
+          <td><span style="display:inline-block;width:16px;height:16px;background:#1A1A1A;border-radius:3px;vertical-align:middle;"></span> #1A1A1A</td>
+        </tr>
+        <tr><td>3</td>
+          <td data-lang-content="ja">口</td><td data-lang-content="en">Mouth</td>
+          <td><span style="display:inline-block;width:16px;height:16px;background:#333333;border-radius:3px;vertical-align:middle;"></span> #333333</td>
+        </tr>
+        <tr><td>4</td>
+          <td data-lang-content="ja">ハイライト</td><td data-lang-content="en">Highlight</td>
+          <td><span style="display:inline-block;width:16px;height:16px;background:#E8F5E9;border:1px solid #ccc;border-radius:3px;vertical-align:middle;"></span> #E8F5E9</td>
+        </tr>
+        <tr><td>5+</td>
+          <td data-lang-content="ja">カスタム</td><td data-lang-content="en">Custom</td>
+          <td data-lang-content="ja">自由に追加可能</td><td data-lang-content="en">User-defined</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tech -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">技術情報</span>
+      <span data-lang-content="en">Tech</span>
+    </h2>
+    <div data-lang-content="ja">
+      <p>
+        HTML + CSS + JavaScript の1ファイルで完結しています。
+        フレームワークやビルドツールは使っていません。ブラウザだけで動きます。
+      </p>
+    </div>
+    <div data-lang-content="en">
+      <p>
+        Built as a single HTML file with CSS and JavaScript.
+        No frameworks or build tools. Runs entirely in the browser.
+      </p>
+    </div>
+    <div style="margin-top:1rem;">
+      <span class="tech-badge">HTML5 Canvas</span>
+      <span class="tech-badge">Vanilla JS</span>
+      <span class="tech-badge">CSS3</span>
+      <span class="tech-badge">gif.js</span>
+      <span class="tech-badge">Google Fonts</span>
+    </div>
+  </div>
+
+  <!-- Credits -->
+  <div class="card">
+    <h2>
+      <span data-lang-content="ja">クレジット</span>
+      <span data-lang-content="en">Credits</span>
+    </h2>
+    <div data-lang-content="ja">
+      <p>
+        <strong>Frog Pixel Editor</strong> は
+        <a href="/">Sit Back and Relax</a> が制作しました。
+      </p>
+      <p style="margin-top:0.5rem;">
+        「やりくりカエル」は
+        <a href="https://yrkr.ai" target="_blank">やりくりかぞく（yrkr.ai）</a>
+        のマスコットキャラクターです。
+      </p>
+    </div>
+    <div data-lang-content="en">
+      <p>
+        <strong>Frog Pixel Editor</strong> is made by
+        <a href="/">Sit Back and Relax</a>.
+      </p>
+      <p style="margin-top:0.5rem;">
+        "Yarikuri Frog" is the mascot of
+        <a href="https://yrkr.ai" target="_blank">Yarikuri Kazoku (yrkr.ai)</a>.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  &copy; 2026 <a href="/">Sit Back and Relax</a>
+</footer>
+
+<script>
+  function setLang(l) {
+    document.body.classList.toggle('en', l === 'en');
+    document.querySelectorAll('.lang-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === l));
+  }
+  // Auto-detect
+  if (!(navigator.language || '').startsWith('ja')) setLang('en');
+</script>
+
+</body>
+</html>
