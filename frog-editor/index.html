@@ -148,9 +148,10 @@
       gap: 0;
       background: var(--warm-gray);
       border-radius: 10px;
-      overflow: hidden;
+      overflow: visible;
       border: 1px solid var(--card-border);
       margin-bottom: 1rem;
+      position: relative;
     }
 
     .res-btn {
@@ -164,12 +165,78 @@
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
+      border-radius: 10px;
     }
 
     .res-btn.active {
       background: var(--accent);
       color: white;
       box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+    }
+
+    .res-btn.hidden {
+      display: none;
+    }
+
+    /* === Resolution Long-press Overlay === */
+    .res-btn-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .res-btn-wrap .res-btn {
+      width: 100%;
+    }
+
+    .res-overlay {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) scale(0.92);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      padding: 4px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 90px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .res-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) scale(1);
+    }
+
+    .res-overlay-option {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.45rem 0.8rem;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .res-overlay-option:hover {
+      background: var(--warm-gray);
+      color: var(--text-primary);
+    }
+
+    .res-overlay-option.active {
+      background: var(--accent);
+      color: white;
     }
 
     /* === Color Palette === */
@@ -617,6 +684,32 @@
       .effect-label { font-size: 0.78rem; }
     }
 
+    /* === Placement Mode Banner === */
+    .placement-banner {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1rem;
+      margin-bottom: 0.8rem;
+      background: rgba(33,150,243,0.08);
+      border: 1px solid rgba(33,150,243,0.25);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #1565C0;
+      font-weight: 500;
+      animation: fadeUp 0.2s ease-out;
+    }
+
+    .placement-banner.active {
+      display: flex;
+    }
+
+    .placement-banner .btn {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.7rem;
+    }
+
     /* === Animations === */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
@@ -653,13 +746,24 @@
         <!-- Grid Editor -->
         <div class="card fade-up">
           <div class="res-selector">
-            <button class="res-btn active" data-res="8">8&times;8</button>
-            <button class="res-btn" data-res="16">16&times;16</button>
-            <button class="res-btn" data-res="32">32&times;32</button>
+            <div class="res-btn-wrap">
+              <button class="res-btn active" id="resBtn1" data-zoom="1">8&times;8</button>
+              <div class="res-overlay" id="resOverlay">
+                <button class="res-overlay-option active" data-bw="8" data-bh="8">8&times;8</button>
+                <button class="res-overlay-option" data-bw="16" data-bh="8">16&times;8</button>
+                <button class="res-overlay-option" data-bw="8" data-bh="16">8&times;16</button>
+              </div>
+            </div>
+            <button class="res-btn" id="resBtn2" data-zoom="2">16&times;16</button>
+            <button class="res-btn" id="resBtn3" data-zoom="4">32&times;32</button>
           </div>
 
           <div class="palette" id="palette"></div>
 
+          <div class="placement-banner" id="placementBanner">
+            <span id="placementText">Drag to position, tap to place</span>
+            <button class="btn btn-sm btn-danger" onclick="cancelPlacement()">✕</button>
+          </div>
           <div class="grid-wrap">
             <canvas id="gridCanvas"></canvas>
           </div>
@@ -816,6 +920,7 @@
       'toast-png': 'PNG downloaded!',
       'toast-gif': 'GIF exported!',
       'toast-gif-need': 'Save 2+ frames first',
+      'placement': 'Drag to position, tap to place',
     },
     ja: {
       back: 'Home',
@@ -839,6 +944,7 @@
       'toast-png': 'PNGをダウンロードしました！',
       'toast-gif': 'GIFをエクスポートしました！',
       'toast-gif-need': '2コマ以上保存してください',
+      'placement': 'ドラッグで配置、タップで確定',
     }
   };
 
@@ -864,10 +970,17 @@
   // =========================================================================
   const INTERNAL = 32;
   let grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
-  let resolution = 8;
+  let baseW = 8, baseH = 8;   // base resolution (8x8, 16x8, or 8x16)
+  let zoom = 1;                // zoom multiplier (1, 2, or 4)
   let selectedColor = 1; // body
   let isPainting = false;
   let loadedPreset = null;
+
+  // Derived resolution helpers
+  function resW() { return baseW * zoom; }
+  function resH() { return baseH * zoom; }
+  function blockW() { return INTERNAL / resW(); }
+  function blockH() { return INTERNAL / resH(); }
 
   // Undo/Redo
   let undoStack = [];
@@ -1052,32 +1165,152 @@
   }
 
   // =========================================================================
-  // Resolution
+  // Resolution: long-press overlay + zoom buttons
   // =========================================================================
-  document.querySelectorAll('.res-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      resolution = parseInt(btn.dataset.res);
-      document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderGrid();
+  const resBtn1 = document.getElementById('resBtn1');
+  const resBtn2 = document.getElementById('resBtn2');
+  const resBtn3 = document.getElementById('resBtn3');
+  const resOverlay = document.getElementById('resOverlay');
+
+  // --- Long-press detection on first button ---
+  let lpTimer = null;
+  let lpTriggered = false;
+
+  function startLongPress(e) {
+    lpTriggered = false;
+    lpTimer = setTimeout(() => {
+      lpTriggered = true;
+      openResOverlay();
+    }, 500);
+  }
+
+  function cancelLongPress(e) {
+    if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+  }
+
+  function endLongPress(e) {
+    cancelLongPress();
+    if (lpTriggered) {
+      // Long press already opened overlay, don't also do a click
+      e.preventDefault();
+      return;
+    }
+    // Short click: select zoom 1
+    setZoom(1);
+  }
+
+  resBtn1.addEventListener('mousedown', startLongPress);
+  resBtn1.addEventListener('touchstart', (e) => { e.preventDefault(); startLongPress(e); }, { passive: false });
+  resBtn1.addEventListener('mouseup', endLongPress);
+  resBtn1.addEventListener('touchend', (e) => { endLongPress(e); });
+  resBtn1.addEventListener('mouseleave', cancelLongPress);
+  resBtn1.addEventListener('touchcancel', cancelLongPress);
+  // Prevent default click to avoid double-firing
+  resBtn1.addEventListener('click', (e) => { e.preventDefault(); });
+
+  function openResOverlay() {
+    resOverlay.classList.add('open');
+    // Close when clicking outside
+    setTimeout(() => document.addEventListener('pointerdown', closeOverlayOutside), 0);
+  }
+
+  function closeResOverlay() {
+    resOverlay.classList.remove('open');
+    document.removeEventListener('pointerdown', closeOverlayOutside);
+  }
+
+  function closeOverlayOutside(e) {
+    if (!resOverlay.contains(e.target) && e.target !== resBtn1) {
+      closeResOverlay();
+    }
+  }
+
+  // Overlay option clicks
+  resOverlay.querySelectorAll('.res-overlay-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const newBW = parseInt(opt.dataset.bw);
+      const newBH = parseInt(opt.dataset.bh);
+      setBase(newBW, newBH);
+      closeResOverlay();
     });
   });
+
+  function setBase(bw, bh) {
+    baseW = bw;
+    baseH = bh;
+    zoom = 1;
+    updateResButtons();
+    render();
+  }
+
+  function setZoom(z) {
+    zoom = z;
+    updateResButtons();
+    renderGrid();
+  }
+
+  function maxZoom() {
+    // Max zoom so that baseW*zoom <= 32 and baseH*zoom <= 32
+    let mz = 1;
+    if (baseW * 2 <= INTERNAL && baseH * 2 <= INTERNAL) mz = 2;
+    if (baseW * 4 <= INTERNAL && baseH * 4 <= INTERNAL) mz = 4;
+    return mz;
+  }
+
+  function updateResButtons() {
+    const mz = maxZoom();
+
+    // Update overlay active state
+    resOverlay.querySelectorAll('.res-overlay-option').forEach(opt => {
+      const bw = parseInt(opt.dataset.bw);
+      const bh = parseInt(opt.dataset.bh);
+      opt.classList.toggle('active', bw === baseW && bh === baseH);
+    });
+
+    // Button 1 (zoom 1x)
+    resBtn1.innerHTML = `${baseW}&times;${baseH}`;
+    resBtn1.classList.toggle('active', zoom === 1);
+
+    // Button 2 (zoom 2x)
+    if (mz >= 2) {
+      resBtn2.innerHTML = `${baseW * 2}&times;${baseH * 2}`;
+      resBtn2.classList.remove('hidden');
+      resBtn2.classList.toggle('active', zoom === 2);
+    } else {
+      resBtn2.classList.add('hidden');
+      resBtn2.classList.remove('active');
+    }
+
+    // Button 3 (zoom 4x)
+    if (mz >= 4) {
+      resBtn3.innerHTML = `${baseW * 4}&times;${baseH * 4}`;
+      resBtn3.classList.remove('hidden');
+      resBtn3.classList.toggle('active', zoom === 4);
+    } else {
+      resBtn3.classList.add('hidden');
+      resBtn3.classList.remove('active');
+    }
+
+    // Update preview sizes for aspect ratio
+    updatePreviewSizes();
+  }
+
+  resBtn2.addEventListener('click', () => { if (maxZoom() >= 2) setZoom(2); });
+  resBtn3.addEventListener('click', () => { if (maxZoom() >= 4) setZoom(4); });
 
   // =========================================================================
   // Grid helpers
   // =========================================================================
-  function blockSize() { return INTERNAL / resolution; }
-
   function getCellValue(r, c) {
-    const bs = blockSize();
-    return grid[r * bs][c * bs];
+    const bw = blockW(), bh = blockH();
+    return grid[r * bh][c * bw];
   }
 
   function setCellValue(r, c, val) {
-    const bs = blockSize();
-    const br = r * bs, bc = c * bs;
-    for (let dr = 0; dr < bs; dr++)
-      for (let dc = 0; dc < bs; dc++)
+    const bw = blockW(), bh = blockH();
+    const br = r * bh, bc = c * bw;
+    for (let dr = 0; dr < bh; dr++)
+      for (let dc = 0; dc < bw; dc++)
         grid[br + dr][bc + dc] = val;
   }
 
@@ -1098,11 +1331,118 @@
       Array.from({length: 8}, (_, c) => grid[r * scale][c * scale]));
   }
 
+  function exportAtBase() {
+    // Export at current base resolution
+    const bw = INTERNAL / baseW;
+    const bh = INTERNAL / baseH;
+    return Array.from({length: baseH}, (_, r) =>
+      Array.from({length: baseW}, (_, c) => grid[r * bh][c * bw]));
+  }
+
   function clearGrid() {
     pushUndo();
     grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
     loadedPreset = null;
     render();
+  }
+
+  // =========================================================================
+  // Placement mode (for presets on non-8x8 canvases)
+  // =========================================================================
+  let placementMode = false;
+  let placementGrid = null;  // 8x8 preset data
+  let placementCol = 0;      // top-left col in base resolution
+  let placementRow = 0;      // top-left row in base resolution
+  let placementDragging = false;
+
+  function startPlacement(presetGrid) {
+    placementMode = true;
+    placementGrid = presetGrid;
+    // Center the 8x8 preset in the canvas (in base resolution units)
+    placementCol = Math.max(0, Math.floor((baseW - 8) / 2));
+    placementRow = Math.max(0, Math.floor((baseH - 8) / 2));
+    placementDragging = false;
+
+    const banner = document.getElementById('placementBanner');
+    banner.classList.add('active');
+    document.getElementById('placementText').textContent = i18n[lang]['placement'];
+
+    render();
+  }
+
+  function cancelPlacement() {
+    placementMode = false;
+    placementGrid = null;
+    document.getElementById('placementBanner').classList.remove('active');
+    render();
+  }
+
+  function confirmPlacement() {
+    if (!placementMode || !placementGrid) return;
+    pushUndo();
+    // Stamp the 8x8 preset into the internal grid at the placement position
+    const scaleW = INTERNAL / baseW;  // internal pixels per base col
+    const scaleH = INTERNAL / baseH;  // internal pixels per base row
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const val = placementGrid[r][c];
+        if (val === 0) continue; // skip empty cells, don't overwrite
+        const targetBaseR = placementRow + r;
+        const targetBaseC = placementCol + c;
+        if (targetBaseR < 0 || targetBaseR >= baseH || targetBaseC < 0 || targetBaseC >= baseW) continue;
+        // Fill the internal grid block
+        const ir = targetBaseR * scaleH;
+        const ic = targetBaseC * scaleW;
+        for (let dr = 0; dr < scaleH; dr++)
+          for (let dc = 0; dc < scaleW; dc++)
+            grid[ir + dr][ic + dc] = val;
+      }
+    }
+    placementMode = false;
+    placementGrid = null;
+    document.getElementById('placementBanner').classList.remove('active');
+    loadedPreset = null;
+    render();
+  }
+
+  // Render placement overlay on the grid canvas
+  function renderPlacementOverlay() {
+    if (!placementMode || !placementGrid) return;
+    const rw = resW(), rh = resH();
+    const cellPx = Math.floor(Math.min(window.innerWidth - 80, 500) / Math.max(rw, rh));
+    const cellsPerBaseCol = zoom;  // how many display cells per base cell
+    const cellsPerBaseRow = zoom;
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const val = placementGrid[r][c];
+        if (val === 0) continue;
+        const dispCol = (placementCol + c) * cellsPerBaseCol;
+        const dispRow = (placementRow + r) * cellsPerBaseRow;
+        if (dispCol < 0 || dispCol >= rw || dispRow < 0 || dispRow >= rh) continue;
+
+        // Draw semi-transparent colored block
+        gridCtx.globalAlpha = 0.5;
+        gridCtx.fillStyle = FLAT_COLORS[val] || '#F5F5F5';
+        const x = dispCol * cellPx;
+        const y = dispRow * cellPx;
+        const w = cellsPerBaseCol * cellPx;
+        const h = cellsPerBaseRow * cellPx;
+        gridCtx.fillRect(x, y, w, h);
+        gridCtx.globalAlpha = 1.0;
+      }
+    }
+
+    // Draw outline around placement area
+    const ox = placementCol * cellsPerBaseCol * cellPx;
+    const oy = placementRow * cellsPerBaseRow * cellPx;
+    const ow = Math.min(8, baseW - placementCol) * cellsPerBaseCol * cellPx;
+    const oh = Math.min(8, baseH - placementRow) * cellsPerBaseRow * cellPx;
+    gridCtx.strokeStyle = '#2196F3';
+    gridCtx.lineWidth = 2;
+    gridCtx.setLineDash([6, 3]);
+    gridCtx.strokeRect(ox, oy, ow, oh);
+    gridCtx.setLineDash([]);
   }
 
   // =========================================================================
@@ -1149,12 +1489,18 @@
       btn.appendChild(cvs);
       btn.appendChild(label);
       btn.onclick = () => {
-        pushUndo();
-        grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
-        loadFrom8x8(p.grid);
-        loadedPreset = key;
-        buildPresets();
-        render();
+        if (baseW === 8 && baseH === 8) {
+          // 8x8 canvas: place directly (original behavior)
+          pushUndo();
+          grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
+          loadFrom8x8(p.grid);
+          loadedPreset = key;
+          buildPresets();
+          render();
+        } else {
+          // Non-8x8 canvas: enter placement mode
+          startPlacement(p.grid);
+        }
       };
       el.appendChild(btn);
     });
@@ -1173,19 +1519,22 @@
   const gridCtx = gridCanvas.getContext('2d');
 
   function renderGrid() {
+    const rw = resW(), rh = resH();
     const maxW = Math.min(window.innerWidth - 80, 500);
-    const cellPx = Math.floor(maxW / resolution);
-    const totalPx = cellPx * resolution;
-    gridCanvas.width = totalPx;
-    gridCanvas.height = totalPx;
-    gridCanvas.style.width = totalPx + 'px';
-    gridCanvas.style.height = totalPx + 'px';
+    // Use same pixel size per cell; canvas may be rectangular
+    const cellPx = Math.floor(maxW / Math.max(rw, rh));
+    const totalW = cellPx * rw;
+    const totalH = cellPx * rh;
+    gridCanvas.width = totalW;
+    gridCanvas.height = totalH;
+    gridCanvas.style.width = totalW + 'px';
+    gridCanvas.style.height = totalH + 'px';
 
-    const bs = blockSize();
+    const bw = blockW(), bh = blockH();
 
-    for (let r = 0; r < resolution; r++) {
-      for (let c = 0; c < resolution; c++) {
-        const val = grid[r * bs][c * bs];
+    for (let r = 0; r < rh; r++) {
+      for (let c = 0; c < rw; c++) {
+        const val = grid[r * bh][c * bw];
         gridCtx.fillStyle = FLAT_COLORS[val] || '#F5F5F5';
         gridCtx.fillRect(c * cellPx, r * cellPx, cellPx, cellPx);
       }
@@ -1194,21 +1543,29 @@
     // Grid lines
     gridCtx.strokeStyle = 'rgba(0,0,0,0.12)';
     gridCtx.lineWidth = 0.5;
-    for (let i = 0; i <= resolution; i++) {
+    for (let i = 0; i <= rw; i++) {
       const pos = i * cellPx;
-      gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalPx); gridCtx.stroke();
-      gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalPx, pos); gridCtx.stroke();
+      gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalH); gridCtx.stroke();
+    }
+    for (let i = 0; i <= rh; i++) {
+      const pos = i * cellPx;
+      gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalW, pos); gridCtx.stroke();
     }
 
-    // Major grid lines (8x8 boundaries) when in higher resolution
-    if (resolution > 8) {
+    // Placement overlay (semi-transparent preset)
+    renderPlacementOverlay();
+
+    // Major grid lines (base resolution boundaries) when zoomed in
+    if (zoom > 1) {
       gridCtx.strokeStyle = 'rgba(0,0,0,0.35)';
       gridCtx.lineWidth = 2;
-      const majorStep = resolution / 8;
-      for (let i = 0; i <= 8; i++) {
-        const pos = i * majorStep * cellPx;
-        gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalPx); gridCtx.stroke();
-        gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalPx, pos); gridCtx.stroke();
+      for (let i = 0; i <= baseW; i++) {
+        const pos = i * zoom * cellPx;
+        gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalH); gridCtx.stroke();
+      }
+      for (let i = 0; i <= baseH; i++) {
+        const pos = i * zoom * cellPx;
+        gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalW, pos); gridCtx.stroke();
       }
     }
   }
@@ -1216,18 +1573,20 @@
   // =========================================================================
   // Preview rendering (with effects)
   // =========================================================================
-  function renderPreviewToCanvas(canvas, grid8, pal) {
+  function renderPreviewToCanvas(canvas, gridData, pal, cols, rows) {
     if (!pal) pal = palettes[currentPalette];
+    if (!cols) cols = gridData[0].length;
+    if (!rows) rows = gridData.length;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
-    const bw = w / 8, bh = h / 8;
-    const isLarge = w >= 100;
+    const bw = w / cols, bh = h / rows;
+    const isLarge = Math.max(w, h) >= 100;
 
     ctx.clearRect(0, 0, w, h);
 
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        const val = grid8[r][c];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const val = gridData[r][c];
         if (val === 0) continue;
         const x = c * bw, y = r * bh;
 
@@ -1296,11 +1655,37 @@
     }
   }
 
+  function updatePreviewSizes() {
+    // Scale preview canvases to match aspect ratio
+    const maxDim = 240;
+    const aspect = baseW / baseH; // >1 for wide, <1 for tall
+    let pw, ph;
+    if (aspect >= 1) {
+      pw = maxDim; ph = Math.round(maxDim / aspect);
+    } else {
+      ph = maxDim; pw = Math.round(maxDim * aspect);
+    }
+
+    const prev = document.getElementById('previewCanvas');
+    prev.width = pw; prev.height = ph;
+    prev.style.width = pw + 'px'; prev.style.height = ph + 'px';
+
+    const mdScale = 80 / maxDim;
+    const prevMd = document.getElementById('prevMd');
+    prevMd.width = Math.round(pw * mdScale); prevMd.height = Math.round(ph * mdScale);
+
+    const smScale = 40 / maxDim;
+    const prevSm = document.getElementById('prevSm');
+    prevSm.width = Math.round(pw * smScale); prevSm.height = Math.round(ph * smScale);
+
+    renderPreview();
+  }
+
   function renderPreview() {
-    const grid8 = exportAs8x8();
-    renderPreviewToCanvas(document.getElementById('previewCanvas'), grid8);
-    renderPreviewToCanvas(document.getElementById('prevMd'), grid8);
-    renderPreviewToCanvas(document.getElementById('prevSm'), grid8);
+    const gridData = exportAtBase();
+    renderPreviewToCanvas(document.getElementById('previewCanvas'), gridData);
+    renderPreviewToCanvas(document.getElementById('prevMd'), gridData);
+    renderPreviewToCanvas(document.getElementById('prevSm'), gridData);
     updateCodePreview();
   }
 
@@ -1326,33 +1711,65 @@
     }
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
-    const cellPx = gridCanvas.width / resolution;
-    const col = Math.floor(x / cellPx);
-    const row = Math.floor(y / cellPx);
-    if (col < 0 || col >= resolution || row < 0 || row >= resolution) return null;
+    const rw = resW(), rh = resH();
+    const cellPxW = gridCanvas.width / rw;
+    const cellPxH = gridCanvas.height / rh;
+    const col = Math.floor(x / cellPxW);
+    const row = Math.floor(y / cellPxH);
+    if (col < 0 || col >= rw || row < 0 || row >= rh) return null;
     return { row, col };
   }
 
   let paintVal = null;
+  let placementStartCell = null;
+  let placementMoved = false;
 
   function startPaint(e) {
     e.preventDefault();
-    isPainting = true;
-    pushUndo();
     const cell = cellFromEvent(e);
     if (!cell) return;
+
+    if (placementMode) {
+      // Start dragging the placement
+      placementDragging = true;
+      placementMoved = false;
+      placementStartCell = { row: cell.row, col: cell.col };
+      return;
+    }
+
+    isPainting = true;
+    pushUndo();
     const cur = getCellValue(cell.row, cell.col);
-    // Toggle if same color
     paintVal = (cur === selectedColor) ? 0 : selectedColor;
     setCellValue(cell.row, cell.col, paintVal);
     render();
   }
 
   function movePaint(e) {
-    if (!isPainting) return;
     e.preventDefault();
     const cell = cellFromEvent(e);
     if (!cell) return;
+
+    if (placementMode && placementDragging && placementStartCell) {
+      // Move the placement position
+      const cellsPerBaseCol = zoom;
+      const cellsPerBaseRow = zoom;
+      const dCol = Math.floor(cell.col / cellsPerBaseCol) - Math.floor(placementStartCell.col / cellsPerBaseCol);
+      const dRow = Math.floor(cell.row / cellsPerBaseRow) - Math.floor(placementStartCell.row / cellsPerBaseRow);
+      if (dCol !== 0 || dRow !== 0) {
+        placementMoved = true;
+        const newCol = placementCol + dCol;
+        const newRow = placementRow + dRow;
+        // Clamp so at least 1 cell is visible
+        placementCol = Math.max(-(8 - 1), Math.min(baseW - 1, newCol));
+        placementRow = Math.max(-(8 - 1), Math.min(baseH - 1, newRow));
+        placementStartCell = { row: cell.row, col: cell.col };
+        renderGrid();
+      }
+      return;
+    }
+
+    if (!isPainting) return;
     const cur = getCellValue(cell.row, cell.col);
     if (cur !== paintVal) {
       setCellValue(cell.row, cell.col, paintVal);
@@ -1360,7 +1777,17 @@
     }
   }
 
-  function endPaint() { isPainting = false; }
+  function endPaint(e) {
+    if (placementMode && placementDragging) {
+      placementDragging = false;
+      if (!placementMoved) {
+        // Tap without moving = confirm placement
+        confirmPlacement();
+      }
+      return;
+    }
+    isPainting = false;
+  }
 
   gridCanvas.addEventListener('mousedown', startPaint);
   gridCanvas.addEventListener('mousemove', movePaint);
@@ -1389,7 +1816,7 @@
   // Snapshots
   // =========================================================================
   function saveSnapshot() {
-    snapshots.push({ grid8: exportAs8x8() });
+    snapshots.push({ grid8: exportAs8x8(), gridBase: exportAtBase(), bw: baseW, bh: baseH });
     renderSnapshots();
     toast(i18n[lang]['toast-save']);
   }
@@ -1417,8 +1844,11 @@
       header.textContent = `#${idx + 1}`;
 
       const cvs = document.createElement('canvas');
-      cvs.width = 64; cvs.height = 64;
-      renderPreviewToCanvas(cvs, snap.grid8);
+      const snapAspect = (snap.bw || 8) / (snap.bh || 8);
+      if (snapAspect >= 1) { cvs.width = 64; cvs.height = Math.round(64 / snapAspect); }
+      else { cvs.height = 64; cvs.width = Math.round(64 * snapAspect); }
+      const snapData = snap.gridBase || snap.grid8;
+      renderPreviewToCanvas(cvs, snapData);
 
       const actions = document.createElement('div');
       actions.className = 'snap-actions';
@@ -1452,28 +1882,31 @@
   // =========================================================================
   // Export: Dart code
   // =========================================================================
-  function dartCodeFrom8x8(g8) {
-    let s = 'static const _expression = [\n';
-    for (let r = 0; r < 8; r++) {
-      s += '  [' + g8[r].join(', ') + '],\n';
+  function dartCodeFromGrid(gridData) {
+    const rows = gridData.length;
+    const cols = gridData[0].length;
+    let s = `// ${cols}x${rows}\nstatic const _expression = [\n`;
+    for (let r = 0; r < rows; r++) {
+      s += '  [' + gridData[r].join(', ') + '],\n';
     }
     s += '];';
     return s;
   }
 
   function updateCodePreview() {
-    document.getElementById('codePreview').textContent = dartCodeFrom8x8(exportAs8x8());
+    document.getElementById('codePreview').textContent = dartCodeFromGrid(exportAtBase());
   }
 
   function copyDartCode() {
-    navigator.clipboard.writeText(dartCodeFrom8x8(exportAs8x8()));
+    navigator.clipboard.writeText(dartCodeFromGrid(exportAtBase()));
     toast(i18n[lang]['toast-copy']);
   }
 
   function copyAllDart() {
-    const code = snapshots.map((s, i) =>
-      `// Frame ${i + 1}\n` + dartCodeFrom8x8(s.grid8)
-    ).join('\n\n');
+    const code = snapshots.map((s, i) => {
+      const data = s.gridBase || s.grid8;
+      return `// Frame ${i + 1}\n` + dartCodeFromGrid(data);
+    }).join('\n\n');
     navigator.clipboard.writeText(code);
     toast(i18n[lang]['toast-copy']);
   }
@@ -1483,8 +1916,10 @@
   // =========================================================================
   function exportPNG() {
     const cvs = document.createElement('canvas');
-    cvs.width = 256; cvs.height = 256;
-    renderPreviewToCanvas(cvs, exportAs8x8());
+    const aspect = baseW / baseH;
+    if (aspect >= 1) { cvs.width = 256; cvs.height = Math.round(256 / aspect); }
+    else { cvs.height = 256; cvs.width = Math.round(256 * aspect); }
+    renderPreviewToCanvas(cvs, exportAtBase());
     const link = document.createElement('a');
     link.download = 'frog-pixel.png';
     link.href = cvs.toDataURL('image/png');
@@ -1505,19 +1940,31 @@
     btn.disabled = true;
     btn.textContent = 'Rendering...';
 
-    const size = 256;
+    // Use the first snapshot's aspect ratio for the GIF
+    const firstSnap = snapshots[0];
+    const gifBW = firstSnap.bw || 8;
+    const gifBH = firstSnap.bh || 8;
+    const gifAspect = gifBW / gifBH;
+    let gifW, gifH;
+    if (gifAspect >= 1) { gifW = 256; gifH = Math.round(256 / gifAspect); }
+    else { gifH = 256; gifW = Math.round(256 * gifAspect); }
+
     const gif = new GIF({
       workers: 2,
       quality: 10,
-      width: size,
-      height: size,
+      width: gifW,
+      height: gifH,
       workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
     });
 
     snapshots.forEach(snap => {
       const cvs = document.createElement('canvas');
-      cvs.width = size; cvs.height = size;
-      renderPreviewToCanvas(cvs, snap.grid8);
+      const sBW = snap.bw || 8, sBH = snap.bh || 8;
+      const sAspect = sBW / sBH;
+      if (sAspect >= 1) { cvs.width = 256; cvs.height = Math.round(256 / sAspect); }
+      else { cvs.height = 256; cvs.width = Math.round(256 * sAspect); }
+      const snapData = snap.gridBase || snap.grid8;
+      renderPreviewToCanvas(cvs, snapData);
       gif.addFrame(cvs, { delay: 200 });
     });
 
@@ -1573,6 +2020,7 @@
     buildPalette();
     buildVariants();
     buildPresets();
+    updateResButtons();
     render();
   }
 
