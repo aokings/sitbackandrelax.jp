@@ -29,6 +29,7 @@
       background: var(--off-white);
       color: var(--text-primary);
       min-height: 100vh;
+      min-width: 340px;
     }
 
     /* === Header === */
@@ -560,6 +561,36 @@
     footer a { color: inherit; text-decoration: none; }
     footer a:hover { color: var(--text-secondary); }
 
+    /* === Drawer (collapsible) === */
+    .drawer-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .drawer-toggle .arrow {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .drawer-toggle.open .arrow {
+      transform: rotate(180deg);
+    }
+
+    .drawer-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .drawer-body.open {
+      max-height: 2000px;
+    }
+
     /* === Spacing helpers === */
     .mb-sm { margin-bottom: 0.8rem; }
     .mb-md { margin-bottom: 1.2rem; }
@@ -647,8 +678,13 @@
 
         <!-- Presets -->
         <div class="card fade-up fade-up-d1 mt-md">
-          <div class="card-title" data-i18n="presets-title">Presets</div>
-          <div class="preset-grid" id="presetGrid"></div>
+          <div class="drawer-toggle open" onclick="toggleDrawer(this)">
+            <div class="card-title" style="margin:0" data-i18n="presets-title">Presets</div>
+            <span class="arrow">&#9660;</span>
+          </div>
+          <div class="drawer-body open">
+            <div class="preset-grid" id="presetGrid" style="margin-top:0.6rem"></div>
+          </div>
         </div>
 
         <!-- Snapshots -->
@@ -689,7 +725,11 @@
 
         <!-- Effects -->
         <div class="card fade-up fade-up-d2 mt-md">
-          <div class="card-title" data-i18n="effects-title">Effects</div>
+          <div class="drawer-toggle open" onclick="toggleDrawer(this)">
+            <div class="card-title" style="margin:0" data-i18n="effects-title">Effects</div>
+            <span class="arrow">&#9660;</span>
+          </div>
+          <div class="drawer-body open">
           <div class="effects-panel">
             <div class="effect-row">
               <span class="effect-label" data-i18n="fx-gradient">Gradient</span>
@@ -711,12 +751,17 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         <!-- Export -->
         <div class="card fade-up fade-up-d3 mt-md">
-          <div class="card-title" data-i18n="export-title">Export</div>
-          <div class="export-section">
+          <div class="drawer-toggle open" onclick="toggleDrawer(this)">
+            <div class="card-title" style="margin:0" data-i18n="export-title">Export</div>
+            <span class="arrow">&#9660;</span>
+          </div>
+          <div class="drawer-body open">
+          <div class="export-section" style="margin-top:0.6rem">
             <button class="btn" onclick="exportPNG()">
               PNG <span data-i18n="download">Download</span>
             </button>
@@ -727,6 +772,7 @@
               GIF <span data-i18n="export-gif">Animation</span>
             </button>
             <div class="code-preview" id="codePreview"></div>
+          </div>
           </div>
         </div>
 
@@ -1498,6 +1544,15 @@
     el.textContent = msg;
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  // =========================================================================
+  // Drawer (collapsible sections)
+  // =========================================================================
+  function toggleDrawer(toggle) {
+    toggle.classList.toggle('open');
+    const body = toggle.nextElementSibling;
+    body.classList.toggle('open');
   }
 
   // =========================================================================
