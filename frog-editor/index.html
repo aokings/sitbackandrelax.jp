@@ -568,13 +568,22 @@
     /* === Responsive === */
     @media (max-width: 800px) {
       header { padding: 1rem 1rem; }
-      .main-wrap { padding: 0 1rem 2rem; }
-      .card { padding: 1.2rem; }
+      .main-wrap { padding: 0 0.8rem 2rem; }
+      .card { padding: 1rem; }
       .page-title { padding: 0.3rem 1rem 1rem; }
+      .grid-wrap { overflow-x: auto; }
+      .action-row { flex-wrap: wrap; }
+      .preset-grid { justify-content: center; }
     }
 
     @media (max-width: 480px) {
-      .palette-btn { width: 42px; height: 42px; }
+      .palette-btn { width: 52px; height: 44px; }
+      .palette { gap: 6px; }
+      .btn { font-size: 0.78rem; padding: 0.5rem 0.8rem; }
+      .preset-btn { padding: 5px 7px; }
+      .preset-btn canvas { width: 40px; height: 40px; }
+      .snap-card { width: 80px; }
+      .effect-label { font-size: 0.78rem; }
     }
 
     /* === Animations === */
