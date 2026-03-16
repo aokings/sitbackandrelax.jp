@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frog Pixel Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --accent: #4CAF50;
+      --accent-dark: #388E3C;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* === Header === */
+    header {
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .back-link {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text-primary); }
+
+    .lang-switcher {
+      display: flex;
+      background: var(--warm-gray);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+    }
+
+    .lang-btn {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .lang-btn.active {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* === Title === */
+    .page-title {
+      text-align: center;
+      padding: 0.5rem 2rem 1.5rem;
+    }
+
+    .page-title h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .page-title .subtitle {
+      font-size: 0.85rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    /* === Main Layout === */
+    .main-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 800px) {
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* === Cards === */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+    }
+
+    /* === Resolution Selector === */
+    .res-selector {
+      display: flex;
+      gap: 0;
+      background: var(--warm-gray);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      margin-bottom: 1rem;
+    }
+
+    .res-btn {
+      flex: 1;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .res-btn.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+    }
+
+    /* === Color Palette === */
+    .palette {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .palette-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: 2px solid var(--card-border);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      position: relative;
+    }
+
+    .palette-btn.active {
+      border-color: #2196F3;
+      box-shadow: 0 0 0 3px rgba(33,150,243,0.2);
+      transform: scale(1.08);
+    }
+
+    .palette-label {
+      font-size: 9px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+
+    /* === Grid Canvas === */
+    .grid-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    #gridCanvas {
+      border: 1px solid var(--card-border);
+      border-radius: 4px;
+      cursor: crosshair;
+      touch-action: none;
+      image-rendering: pixelated;
+    }
+
+    /* === Action Buttons === */
+    .action-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+      color: white;
+    }
+
+    .btn-sm {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.7rem;
+    }
+
+    .btn-danger {
+      color: #e53935;
+      border-color: #ffcdd2;
+    }
+
+    .btn-danger:hover {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* === Preview === */
+    .preview-section { text-align: center; }
+
+    #previewCanvas {
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: #FFF8E1;
+      image-rendering: pixelated;
+    }
+
+    .preview-sizes {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+
+    .preview-sizes canvas {
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: white;
+      image-rendering: pixelated;
+    }
+
+    .preview-sizes .size-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      text-align: center;
+    }
+
+    /* === Color Variants === */
+    .variant-selector {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 0.8rem 0;
+    }
+
+    .variant-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--card-border);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .variant-btn.active {
+      border-color: var(--text-primary);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+      transform: scale(1.15);
+    }
+
+    /* === Effects Panel === */
+    .effects-panel {
+      margin-top: 0.8rem;
+    }
+
+    .effect-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--warm-gray);
+    }
+
+    .effect-row:last-child { border-bottom: none; }
+
+    .effect-label {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    .effect-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toggle {
+      width: 40px;
+      height: 22px;
+      border-radius: 11px;
+      background: var(--warm-gray);
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+
+    .toggle.on { background: var(--accent); }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .toggle.on::after { left: 20px; }
+
+    .slider {
+      width: 60px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--warm-gray);
+      outline: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+    }
+
+    /* === Presets === */
+    .preset-grid {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border: 2px solid var(--card-border);
+      border-radius: 10px;
+      background: var(--card-bg);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-btn canvas {
+      image-rendering: pixelated;
+      border-radius: 4px;
+    }
+
+    .preset-btn span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .preset-btn:hover {
+      border-color: var(--accent);
+      box-shadow: 0 2px 12px rgba(76,175,80,0.15);
+      transform: translateY(-2px);
+    }
+
+    .preset-btn.active {
+      border-color: var(--accent);
+      background: rgba(76,175,80,0.06);
+    }
+
+    .preset-btn.active span {
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    /* === Snapshots === */
+    .snap-grid {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .snap-card {
+      width: 90px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .snap-header {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px;
+      background: rgba(76,175,80,0.08);
+      color: var(--text-secondary);
+    }
+
+    .snap-card canvas {
+      display: block;
+      margin: 4px auto;
+      image-rendering: pixelated;
+    }
+
+    .snap-actions {
+      display: flex;
+      justify-content: space-around;
+      padding: 4px;
+    }
+
+    .snap-action {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .snap-action:hover {
+      color: var(--text-primary);
+      background: var(--warm-gray);
+    }
+
+    /* === Export === */
+    .export-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .code-preview {
+      background: #263238;
+      border-radius: 8px;
+      padding: 0.8rem;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #80CBC4;
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre;
+      line-height: 1.5;
+      margin-top: 0.5rem;
+    }
+
+    /* === Toast === */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #263238;
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* === Footer === */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--warm-gray);
+    }
+
+    footer a { color: inherit; text-decoration: none; }
+    footer a:hover { color: var(--text-secondary); }
+
+    /* === Spacing helpers === */
+    .mb-sm { margin-bottom: 0.8rem; }
+    .mb-md { margin-bottom: 1.2rem; }
+    .mt-md { margin-top: 1.2rem; }
+
+    /* === Responsive === */
+    @media (max-width: 800px) {
+      header { padding: 1rem 1rem; }
+      .main-wrap { padding: 0 1rem 2rem; }
+      .card { padding: 1.2rem; }
+      .page-title { padding: 0.3rem 1rem 1rem; }
+    }
+
+    @media (max-width: 480px) {
+      .palette-btn { width: 42px; height: 42px; }
+    }
+
+    /* === Animations === */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up { animation: fadeUp 0.5s ease-out both; }
+    .fade-up-d1 { animation-delay: 0.08s; }
+    .fade-up-d2 { animation-delay: 0.16s; }
+    .fade-up-d3 { animation-delay: 0.24s; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="back-link" href="/">&#8592; <span data-i18n="back">Home</span></a>
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">JP</button>
+    </div>
+  </header>
+
+  <div class="page-title fade-up">
+    <h1>Frog Pixel Editor</h1>
+    <p class="subtitle" data-i18n="subtitle">Draw your own 8-bit frog</p>
+  </div>
+
+  <div class="main-wrap">
+    <div class="editor-layout">
+
+      <!-- Left: Editor -->
+      <div class="left-col">
+
+        <!-- Grid Editor -->
+        <div class="card fade-up">
+          <div class="res-selector">
+            <button class="res-btn active" data-res="8">8&times;8</button>
+            <button class="res-btn" data-res="16">16&times;16</button>
+            <button class="res-btn" data-res="32">32&times;32</button>
+          </div>
+
+          <div class="palette" id="palette"></div>
+
+          <div class="grid-wrap">
+            <canvas id="gridCanvas"></canvas>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" onclick="saveSnapshot()">
+              <span data-i18n="save-frame">Save Frame</span>
+            </button>
+            <button class="btn" onclick="clearGrid()">
+              <span data-i18n="clear">Clear</span>
+            </button>
+            <button class="btn" onclick="undo()">Undo</button>
+            <button class="btn" onclick="redo()">Redo</button>
+          </div>
+        </div>
+
+        <!-- Presets -->
+        <div class="card fade-up fade-up-d1 mt-md">
+          <div class="card-title" data-i18n="presets-title">Presets</div>
+          <div class="preset-grid" id="presetGrid"></div>
+        </div>
+
+        <!-- Snapshots -->
+        <div class="card fade-up fade-up-d2 mt-md" id="snapshotSection" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center" class="mb-sm">
+            <div class="card-title" style="margin:0">
+              <span data-i18n="frames-title">Saved Frames</span>
+              <span id="frameCount" style="font-weight:300"></span>
+            </div>
+            <button class="btn btn-sm" onclick="copyAllDart()" data-i18n="copy-all">Copy All Code</button>
+          </div>
+          <div class="snap-grid" id="snapGrid"></div>
+        </div>
+
+      </div>
+
+      <!-- Right: Preview & Effects & Export -->
+      <div class="right-col">
+
+        <!-- Preview -->
+        <div class="card fade-up fade-up-d1">
+          <div class="card-title" data-i18n="preview-title">Preview</div>
+          <div class="preview-section">
+            <canvas id="previewCanvas" width="240" height="240"></canvas>
+            <div class="variant-selector" id="variantSelector"></div>
+            <div class="preview-sizes">
+              <div>
+                <canvas id="prevMd" width="80" height="80"></canvas>
+                <div class="size-label">M</div>
+              </div>
+              <div>
+                <canvas id="prevSm" width="40" height="40"></canvas>
+                <div class="size-label">S</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Effects -->
+        <div class="card fade-up fade-up-d2 mt-md">
+          <div class="card-title" data-i18n="effects-title">Effects</div>
+          <div class="effects-panel">
+            <div class="effect-row">
+              <span class="effect-label" data-i18n="fx-gradient">Gradient</span>
+              <div class="effect-controls">
+                <button class="toggle on" data-fx="gradient" onclick="toggleFx(this)"></button>
+              </div>
+            </div>
+            <div class="effect-row">
+              <span class="effect-label" data-i18n="fx-emboss">Emboss</span>
+              <div class="effect-controls">
+                <input type="range" class="slider" min="0" max="100" value="70" oninput="setFxStrength('emboss',this.value)" data-fx-slider="emboss">
+                <button class="toggle on" data-fx="emboss" onclick="toggleFx(this)"></button>
+              </div>
+            </div>
+            <div class="effect-row">
+              <span class="effect-label" data-i18n="fx-scanlines">Scanlines</span>
+              <div class="effect-controls">
+                <button class="toggle" data-fx="scanlines" onclick="toggleFx(this)"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export -->
+        <div class="card fade-up fade-up-d3 mt-md">
+          <div class="card-title" data-i18n="export-title">Export</div>
+          <div class="export-section">
+            <button class="btn" onclick="exportPNG()">
+              PNG <span data-i18n="download">Download</span>
+            </button>
+            <button class="btn" onclick="copyDartCode()">
+              <span data-i18n="copy-dart">Copy Dart Array</span>
+            </button>
+            <button class="btn" onclick="exportGIF()" id="gifBtn">
+              GIF <span data-i18n="export-gif">Animation</span>
+            </button>
+            <div class="code-preview" id="codePreview"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <footer>
+    &copy; 2026 <a href="/">Sit Back and Relax</a>
+  </footer>
+
+  <!-- GIF encoder (loaded async, non-blocking) -->
+  <script async src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+
+  <script>
+  // =========================================================================
+  // i18n
+  // =========================================================================
+  const i18n = {
+    en: {
+      back: 'Home',
+      subtitle: 'Draw your own 8-bit frog',
+      'save-frame': 'Save Frame',
+      clear: 'Clear',
+      'presets-title': 'Presets',
+      'frames-title': 'Saved Frames',
+      'copy-all': 'Copy All Code',
+      'preview-title': 'Preview',
+      'effects-title': 'Effects',
+      'fx-gradient': 'Gradient',
+      'fx-emboss': 'Emboss',
+      'fx-scanlines': 'Scanlines',
+      'export-title': 'Export',
+      download: 'Download',
+      'copy-dart': 'Copy Dart Array',
+      'export-gif': 'Animation',
+      'toast-copy': 'Copied!',
+      'toast-save': 'Frame saved!',
+      'toast-png': 'PNG downloaded!',
+      'toast-gif': 'GIF exported!',
+      'toast-gif-need': 'Save 2+ frames first',
+    },
+    ja: {
+      back: 'Home',
+      subtitle: '8ビットカエルを描こう',
+      'save-frame': 'コマを保存',
+      clear: 'クリア',
+      'presets-title': 'プリセット',
+      'frames-title': '保存したコマ',
+      'copy-all': '全コマコピー',
+      'preview-title': 'プレビュー',
+      'effects-title': 'エフェクト',
+      'fx-gradient': 'グラデーション',
+      'fx-emboss': 'エンボス',
+      'fx-scanlines': 'スキャンライン',
+      'export-title': 'エクスポート',
+      download: 'ダウンロード',
+      'copy-dart': 'Dart配列コピー',
+      'export-gif': 'アニメーション',
+      'toast-copy': 'コピーしました！',
+      'toast-save': 'コマを保存しました！',
+      'toast-png': 'PNGをダウンロードしました！',
+      'toast-gif': 'GIFをエクスポートしました！',
+      'toast-gif-need': '2コマ以上保存してください',
+    }
+  };
+
+  let lang = 'en';
+
+  function setLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    document.querySelectorAll('.lang-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.lang === l));
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (i18n[l][key]) el.textContent = i18n[l][key];
+    });
+    updatePresetLabels();
+  }
+
+  document.querySelectorAll('.lang-btn').forEach(b =>
+    b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+  // =========================================================================
+  // State
+  // =========================================================================
+  const INTERNAL = 32;
+  let grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
+  let resolution = 8;
+  let selectedColor = 1; // body
+  let isPainting = false;
+  let loadedPreset = null;
+
+  // Undo/Redo
+  let undoStack = [];
+  let redoStack = [];
+  function pushUndo() {
+    undoStack.push(grid.map(r => Int8Array.from(r)));
+    if (undoStack.length > 50) undoStack.shift();
+    redoStack = [];
+  }
+  function undo() {
+    if (!undoStack.length) return;
+    redoStack.push(grid.map(r => Int8Array.from(r)));
+    grid = undoStack.pop();
+    render();
+  }
+  function redo() {
+    if (!redoStack.length) return;
+    undoStack.push(grid.map(r => Int8Array.from(r)));
+    grid = redoStack.pop();
+    render();
+  }
+
+  // Color variants
+  const palettes = {
+    green:  { base: '#4CAF50', light: '#81C784', dark: '#388E3C', highlight: '#E8F5E9' },
+    pink:   { base: '#F48FB1', light: '#F8BBD0', dark: '#EC407A', highlight: '#FCE4EC' },
+    red:    { base: '#EF5350', light: '#EF9A9A', dark: '#C62828', highlight: '#FFEBEE' },
+  };
+  let currentPalette = 'green';
+
+  // Effects
+  const fx = {
+    gradient: true,
+    emboss: true,
+    embossStrength: 0.7,
+    scanlines: false,
+  };
+
+  // Snapshots
+  let snapshots = [];
+
+  // =========================================================================
+  // Cell types
+  // =========================================================================
+  const CELL_TYPES = [
+    { value: 0, label: 'Empty', labelJa: '空',     color: '#F5F5F5', textColor: '#999' },
+    { value: 1, label: 'Body',  labelJa: '体',     color: '#4CAF50', textColor: '#fff' },
+    { value: 2, label: 'Eye',   labelJa: '目',     color: '#1A1A1A', textColor: '#fff' },
+    { value: 3, label: 'Mouth', labelJa: '口',     color: '#333333', textColor: '#fff' },
+    { value: 4, label: 'Hi',    labelJa: 'ハイ',   color: '#E8F5E9', textColor: '#666' },
+  ];
+
+  // =========================================================================
+  // Presets (8x8 grids from kodomobank)
+  // =========================================================================
+  const PRESETS = {
+    normal: {
+      en: 'Normal', ja: 'ふつう',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,2,1,0,2,1,0],
+        [0,1,2,1,1,2,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,3,3,3,3,3,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,0,1,1,0,1,0],
+      ]
+    },
+    surprised: {
+      en: 'Surprised', ja: 'びっくり',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,2,2,0,2,2,0],
+        [0,1,2,2,1,2,2,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,3,3,3,3,3,1],
+        [0,1,3,3,3,3,3,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,0,1,1,0,1,0],
+      ]
+    },
+    happy: {
+      en: 'Happy', ja: 'うれしい',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,2,1,0,2,1,0],
+        [0,1,2,1,1,2,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,3,1,1,1,3,1],
+        [0,1,1,3,3,3,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,0,1,1,0,1,0],
+      ]
+    },
+    sleepy: {
+      en: 'Sleepy', ja: 'ねむい',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,1,1,0,1,1,0],
+        [0,1,1,1,1,1,1,1],
+        [0,1,3,3,3,3,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,0,1,1,0,1,0],
+      ]
+    },
+    sad: {
+      en: 'Sad', ja: 'かなしい',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,1,1,0,1,1,0],
+        [0,1,1,1,1,1,1,1],
+        [0,1,2,1,1,2,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,3,3,3,1,1,1],
+        [0,1,1,1,1,1,1,1],
+        [0,1,0,1,1,0,1,0],
+      ]
+    },
+    jumpR: {
+      en: 'Jump R', ja: 'ジャンプ→',
+      grid: [
+        [0,0,1,1,0,1,1,0],
+        [0,0,1,2,0,1,2,0],
+        [0,1,1,1,1,1,1,1],
+        [0,1,1,3,3,3,3,1],
+        [1,1,1,3,3,3,3,1],
+        [0,1,1,3,3,3,3,1],
+        [1,1,1,1,1,1,1,1],
+        [0,0,0,0,1,0,0,1],
+      ]
+    },
+    jumpL: {
+      en: 'Jump L', ja: '←ジャンプ',
+      grid: [
+        [0,1,1,0,1,1,0,0],
+        [0,2,1,0,2,1,0,0],
+        [1,1,1,1,1,1,1,0],
+        [1,3,3,3,3,1,1,0],
+        [1,3,3,3,3,1,1,1],
+        [1,3,3,3,3,1,1,0],
+        [1,1,1,1,1,1,1,1],
+        [1,0,0,1,0,0,0,0],
+      ]
+    },
+  };
+
+  // =========================================================================
+  // Palette UI
+  // =========================================================================
+  function buildPalette() {
+    const el = document.getElementById('palette');
+    el.innerHTML = '';
+    CELL_TYPES.forEach(ct => {
+      const btn = document.createElement('button');
+      btn.className = 'palette-btn' + (selectedColor === ct.value ? ' active' : '');
+      btn.style.background = ct.color;
+      btn.innerHTML = `<span class="palette-label" style="color:${ct.textColor}">${lang === 'ja' ? ct.labelJa : ct.label}</span>`;
+      btn.onclick = () => {
+        selectedColor = ct.value;
+        buildPalette();
+      };
+      el.appendChild(btn);
+    });
+  }
+
+  // =========================================================================
+  // Variant selector
+  // =========================================================================
+  function buildVariants() {
+    const el = document.getElementById('variantSelector');
+    el.innerHTML = '';
+    Object.keys(palettes).forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'variant-btn' + (currentPalette === k ? ' active' : '');
+      btn.style.background = palettes[k].base;
+      btn.onclick = () => { currentPalette = k; buildVariants(); renderPreview(); };
+      el.appendChild(btn);
+    });
+  }
+
+  // =========================================================================
+  // Resolution
+  // =========================================================================
+  document.querySelectorAll('.res-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      resolution = parseInt(btn.dataset.res);
+      document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGrid();
+    });
+  });
+
+  // =========================================================================
+  // Grid helpers
+  // =========================================================================
+  function blockSize() { return INTERNAL / resolution; }
+
+  function getCellValue(r, c) {
+    const bs = blockSize();
+    return grid[r * bs][c * bs];
+  }
+
+  function setCellValue(r, c, val) {
+    const bs = blockSize();
+    const br = r * bs, bc = c * bs;
+    for (let dr = 0; dr < bs; dr++)
+      for (let dc = 0; dc < bs; dc++)
+        grid[br + dr][bc + dc] = val;
+  }
+
+  function loadFrom8x8(g8) {
+    const scale = INTERNAL / 8;
+    for (let r = 0; r < 8; r++)
+      for (let c = 0; c < 8; c++) {
+        const val = g8[r][c];
+        for (let dr = 0; dr < scale; dr++)
+          for (let dc = 0; dc < scale; dc++)
+            grid[r * scale + dr][c * scale + dc] = val;
+      }
+  }
+
+  function exportAs8x8() {
+    const scale = INTERNAL / 8;
+    return Array.from({length: 8}, (_, r) =>
+      Array.from({length: 8}, (_, c) => grid[r * scale][c * scale]));
+  }
+
+  function clearGrid() {
+    pushUndo();
+    grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
+    loadedPreset = null;
+    render();
+  }
+
+  // =========================================================================
+  // Preset buttons
+  // =========================================================================
+  function renderMiniPreview(canvas, grid8) {
+    const ctx = canvas.getContext('2d');
+    const pal = palettes.green;
+    const bw = canvas.width / 8, bh = canvas.height / 8;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const val = grid8[r][c];
+        if (val === 0) continue;
+        const x = c * bw, y = r * bh;
+        if (val === 1) {
+          const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
+          grad.addColorStop(0, pal.light); grad.addColorStop(1, pal.dark);
+          ctx.fillStyle = grad;
+        } else if (val === 2 || val === 3) {
+          ctx.fillStyle = '#1A1A1A';
+        } else if (val === 4) {
+          ctx.fillStyle = pal.highlight;
+        }
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  function buildPresets() {
+    const el = document.getElementById('presetGrid');
+    el.innerHTML = '';
+    Object.entries(PRESETS).forEach(([key, p]) => {
+      const btn = document.createElement('button');
+      btn.className = 'preset-btn' + (loadedPreset === key ? ' active' : '');
+
+      const cvs = document.createElement('canvas');
+      cvs.width = 48; cvs.height = 48;
+      renderMiniPreview(cvs, p.grid);
+
+      const label = document.createElement('span');
+      label.textContent = lang === 'ja' ? p.ja : p.en;
+
+      btn.appendChild(cvs);
+      btn.appendChild(label);
+      btn.onclick = () => {
+        pushUndo();
+        grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
+        loadFrom8x8(p.grid);
+        loadedPreset = key;
+        buildPresets();
+        render();
+      };
+      el.appendChild(btn);
+    });
+  }
+
+  function updatePresetLabels() {
+    buildPresets();
+    buildPalette();
+  }
+
+  // =========================================================================
+  // Grid rendering (flat colors for editor)
+  // =========================================================================
+  const FLAT_COLORS = { 0: '#F5F5F5', 1: '#4CAF50', 2: '#1A1A1A', 3: '#333333', 4: '#E8F5E9' };
+  const gridCanvas = document.getElementById('gridCanvas');
+  const gridCtx = gridCanvas.getContext('2d');
+
+  function renderGrid() {
+    const maxW = Math.min(window.innerWidth - 80, 500);
+    const cellPx = Math.floor(maxW / resolution);
+    const totalPx = cellPx * resolution;
+    gridCanvas.width = totalPx;
+    gridCanvas.height = totalPx;
+    gridCanvas.style.width = totalPx + 'px';
+    gridCanvas.style.height = totalPx + 'px';
+
+    const bs = blockSize();
+
+    for (let r = 0; r < resolution; r++) {
+      for (let c = 0; c < resolution; c++) {
+        const val = grid[r * bs][c * bs];
+        gridCtx.fillStyle = FLAT_COLORS[val] || '#F5F5F5';
+        gridCtx.fillRect(c * cellPx, r * cellPx, cellPx, cellPx);
+      }
+    }
+
+    // Grid lines
+    gridCtx.strokeStyle = 'rgba(0,0,0,0.12)';
+    gridCtx.lineWidth = 0.5;
+    for (let i = 0; i <= resolution; i++) {
+      const pos = i * cellPx;
+      gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalPx); gridCtx.stroke();
+      gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalPx, pos); gridCtx.stroke();
+    }
+
+    // Major grid lines (8x8 boundaries) when in higher resolution
+    if (resolution > 8) {
+      gridCtx.strokeStyle = 'rgba(0,0,0,0.35)';
+      gridCtx.lineWidth = 2;
+      const majorStep = resolution / 8;
+      for (let i = 0; i <= 8; i++) {
+        const pos = i * majorStep * cellPx;
+        gridCtx.beginPath(); gridCtx.moveTo(pos, 0); gridCtx.lineTo(pos, totalPx); gridCtx.stroke();
+        gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalPx, pos); gridCtx.stroke();
+      }
+    }
+  }
+
+  // =========================================================================
+  // Preview rendering (with effects)
+  // =========================================================================
+  function renderPreviewToCanvas(canvas, grid8, pal) {
+    if (!pal) pal = palettes[currentPalette];
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const bw = w / 8, bh = h / 8;
+    const isLarge = w >= 100;
+
+    ctx.clearRect(0, 0, w, h);
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const val = grid8[r][c];
+        if (val === 0) continue;
+        const x = c * bw, y = r * bh;
+
+        if (val === 1) {
+          // Body
+          if (fx.gradient) {
+            const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
+            grad.addColorStop(0, pal.light);
+            grad.addColorStop(1, pal.dark);
+            ctx.fillStyle = grad;
+          } else {
+            ctx.fillStyle = pal.base;
+          }
+          ctx.fillRect(x, y, bw, bh);
+
+          // Sub-pixel texture for large
+          if (isLarge) {
+            const sw = bw / 2, sh = bh / 2;
+            for (let sy = 0; sy < 2; sy++) {
+              for (let sx = 0; sx < 2; sx++) {
+                const v = ((r + c + sx + sy) % 3) * 0.015;
+                if (v > 0) {
+                  ctx.fillStyle = `rgba(0,0,0,${v})`;
+                  ctx.fillRect(x + sx * sw, y + sy * sh, sw, sh);
+                }
+              }
+            }
+          }
+        } else if (val === 2 || val === 3) {
+          // Eye / Mouth
+          ctx.fillStyle = '#1A1A1A';
+          ctx.fillRect(x, y, bw, bh);
+        } else if (val === 4) {
+          // Highlight
+          ctx.fillStyle = pal.highlight;
+          ctx.fillRect(x, y, bw, bh);
+        }
+
+        // Emboss
+        if (fx.emboss) {
+          const s = fx.embossStrength;
+          const sw = isLarge ? 1.5 * s : 0.8 * s;
+          const hA = (isLarge ? 0.25 : 0.15) * s;
+          const sA = (isLarge ? 0.2 : 0.12) * s;
+
+          // Highlight (top-left)
+          ctx.strokeStyle = `rgba(255,255,255,${hA})`;
+          ctx.lineWidth = sw;
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke();
+
+          // Shadow (bottom-right)
+          ctx.strokeStyle = `rgba(0,0,0,${sA})`;
+          ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke();
+        }
+      }
+    }
+
+    // Scanlines
+    if (fx.scanlines) {
+      ctx.fillStyle = 'rgba(0,0,0,0.04)';
+      for (let y = 0; y < h; y += 2) {
+        ctx.fillRect(0, y, w, 1);
+      }
+    }
+  }
+
+  function renderPreview() {
+    const grid8 = exportAs8x8();
+    renderPreviewToCanvas(document.getElementById('previewCanvas'), grid8);
+    renderPreviewToCanvas(document.getElementById('prevMd'), grid8);
+    renderPreviewToCanvas(document.getElementById('prevSm'), grid8);
+    updateCodePreview();
+  }
+
+  function render() {
+    renderGrid();
+    renderPreview();
+  }
+
+  // =========================================================================
+  // Grid interaction (mouse + touch)
+  // =========================================================================
+  function cellFromEvent(e) {
+    const rect = gridCanvas.getBoundingClientRect();
+    const scaleX = gridCanvas.width / rect.width;
+    const scaleY = gridCanvas.height / rect.height;
+    let clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    const cellPx = gridCanvas.width / resolution;
+    const col = Math.floor(x / cellPx);
+    const row = Math.floor(y / cellPx);
+    if (col < 0 || col >= resolution || row < 0 || row >= resolution) return null;
+    return { row, col };
+  }
+
+  let paintVal = null;
+
+  function startPaint(e) {
+    e.preventDefault();
+    isPainting = true;
+    pushUndo();
+    const cell = cellFromEvent(e);
+    if (!cell) return;
+    const cur = getCellValue(cell.row, cell.col);
+    // Toggle if same color
+    paintVal = (cur === selectedColor) ? 0 : selectedColor;
+    setCellValue(cell.row, cell.col, paintVal);
+    render();
+  }
+
+  function movePaint(e) {
+    if (!isPainting) return;
+    e.preventDefault();
+    const cell = cellFromEvent(e);
+    if (!cell) return;
+    const cur = getCellValue(cell.row, cell.col);
+    if (cur !== paintVal) {
+      setCellValue(cell.row, cell.col, paintVal);
+      render();
+    }
+  }
+
+  function endPaint() { isPainting = false; }
+
+  gridCanvas.addEventListener('mousedown', startPaint);
+  gridCanvas.addEventListener('mousemove', movePaint);
+  gridCanvas.addEventListener('mouseup', endPaint);
+  gridCanvas.addEventListener('mouseleave', endPaint);
+  gridCanvas.addEventListener('touchstart', startPaint, { passive: false });
+  gridCanvas.addEventListener('touchmove', movePaint, { passive: false });
+  gridCanvas.addEventListener('touchend', endPaint);
+
+  // =========================================================================
+  // Effects controls
+  // =========================================================================
+  function toggleFx(btn) {
+    const key = btn.dataset.fx;
+    fx[key] = !fx[key];
+    btn.classList.toggle('on', fx[key]);
+    renderPreview();
+  }
+
+  function setFxStrength(key, val) {
+    fx[key + 'Strength'] = val / 100;
+    renderPreview();
+  }
+
+  // =========================================================================
+  // Snapshots
+  // =========================================================================
+  function saveSnapshot() {
+    snapshots.push({ grid8: exportAs8x8() });
+    renderSnapshots();
+    toast(i18n[lang]['toast-save']);
+  }
+
+  function renderSnapshots() {
+    const section = document.getElementById('snapshotSection');
+    const container = document.getElementById('snapGrid');
+    const countEl = document.getElementById('frameCount');
+
+    if (snapshots.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    section.style.display = 'block';
+    countEl.textContent = `(${snapshots.length})`;
+    container.innerHTML = '';
+
+    snapshots.forEach((snap, idx) => {
+      const card = document.createElement('div');
+      card.className = 'snap-card';
+
+      const header = document.createElement('div');
+      header.className = 'snap-header';
+      header.textContent = `#${idx + 1}`;
+
+      const cvs = document.createElement('canvas');
+      cvs.width = 64; cvs.height = 64;
+      renderPreviewToCanvas(cvs, snap.grid8);
+
+      const actions = document.createElement('div');
+      actions.className = 'snap-actions';
+
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'snap-action';
+      loadBtn.textContent = 'Load';
+      loadBtn.onclick = () => {
+        pushUndo();
+        grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
+        loadFrom8x8(snap.grid8);
+        loadedPreset = null;
+        render();
+      };
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'snap-action';
+      delBtn.textContent = 'Del';
+      delBtn.style.color = '#e53935';
+      delBtn.onclick = () => { snapshots.splice(idx, 1); renderSnapshots(); };
+
+      actions.appendChild(loadBtn);
+      actions.appendChild(delBtn);
+      card.appendChild(header);
+      card.appendChild(cvs);
+      card.appendChild(actions);
+      container.appendChild(card);
+    });
+  }
+
+  // =========================================================================
+  // Export: Dart code
+  // =========================================================================
+  function dartCodeFrom8x8(g8) {
+    let s = 'static const _expression = [\n';
+    for (let r = 0; r < 8; r++) {
+      s += '  [' + g8[r].join(', ') + '],\n';
+    }
+    s += '];';
+    return s;
+  }
+
+  function updateCodePreview() {
+    document.getElementById('codePreview').textContent = dartCodeFrom8x8(exportAs8x8());
+  }
+
+  function copyDartCode() {
+    navigator.clipboard.writeText(dartCodeFrom8x8(exportAs8x8()));
+    toast(i18n[lang]['toast-copy']);
+  }
+
+  function copyAllDart() {
+    const code = snapshots.map((s, i) =>
+      `// Frame ${i + 1}\n` + dartCodeFrom8x8(s.grid8)
+    ).join('\n\n');
+    navigator.clipboard.writeText(code);
+    toast(i18n[lang]['toast-copy']);
+  }
+
+  // =========================================================================
+  // Export: PNG
+  // =========================================================================
+  function exportPNG() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 256; cvs.height = 256;
+    renderPreviewToCanvas(cvs, exportAs8x8());
+    const link = document.createElement('a');
+    link.download = 'frog-pixel.png';
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+    toast(i18n[lang]['toast-png']);
+  }
+
+  // =========================================================================
+  // Export: GIF animation
+  // =========================================================================
+  function exportGIF() {
+    if (snapshots.length < 2) {
+      toast(i18n[lang]['toast-gif-need']);
+      return;
+    }
+
+    const btn = document.getElementById('gifBtn');
+    btn.disabled = true;
+    btn.textContent = 'Rendering...';
+
+    const size = 256;
+    const gif = new GIF({
+      workers: 2,
+      quality: 10,
+      width: size,
+      height: size,
+      workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js',
+    });
+
+    snapshots.forEach(snap => {
+      const cvs = document.createElement('canvas');
+      cvs.width = size; cvs.height = size;
+      renderPreviewToCanvas(cvs, snap.grid8);
+      gif.addFrame(cvs, { delay: 200 });
+    });
+
+    gif.on('finished', blob => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = 'frog-animation.gif';
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+      btn.disabled = false;
+      btn.innerHTML = `GIF <span data-i18n="export-gif">${i18n[lang]['export-gif']}</span>`;
+      toast(i18n[lang]['toast-gif']);
+    });
+
+    gif.render();
+  }
+
+  // =========================================================================
+  // Toast
+  // =========================================================================
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  // =========================================================================
+  // Init
+  // =========================================================================
+  function init() {
+    // Auto-detect language (must be AFTER all const declarations)
+    if ((navigator.language || '').startsWith('ja')) {
+      lang = 'ja';
+      document.documentElement.lang = 'ja';
+      document.querySelectorAll('.lang-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.lang === 'ja'));
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (i18n.ja[key]) el.textContent = i18n.ja[key];
+      });
+    }
+    buildPalette();
+    buildVariants();
+    buildPresets();
+    render();
+  }
+
+  init();
+  window.addEventListener('resize', renderGrid);
+  </script>
+</body>
+</html>
