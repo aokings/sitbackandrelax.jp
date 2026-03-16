@@ -3013,23 +3013,33 @@
     const BODY = '#4CAF50', EYE = '#1A1A1A', MOUTH = '#333333', HI = '#E8F5E9';
     const colorMap = { 0: null, 1: BODY, 2: EYE, 3: MOUTH, 4: HI };
 
-    // Expressions to cycle through
-    const expressions = [
+    // Idle expressions to show between jumps
+    const faceExprs = [
       PRESETS.normal.grid,
       PRESETS.happy.grid,
       PRESETS.surprised.grid,
       PRESETS.sleepy.grid,
-      PRESETS.normal.grid,
       PRESETS.sad.grid,
     ];
 
-    let exprIdx = 0;
-    let bounceY = 0;
-    let phase = 'idle';   // 'idle' | 'jump' | 'land'
+    let faceIdx = 0;
+    let jumpDir = 1;        // 1 = right, -1 = left
+    let phase = 'idle';     // 'idle' | 'jump'
     let tick = 0;
     let idleTicks = 0;
-    const IDLE_DURATION = 40;  // ticks to stay idle (~2s at 50ms)
-    const JUMP_FRAMES = [0, -2, -4, -5, -5, -4, -2, 0]; // bounce curve in pixels
+    const IDLE_DURATION = 30;  // ~1.5s at 50ms
+    const HOP_X = 4;          // pixels to move sideways
+    // Arc: up then down, with horizontal drift
+    const JUMP_ARC = [
+      { y: 0,  x: 0 },
+      { y: -2, x: 0.5 },
+      { y: -4, x: 1.2 },
+      { y: -5, x: 2.0 },
+      { y: -5, x: 2.8 },
+      { y: -4, x: 3.3 },
+      { y: -2, x: 3.7 },
+      { y: 0,  x: 4.0 },
+    ];
 
     function drawFrog(grid) {
       ctx.clearRect(0, 0, 8, 8);
@@ -3045,30 +3055,38 @@
 
     function update() {
       if (phase === 'idle') {
+        // Show face expression while idle
+        drawFrog(faceExprs[faceIdx]);
         idleTicks++;
         if (idleTicks >= IDLE_DURATION) {
           phase = 'jump';
           tick = 0;
           idleTicks = 0;
+          // Show jump pose for current direction
+          drawFrog(jumpDir > 0 ? PRESETS.jumpR.grid : PRESETS.jumpL.grid);
         }
       } else if (phase === 'jump') {
-        bounceY = JUMP_FRAMES[tick] || 0;
-        cvs.style.transform = `translateY(${bounceY}px)`;
+        const frame = JUMP_ARC[tick];
+        const dx = frame.x * jumpDir;
+        cvs.style.transform = `translate(${dx}px, ${frame.y}px)`;
+        drawFrog(jumpDir > 0 ? PRESETS.jumpR.grid : PRESETS.jumpL.grid);
         tick++;
-        if (tick >= JUMP_FRAMES.length) {
-          // Change expression after landing
-          exprIdx = (exprIdx + 1) % expressions.length;
+        if (tick >= JUMP_ARC.length) {
+          // Land: switch direction, change face
+          jumpDir *= -1;
+          faceIdx = (faceIdx + 1) % faceExprs.length;
           phase = 'idle';
-          bounceY = 0;
-          cvs.style.transform = 'translateY(0)';
+          cvs.style.transform = `translate(${HOP_X * -jumpDir}px, 0)`;
+          drawFrog(faceExprs[faceIdx]);
         }
       }
 
-      drawFrog(expressions[exprIdx]);
       requestAnimationFrame(() => setTimeout(update, 50));
     }
 
-    drawFrog(expressions[0]);
+    // Start centered, then will drift left/right around center
+    cvs.style.transform = 'translate(0, 0)';
+    drawFrog(faceExprs[0]);
     setTimeout(update, 1000);
   })();
 
