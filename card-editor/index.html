@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frog Card Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --accent: #8B6914;
+      --accent-dark: #6B4F10;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 40px rgba(0,0,0,0.08);
+      --mob-back: #2d1518; --mob-accent: #e8b4b8;
+      --elite-back: #0a3070; --elite-accent: #7eaadc;
+      --legend-back: #501a60; --legend-accent: #c48ed0;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--off-white); color: var(--text-primary); min-height: 100vh; min-width: 340px; }
+
+    /* Header */
+    header { padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; max-width: 1100px; margin: 0 auto; }
+    .back-link { font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); text-decoration: none; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: color 0.2s; }
+    .back-link:hover { color: var(--text-primary); }
+    .lang-switcher { display: flex; background: var(--warm-gray); border-radius: 8px; overflow: hidden; border: 1px solid var(--card-border); }
+    .lang-btn { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; padding: 0.4rem 0.8rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+    .lang-btn.active { background: var(--card-bg); color: var(--text-primary); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .page-title { text-align: center; padding: 0.3rem 2rem 1rem; }
+    .page-title h1 { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.1; }
+    .page-title .subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; }
+    .main-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 2rem; }
+
+    /* Card Grid (View 1) */
+    .card-group-title { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 1.2rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--card-border); }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .card-tile { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 0.7rem; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .card-tile:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+    .card-tile .emoji { font-size: 2rem; }
+    .card-tile .cname { font-size: 0.78rem; font-weight: 700; }
+    .card-tile .cinfo { font-size: 0.65rem; color: var(--text-muted); }
+    .card-tile .progress { display: flex; gap: 3px; margin-top: 2px; }
+    .card-tile .dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--card-border); }
+    .card-tile .dot.filled { background: var(--accent); border-color: var(--accent); }
+    .tier-badge { display: inline-block; font-size: 0.55rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tier-mob { background: var(--mob-back); }
+    .tier-elite { background: var(--elite-back); }
+    .tier-legend { background: var(--legend-back); }
+
+    /* Dashboard (View 2) */
+    .dash-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .dash-header .emoji { font-size: 2.5rem; }
+    .dash-header h2 { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.4rem; }
+    .dash-header .dinfo { font-size: 0.78rem; color: var(--text-secondary); }
+    .slot-list { display: flex; flex-direction: column; gap: 10px; }
+    .slot-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 0.8rem; display: flex; align-items: center; gap: 12px; transition: all 0.15s; }
+    .slot-thumb { width: 60px; height: 60px; background: var(--warm-gray); border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .slot-thumb canvas { image-rendering: pixelated; }
+    .slot-info { flex: 1; }
+    .slot-info .sname { font-size: 0.82rem; font-weight: 700; }
+    .slot-info .sdesc { font-size: 0.68rem; color: var(--text-muted); }
+    .slot-badge { font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+    .badge-required { background: #fdecea; color: #c62828; }
+    .badge-optional { background: #fff8e1; color: #f57f17; }
+    .badge-done { background: #e8f5e9; color: #2e7d32; }
+    .slot-actions { display: flex; gap: 6px; }
+
+    /* Preview section in dashboard */
+    .preview-section { margin-top: 1.2rem; text-align: center; }
+    .preview-section canvas { image-rendering: pixelated; border: 1px solid var(--card-border); border-radius: 6px; }
+
+    /* Editor (View 3) */
+    .editor-area { display: flex; gap: 1.2rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+    .canvas-col { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+    .canvas-label { font-family: 'Outfit', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+    .canvas-wrapper { background: var(--card-bg); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; }
+    canvas#gridCanvas { cursor: crosshair; display: block; image-rendering: pixelated; }
+    canvas#previewCanvas { display: block; image-rendering: pixelated; }
+
+    /* Drawers */
+    .drawer { max-width: 700px; margin: 0.8rem auto 0; }
+    .drawer-toggle { font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; color: var(--text-secondary); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; width: 100%; text-align: left; transition: color 0.2s; }
+    .drawer-toggle:hover { color: var(--text-primary); }
+    .drawer-toggle .arrow { display: inline-block; transition: transform 0.25s; font-size: 0.6rem; }
+    .drawer-toggle.open .arrow { transform: rotate(90deg); }
+    .drawer-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .drawer-body.open { max-height: 1200px; }
+    .drawer-inner { background: var(--card-bg); border-radius: 12px; padding: 0.8rem; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); margin-bottom: 0.4rem; }
+
+    /* Palette */
+    #palette { display: flex; flex-wrap: wrap; gap: 5px; }
+    .palette-btn { position: relative; border: 2px solid transparent; border-radius: 7px; padding: 5px 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 500; min-width: 48px; text-align: center; transition: all 0.15s; }
+    .palette-btn.active { border-color: var(--text-primary); box-shadow: 0 0 0 2px rgba(26,26,26,0.15); transform: scale(1.06); }
+    .palette-label { pointer-events: none; white-space: nowrap; font-size: 0.6rem; }
+    .color-edit { position: absolute; top: 1px; right: 3px; font-size: 0.55rem; opacity: 0.5; cursor: pointer; }
+    .color-edit:hover { opacity: 1; }
+    .color-delete { position: absolute; top: -4px; right: -4px; background: #e53935; color: #fff; width: 14px; height: 14px; border-radius: 50%; font-size: 0.6rem; line-height: 14px; text-align: center; cursor: pointer; }
+    .palette-add { border: 2px dashed var(--card-border); border-radius: 7px; padding: 5px 10px; cursor: pointer; background: transparent; color: var(--text-muted); font-size: 1rem; font-weight: 700; transition: all 0.15s; }
+    .palette-add:hover { border-color: var(--text-secondary); color: var(--text-secondary); }
+
+    /* Part visibility */
+    .part-vis-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .vis-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 0.62rem; padding: 2px 6px; border: 1px solid var(--card-border); border-radius: 5px; cursor: pointer; transition: all 0.15s; }
+    .vis-chip.hidden { opacity: 0.3; }
+    .vis-swatch { width: 10px; height: 10px; border-radius: 2px; border: 1px solid rgba(0,0,0,0.1); }
+
+    /* Tool buttons */
+    .tool-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tool-btn { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 500; padding: 0.4rem 0.7rem; border-radius: 7px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+    .tool-btn:hover { background: var(--warm-gray); color: var(--text-primary); }
+    .tool-btn:active { transform: scale(0.96); }
+    .tool-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent-dark); }
+    .tool-btn.primary:hover { background: var(--accent-dark); }
+    .tool-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* Image import */
+    .drop-zone { border: 2px dashed var(--card-border); border-radius: 10px; padding: 1.2rem; text-align: center; color: var(--text-muted); font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+    .drop-zone.drag-over { border-color: var(--accent); background: rgba(139,105,20,0.04); color: var(--accent); }
+    .drop-zone input[type="file"] { display: none; }
+    .import-options { margin-top: 0.6rem; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .import-options label { font-size: 0.68rem; color: var(--text-secondary); }
+    .import-options select { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; padding: 3px 6px; border: 1px solid var(--card-border); border-radius: 5px; background: var(--card-bg); }
+
+    /* Overlays */
+    .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); z-index: 1000; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .overlay-card { background: var(--card-bg); border-radius: 14px; padding: 1.2rem; box-shadow: 0 12px 40px rgba(0,0,0,0.15); max-width: 360px; width: 90%; }
+    .overlay-title { font-family: 'Outfit', sans-serif; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.6rem; }
+    .overlay-input { width: 100%; padding: 0.45rem 0.7rem; border: 1px solid var(--card-border); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; margin-bottom: 0.5rem; }
+    .overlay-input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .overlay-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .color-grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 1px; margin-bottom: 0.6rem; }
+    .color-swatch { aspect-ratio: 1; border-radius: 2px; border: 1px solid rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.1s; min-width: 14px; }
+    .color-swatch:hover { transform: scale(1.3); z-index: 2; }
+    .color-swatch.active { border: 2px solid var(--text-primary); }
+
+    /* Animation Drawer */
+    .anim-part-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 0.6rem; }
+    .anim-chip { display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; border: 2px solid var(--card-border); cursor: pointer; font-size: 0.68rem; font-weight: 500; transition: all 0.15s; background: var(--card-bg); }
+    .anim-chip:hover { border-color: var(--text-muted); }
+    .anim-chip.active { border-color: var(--accent); background: #fdf8ef; }
+    .anim-chip .chip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .anim-chip .chip-star { font-size: 0.55rem; color: var(--accent); }
+    .anim-controls { border-top: 1px solid var(--card-border); padding-top: 0.6rem; margin-top: 0.2rem; }
+    .anim-row { display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem; font-size: 0.72rem; }
+    .anim-row label { min-width: 80px; color: var(--text-secondary); font-weight: 500; }
+    .anim-row select, .anim-row input[type="range"] { flex: 1; font-family: 'DM Sans', sans-serif; font-size: 0.68rem; }
+    .anim-row select { padding: 3px 6px; border: 1px solid var(--card-border); border-radius: 5px; background: var(--card-bg); }
+    .anim-row input[type="range"] { height: 4px; accent-color: var(--accent); }
+    .anim-row .range-val { font-size: 0.65rem; color: var(--text-muted); min-width: 24px; text-align: right; }
+    .anim-row input[type="color"] { width: 28px; height: 22px; border: 1px solid var(--card-border); border-radius: 4px; padding: 0; cursor: pointer; }
+    .anim-play-btns { display: flex; gap: 6px; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--card-border); }
+    .anim-play-btns button { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 600; padding: 4px 10px; border: 1px solid var(--card-border); border-radius: 6px; background: var(--card-bg); cursor: pointer; transition: all 0.15s; }
+    .anim-play-btns button:hover { border-color: var(--accent); color: var(--accent); }
+    .anim-play-btns button.playing { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-primary); color: #fff; padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.78rem; font-weight: 500; opacity: 0; transition: all 0.35s; z-index: 2000; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .editor-area { flex-direction: column; align-items: center; }
+      header { padding: 0.6rem 1rem; }
+      .main-wrap { padding: 0 0.8rem 2rem; }
+      .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <a class="back-link" id="backLink" onclick="navigateBack()">
+      <span>&larr;</span> <span id="backLabel" data-i18n="back">Home</span>
+    </a>
+    <div class="lang-switcher">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ja">JP</button>
+    </div>
+  </header>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 1: Card Selection -->
+  <!-- ============================================================ -->
+  <section id="viewCardSelect">
+    <div class="page-title">
+      <h1>Frog Card Editor</h1>
+      <p class="subtitle" data-i18n="subtitle">Pixel art card editor for Wind &amp; Gate</p>
+    </div>
+    <div class="main-wrap" id="cardGridContainer"></div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 2: Asset Dashboard -->
+  <!-- ============================================================ -->
+  <section id="viewDashboard" style="display:none;">
+    <div class="main-wrap">
+      <div class="dash-header" id="dashHeader"></div>
+      <div class="slot-list" id="slotList"></div>
+      <div class="preview-section" id="previewSection">
+        <span class="canvas-label" data-i18n="card-preview">CARD PREVIEW</span>
+        <div style="margin-top:6px;">
+          <canvas id="compositeCanvas" width="192" height="288"></canvas>
+        </div>
+        <div class="tool-row" style="justify-content:center; margin-top:8px;">
+          <button class="tool-btn primary" onclick="exportCompositePNG()" id="exportPngBtn" disabled data-i18n="export-png">Download PNG</button>
+          <button class="tool-btn" onclick="exportCardJSON()" id="exportJsonBtn" disabled data-i18n="export-json">Download JSON</button>
+          <button class="tool-btn" onclick="copyCardJSON()" id="copyJsonBtn" disabled data-i18n="copy-json">Copy JSON</button>
+        </div>
+      </div>
+      <div style="margin-top:1.2rem; padding-top:1rem; border-top:1px solid var(--card-border); display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+        <button class="tool-btn" onclick="copyAllData()" data-i18n="copy-all">📋 Copy All Data</button>
+        <button class="tool-btn" onclick="loadAllData()" data-i18n="load-all">📥 Load Data</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- VIEW 3: Pixel Editor -->
+  <!-- ============================================================ -->
+  <section id="viewEditor" style="display:none;">
+    <div class="page-title">
+      <h1 id="editorTitle">Editor</h1>
+      <p class="subtitle" id="editorSubtitle"></p>
+    </div>
+    <div class="main-wrap">
+      <div class="editor-area">
+        <div class="canvas-col">
+          <span class="canvas-label" data-i18n="grid-label">EDITOR</span>
+          <div class="canvas-wrapper"><canvas id="gridCanvas"></canvas></div>
+        </div>
+        <div class="canvas-col">
+          <span class="canvas-label" data-i18n="preview-label">PREVIEW</span>
+          <div class="canvas-wrapper"><canvas id="previewCanvas"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Parts Palette -->
+      <div class="drawer">
+        <button class="drawer-toggle open" onclick="toggleDrawer(this)">
+          <span class="arrow">&#9654;</span> <span data-i18n="parts-title">Parts</span>
+        </button>
+        <div class="drawer-body open"><div class="drawer-inner">
+          <div id="palette"></div>
+          <div id="partVisibility"></div>
+        </div></div>
+      </div>
+
+      <!-- Tools -->
+      <div class="drawer">
+        <button class="drawer-toggle open" onclick="toggleDrawer(this)">
+          <span class="arrow">&#9654;</span> <span data-i18n="tools-title">Tools</span>
+        </button>
+        <div class="drawer-body open"><div class="drawer-inner">
+          <div class="tool-row">
+            <button class="tool-btn" onclick="undo()" data-i18n="undo">Undo</button>
+            <button class="tool-btn" onclick="redo()" data-i18n="redo">Redo</button>
+            <button class="tool-btn" onclick="clearGrid()" data-i18n="clear">Clear</button>
+            <button class="tool-btn" onclick="fillSelected()" data-i18n="fill">Fill</button>
+            <button class="tool-btn" onclick="clearPart()" data-i18n="clear-part">Clear Part</button>
+            <button class="tool-btn primary" onclick="saveAsset()" data-i18n="save">Save</button>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- Animation -->
+      <div class="drawer" id="animDrawer">
+        <button class="drawer-toggle" onclick="toggleDrawer(this)">
+          <span class="arrow">&#9654;</span> <span data-i18n="anim-title">Animation</span>
+        </button>
+        <div class="drawer-body"><div class="drawer-inner">
+          <div id="animPartChips" class="anim-part-chips"></div>
+          <div id="animControls" class="anim-controls" style="display:none">
+            <div class="anim-row">
+              <label data-i18n="anim-type">Type</label>
+              <select id="animTypeSelect" onchange="onAnimTypeChange()">
+                <option value="" data-i18n="anim-none">— None —</option>
+                <option value="shake" data-i18n="anim-shake">Shake</option>
+                <option value="move" data-i18n="anim-move">Move</option>
+                <option value="fade" data-i18n="anim-fade">Fade</option>
+                <option value="color" data-i18n="anim-color">Color Shift</option>
+                <option value="rotate" data-i18n="anim-rotate">Rotate</option>
+              </select>
+            </div>
+            <div id="animParams"></div>
+            <div class="anim-row">
+              <label><input type="checkbox" id="animEnabled" checked onchange="onAnimEnabledChange()"> <span data-i18n="anim-enabled">Enabled</span></label>
+            </div>
+          </div>
+          <div class="anim-play-btns">
+            <button onclick="playPartAnim()" id="btnPlayPart" data-i18n="anim-play">▶ Play</button>
+            <button onclick="playAllAnims()" id="btnPlayAll" data-i18n="anim-play-all">▶ All</button>
+            <button onclick="stopAnims()" id="btnStop" data-i18n="anim-stop">■ Stop</button>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- Image Import -->
+      <div class="drawer">
+        <button class="drawer-toggle" onclick="toggleDrawer(this)">
+          <span class="arrow">&#9654;</span> <span data-i18n="import-title">Image Import</span>
+        </button>
+        <div class="drawer-body"><div class="drawer-inner">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <p data-i18n="drop-hint">Drop image here or click to select</p>
+            <input type="file" id="fileInput" accept="image/*">
+          </div>
+          <div class="import-options">
+            <label data-i18n="map-mode">Mapping:</label>
+            <select id="mapMode">
+              <option value="auto">Auto</option>
+              <option value="brightness">Brightness</option>
+            </select>
+            <button class="tool-btn" onclick="applyImportedImage()" id="applyImportBtn" disabled data-i18n="apply-import">Apply</button>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Overlays -->
+  <div class="overlay" id="addTypeOverlay">
+    <div class="overlay-card">
+      <div class="overlay-title" id="addTypeLabel">Name this part type</div>
+      <input class="overlay-input" id="addTypeInput" maxlength="20">
+      <div class="overlay-actions">
+        <button class="tool-btn" onclick="closeAddType()" data-i18n="btn-cancel">Cancel</button>
+        <button class="tool-btn primary" id="addTypeConfirm" onclick="confirmAddType()" data-i18n="add-btn">Add</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="colorPickerOverlay">
+    <div class="overlay-card" style="max-width:420px;">
+      <div class="overlay-title" id="colorPickerLabel">Pick color</div>
+      <div class="color-grid" id="colorGrid"></div>
+      <div class="overlay-actions"><button class="tool-btn" onclick="closeColorPicker()">OK</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="importJsonOverlay">
+    <div class="overlay-card" style="max-width:480px;">
+      <div class="overlay-title" data-i18n="import-json-title">Import Asset JSON</div>
+      <textarea class="overlay-input" id="importJsonInput" rows="8"
+        style="font-family:monospace; font-size:0.7rem; resize:vertical;"
+        placeholder='{"grid":[[...]], "partTypes":[...]}'></textarea>
+      <div id="importJsonError" style="color:#c62828; font-size:0.7rem; margin-bottom:0.4rem;"></div>
+      <div class="overlay-actions">
+        <button class="tool-btn" onclick="closeImportJson()" data-i18n="btn-cancel">Cancel</button>
+        <button class="tool-btn primary" onclick="confirmImportJson()" data-i18n="import-json-apply">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SECTION 1: i18n
+// ═══════════════════════════════════════════════════════════════
+const i18n = {
+  en: {
+    back: 'Home', subtitle: 'Pixel art card editor for Wind & Gate',
+    'grid-label': 'EDITOR', 'preview-label': 'PREVIEW',
+    'parts-title': 'Parts', 'tools-title': 'Tools', 'import-title': 'Image Import',
+    undo: 'Undo', redo: 'Redo', clear: 'Clear', fill: 'Fill', 'clear-part': 'Clear Part', save: 'Save & Back',
+    'drop-hint': 'Drop image here or click to select', 'map-mode': 'Mapping:', 'apply-import': 'Apply',
+    'export-png': 'Download PNG', 'export-json': 'Download JSON', 'card-preview': 'CARD PREVIEW',
+    'pick-color': 'Pick color for', 'add-type': 'Name this part type', 'add-btn': 'Add',
+    'toast-saved': 'Saved!', 'toast-copy': 'Copied!', 'toast-png': 'PNG downloaded!', 'toast-json': 'JSON downloaded!',
+    'btn-cancel': 'Cancel',
+    'toast-type-added': 'Part type added!', 'toast-type-removed': 'Part type removed', 'toast-type-max': 'Max 12 types',
+    'toast-cleared': 'Cleared!', 'toast-filled': 'Filled!', 'toast-part-cleared': 'Part cleared!',
+    'toast-image-loaded': 'Image loaded! Click Apply.', 'toast-export-block': 'Required assets missing',
+    'back-cards': 'Cards', 'back-dashboard': 'Dashboard',
+    'slot-required': 'Required', 'slot-optional': 'Optional', 'slot-done': 'Done',
+    'btn-create': 'Create', 'btn-edit': 'Edit',
+    'mob-title': 'Mob (1pt)', 'elite-title': 'Elite (5pt)', 'legend-title': 'Legend', 'special-title': 'Special',
+    'character': 'Character', 'frame': 'Card Frame', 'back-asset': 'Card Back', 'icon': 'Category Icon', 'points': 'Points',
+    'shared-with': 'Shared:',
+    'anim-title': 'Animation', 'anim-type': 'Type', 'anim-enabled': 'Enabled',
+    'anim-play': '▶ Play', 'anim-play-all': '▶ All', 'anim-stop': '■ Stop',
+    'anim-speed': 'Speed', 'anim-amplitude': 'Amplitude', 'anim-axis': 'Axis',
+    'anim-distance': 'Distance', 'anim-direction': 'Direction',
+    'anim-min-opacity': 'Min Opacity', 'anim-target-color': 'Target Color', 'anim-angle': 'Angle',
+    'anim-shake': 'Shake', 'anim-move': 'Move', 'anim-fade': 'Fade', 'anim-color': 'Color Shift', 'anim-rotate': 'Rotate',
+    'anim-none': '— None —',
+    'anim-axis-x': 'Horizontal', 'anim-axis-y': 'Vertical', 'anim-axis-xy': 'Both',
+    'anim-dir-up': 'Up', 'anim-dir-down': 'Down', 'anim-dir-left': 'Left', 'anim-dir-right': 'Right',
+    'import-json-title': 'Import Asset JSON', 'import-json-apply': 'Import', 'import-json-btn': 'Import',
+    'toast-imported': 'Imported!', 'toast-import-error': 'Import failed: ',
+    'copy-json': 'Copy JSON', 'toast-copied-json': 'JSON copied!',
+    'copy-all': '📋 Copy All Data', 'load-all': '📥 Load Data', 'toast-all-copied': 'All data copied!', 'toast-all-loaded': 'Data loaded!',
+  },
+  ja: {
+    back: 'Home', subtitle: 'Wind & Gate カード用ピクセルアートエディタ',
+    'grid-label': 'エディタ', 'preview-label': 'プレビュー',
+    'parts-title': 'パーツ', 'tools-title': 'ツール', 'import-title': '画像読み込み',
+    undo: '戻す', redo: 'やり直し', clear: 'クリア', fill: '塗りつぶし', 'clear-part': 'パーツクリア', save: '保存して戻る',
+    'drop-hint': '画像をドロップ、またはクリックで選択', 'map-mode': 'マッピング:', 'apply-import': '適用',
+    'export-png': 'PNGダウンロード', 'export-json': 'JSONダウンロード', 'card-preview': 'カードプレビュー',
+    'pick-color': 'の色を選択', 'add-type': 'パーツ名を入力', 'add-btn': '追加',
+    'toast-saved': '保存しました！', 'toast-copy': 'コピーしました！', 'toast-png': 'PNGをDLしました！', 'toast-json': 'JSONをDLしました！',
+    'btn-cancel': 'キャンセル',
+    'toast-type-added': 'パーツを追加！', 'toast-type-removed': 'パーツを削除', 'toast-type-max': '最大12パーツ',
+    'toast-cleared': 'クリアしました！', 'toast-filled': '塗りつぶしました！', 'toast-part-cleared': 'パーツをクリア！',
+    'toast-image-loaded': '画像を読み込みました！「適用」を押してください。', 'toast-export-block': '必須アセットが不足しています',
+    'back-cards': 'カード一覧', 'back-dashboard': 'ダッシュボード',
+    'slot-required': '必須', 'slot-optional': '任意', 'slot-done': '作成済み',
+    'btn-create': '作成', 'btn-edit': '編集',
+    'mob-title': 'Mob (1pt)', 'elite-title': 'Elite (5pt)', 'legend-title': 'Legend', 'special-title': 'Special',
+    'character': 'キャラクター', 'frame': 'カード枠', 'back-asset': 'カード裏面', 'icon': 'カテゴリアイコン', 'points': 'ポイント表示',
+    'shared-with': '共有:',
+    'anim-title': 'アニメーション', 'anim-type': 'タイプ', 'anim-enabled': '有効',
+    'anim-play': '▶ 再生', 'anim-play-all': '▶ 全再生', 'anim-stop': '■ 停止',
+    'anim-speed': '速度', 'anim-amplitude': '振幅', 'anim-axis': '軸',
+    'anim-distance': '距離', 'anim-direction': '方向',
+    'anim-min-opacity': '最小不透明度', 'anim-target-color': '変化色', 'anim-angle': '角度',
+    'anim-shake': '振動', 'anim-move': '移動', 'anim-fade': 'フェード', 'anim-color': '色変化', 'anim-rotate': '回転',
+    'anim-none': '— なし —',
+    'anim-axis-x': '横', 'anim-axis-y': '縦', 'anim-axis-xy': '両方',
+    'anim-dir-up': '上', 'anim-dir-down': '下', 'anim-dir-left': '左', 'anim-dir-right': '右',
+    'import-json-title': 'アセットJSONインポート', 'import-json-apply': 'インポート', 'import-json-btn': 'インポート',
+    'toast-imported': 'インポートしました！', 'toast-import-error': 'インポート失敗: ',
+    'copy-json': 'JSONコピー', 'toast-copied-json': 'JSONをコピー！',
+    'copy-all': '📋 全データコピー', 'load-all': '📥 データ読込', 'toast-all-copied': '全データをコピー！', 'toast-all-loaded': 'データを読み込みました！',
+  }
+};
+let lang = 'en';
+function T(key) { return i18n[lang][key] || i18n.en[key] || key; }
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === l));
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; const v = i18n[l][k]; if (v) el.textContent = v; });
+  store.settings.lang = l; saveStore();
+  // Rebuild dynamic UI based on current view
+  if (currentView === 'viewCardSelect') buildCardGrid();
+  if (currentView === 'viewDashboard') initDashboard(selectedCardCode);
+  if (currentView === 'viewEditor') { buildPalette(); buildPartVisibility(); buildAnimPartChips(); }
+}
+document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 2: Card Data (from card_parts_data_v7.js)
+// ═══════════════════════════════════════════════════════════════
+const CARD_DATA = {
+  FAR: { name: 'ペンギン', nameEn: 'Penguin', points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC27' },
+  MER: { name: 'キツネ',   nameEn: 'Fox',     points: 1, category: 'mob',    tier: 'legend', emoji: '\uD83E\uDD8A' },
+  CAR: { name: '作業員',   nameEn: 'Worker',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC77' },
+  TRV: { name: 'カメ',     nameEn: 'Turtle',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC22' },
+  BUT: { name: 'ゾンビ',   nameEn: 'Zombie',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83E\uDDDF' },
+  MAI: { name: 'ネズミ',   nameEn: 'Mouse',   points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC2D' },
+  BAL: { name: '宝石',     nameEn: 'Jewel',   points: 1, category: 'mob',    tier: 'legend', emoji: '\uD83D\uDC8E' },
+  NOB: { name: 'ライオン', nameEn: 'Lion',    points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD81' },
+  KNI: { name: '忍者',     nameEn: 'Ninja',   points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD77' },
+  PRI: { name: '魔法使い', nameEn: 'Wizard',  points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDDD9' },
+  SCH: { name: 'フクロウ', nameEn: 'Owl',     points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD89' },
+  HOR: { name: 'カエル',   nameEn: 'Frog',    points: 5, category: 'elite',  tier: 'legend', emoji: '\uD83D\uDC38' },
+  KIN: { name: 'ドラゴン', nameEn: 'Dragon',  points: 10, category: 'legend', tier: 'legend', emoji: '\uD83D\uDC09' },
+  QUE: { name: '炎',       nameEn: 'Flame',   points: 10, category: 'legend', tier: 'legend', emoji: '\uD83D\uDD25' },
+  WIT: { name: '吸血鬼',   nameEn: 'Vampire', points: 15, category: 'legend', tier: 'legend', emoji: '\uD83E\uDDDB' },
+  HOL: { name: 'ニンニク', nameEn: 'Garlic',  points: 5,  category: 'legend', tier: 'legend', emoji: '\uD83E\uDDC4' },
+  HOU: { name: '鳥居',     nameEn: 'Gate',    points: 3,  category: 'house',  tier: 'legend', emoji: '\u26E9\uFE0F' },
+  GHI: { name: '強奪',     nameEn: 'Gust',    points: 3,  category: 'wind',   tier: 'legend', emoji: '\uD83C\uDF00' },
+};
+
+const TIER_COLORS = {
+  mob:    { back: '#2d1518', accent: '#e8b4b8' },
+  elite:  { back: '#0a3070', accent: '#7eaadc' },
+  legend: { back: '#501a60', accent: '#c48ed0' },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 3: Asset Type Definitions
+// ═══════════════════════════════════════════════════════════════
+const ASSET_TYPES = {
+  character:  { w: 24, h: 32, required: true,  i18nKey: 'character',   sharedBy: 'card' },
+  frame:      { w: 32, h: 48, required: true,  i18nKey: 'frame',       sharedBy: 'tier' },
+  back:       { w: 32, h: 48, required: false, i18nKey: 'back-asset',  sharedBy: 'tier' },
+  icon:       { w: 8,  h: 8,  required: false, i18nKey: 'icon',        sharedBy: 'category' },
+  points:     { w: 12, h: 8,  required: false, i18nKey: 'points',      sharedBy: 'points' },
+};
+
+const ASSET_PART_DEFAULTS = {
+  character: [
+    { value: 0, label: 'Empty',  labelJa: '空',     color: '#F5F5F5' },
+    { value: 1, label: 'Body',   labelJa: '体',     color: '#8B6914' },
+    { value: 2, label: 'Armor',  labelJa: '鎧/服',  color: '#708090' },
+    { value: 3, label: 'Weapon', labelJa: '武器',   color: '#C0C0C0' },
+    { value: 4, label: 'Cape',   labelJa: 'マント', color: '#8B0000' },
+    { value: 5, label: 'Horns',  labelJa: '装飾',   color: '#DAA520' },
+    { value: 6, label: 'Eyes',   labelJa: '目',     color: '#1A1A1A' },
+    { value: 7, label: 'Mouth',  labelJa: '口',     color: '#333333' },
+  ],
+  frame: [
+    { value: 0, label: 'Empty',  labelJa: '空',       color: '#F5F5F5' },
+    { value: 1, label: 'Border', labelJa: '枠',       color: '#2d1518' },
+    { value: 2, label: 'Accent', labelJa: 'アクセント', color: '#e8b4b8' },
+    { value: 3, label: 'Fill',   labelJa: '背景',     color: '#FFFFFF' },
+  ],
+  back: [
+    { value: 0, label: 'Empty',  labelJa: '空',         color: '#F5F5F5' },
+    { value: 1, label: 'Base',   labelJa: 'ベース',     color: '#2d1518' },
+    { value: 2, label: 'Accent', labelJa: 'アクセント', color: '#e8b4b8' },
+    { value: 3, label: 'Stripe', labelJa: 'ストライプ', color: '#3d2528' },
+  ],
+  icon: [
+    { value: 0, label: 'Empty',  labelJa: '空',     color: '#F5F5F5' },
+    { value: 1, label: 'Main',   labelJa: 'メイン', color: '#e8b4b8' },
+    { value: 2, label: 'Shadow', labelJa: '影',     color: '#2d1518' },
+  ],
+  points: [
+    { value: 0, label: 'Empty',   labelJa: '空',   color: '#F5F5F5' },
+    { value: 1, label: 'Digit',   labelJa: '数字', color: '#2d1518' },
+    { value: 2, label: 'Outline', labelJa: 'フチ', color: '#FFFFFF' },
+  ],
+};
+
+const SLOT_ORDER = ['character', 'frame', 'back', 'icon', 'points'];
+
+function getMetaForSlot(slotType, card) {
+  if (slotType === 'character') return card.tier; // stored but search is by card code for unique
+  if (slotType === 'frame' || slotType === 'back') return card.tier;
+  if (slotType === 'icon') return card.category;
+  if (slotType === 'points') return String(card.points);
+  return '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 4: Storage
+// ═══════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'frog_card_editor';
+const SCHEMA_VERSION = 1;
+
+function createEmptyStore() {
+  return { version: SCHEMA_VERSION, assets: {}, cardAssignments: {}, settings: { lang: 'en' } };
+}
+
+let store = createEmptyStore();
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { store = createEmptyStore(); return; }
+    const data = JSON.parse(raw);
+    if (!data.version || data.version < SCHEMA_VERSION) { store = createEmptyStore(); return; }
+    // Restore grids to Int8Array
+    Object.values(data.assets).forEach(a => { a.grid = a.grid.map(r => Int8Array.from(r)); });
+    store = data;
+  } catch (e) { store = createEmptyStore(); }
+}
+
+function saveStore() {
+  try {
+    const s = JSON.parse(JSON.stringify(store, (k, v) => {
+      if (v instanceof Int8Array) return Array.from(v);
+      return v;
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  } catch (e) { toast('Storage full'); }
+}
+
+function findDefaultAsset(type, meta) {
+  const candidates = Object.values(store.assets)
+    .filter(a => a.type === type && a.meta === meta)
+    .sort((a, b) => a.createdAt - b.createdAt);
+  return candidates.length > 0 ? candidates[0].id : null;
+}
+
+function getAssignments(cardCode) {
+  const card = CARD_DATA[cardCode];
+  if (!store.cardAssignments[cardCode]) {
+    store.cardAssignments[cardCode] = {
+      character: null, frame: null, back: null, icon: null, points: null,
+    };
+  }
+  const assign = store.cardAssignments[cardCode];
+  // Auto-fill null shared slots with defaults (re-checked each time)
+  if (!assign.frame)  assign.frame  = findDefaultAsset('frame', card.tier);
+  if (!assign.back)   assign.back   = findDefaultAsset('back', card.tier);
+  if (!assign.icon)   assign.icon   = findDefaultAsset('icon', card.category);
+  if (!assign.points) assign.points = findDefaultAsset('points', String(card.points));
+  return assign;
+}
+
+function countDoneSlots(cardCode) {
+  const assign = getAssignments(cardCode);
+  return SLOT_ORDER.filter(s => assign[s] && store.assets[assign[s]]).length;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 5: Navigation
+// ═══════════════════════════════════════════════════════════════
+let currentView = 'viewCardSelect';
+let selectedCardCode = null;
+let editingAssetKey = null; // currently editing asset ID
+let editingSlotType = null; // which slot type we're editing
+
+function showView(viewId) {
+  ['viewCardSelect', 'viewDashboard', 'viewEditor'].forEach(v =>
+    document.getElementById(v).style.display = v === viewId ? '' : 'none');
+  currentView = viewId;
+  updateBackLink();
+}
+
+function updateBackLink() {
+  const lbl = document.getElementById('backLabel');
+  if (currentView === 'viewCardSelect') {
+    lbl.textContent = T('back');
+  } else if (currentView === 'viewDashboard') {
+    lbl.textContent = T('back-cards');
+  } else if (currentView === 'viewEditor') {
+    lbl.textContent = T('back-dashboard');
+  }
+}
+
+function navigateBack() {
+  if (currentView === 'viewEditor') {
+    showView('viewDashboard');
+    initDashboard(selectedCardCode);
+  } else if (currentView === 'viewDashboard') {
+    showView('viewCardSelect');
+    buildCardGrid();
+  }
+  // viewCardSelect: back to sitbackandrelax.jp handled by link
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 6: Card Selection View
+// ═══════════════════════════════════════════════════════════════
+function buildCardGrid() {
+  const container = document.getElementById('cardGridContainer');
+  container.innerHTML = '';
+
+  const groups = [
+    { key: 'mob',     title: T('mob-title'),     cards: [] },
+    { key: 'elite',   title: T('elite-title'),   cards: [] },
+    { key: 'legend',  title: T('legend-title'),  cards: [] },
+    { key: 'special', title: T('special-title'), cards: [] },
+  ];
+
+  Object.entries(CARD_DATA).forEach(([code, card]) => {
+    const g = card.category === 'house' || card.category === 'wind' ? 'special' :
+              card.category === 'mob' ? 'mob' : card.category === 'elite' ? 'elite' : 'legend';
+    groups.find(gr => gr.key === g).cards.push({ code, ...card });
+  });
+
+  groups.forEach(group => {
+    if (group.cards.length === 0) return;
+    const title = document.createElement('div');
+    title.className = 'card-group-title';
+    title.textContent = group.title;
+    container.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'card-grid';
+    group.cards.forEach(card => {
+      const tile = document.createElement('div');
+      tile.className = 'card-tile';
+      tile.onclick = () => { selectedCardCode = card.code; showView('viewDashboard'); initDashboard(card.code); };
+
+      const done = countDoneSlots(card.code);
+      tile.innerHTML = `
+        <span class="emoji">${card.emoji}</span>
+        <span class="cname">${lang === 'ja' ? card.name : card.nameEn}</span>
+        <span class="tier-badge tier-${card.tier}">${card.tier}</span>
+        <span class="cinfo">${card.points}pt</span>
+        <div class="progress">${SLOT_ORDER.map((_, i) => `<span class="dot${i < done ? ' filled' : ''}"></span>`).join('')}</div>
+      `;
+      grid.appendChild(tile);
+    });
+    container.appendChild(grid);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 7: Asset Dashboard
+// ═══════════════════════════════════════════════════════════════
+function initDashboard(cardCode) {
+  const card = CARD_DATA[cardCode];
+  const assign = getAssignments(cardCode);
+
+  // Header
+  const hdr = document.getElementById('dashHeader');
+  hdr.innerHTML = `
+    <span class="emoji" style="font-size:2.5rem;">${card.emoji}</span>
+    <div>
+      <h2>${lang === 'ja' ? card.name : card.nameEn}</h2>
+      <span class="dinfo"><span class="tier-badge tier-${card.tier}">${card.tier}</span> ${card.points}pt &middot; ${card.category}</span>
+    </div>
+  `;
+
+  // Slots
+  const list = document.getElementById('slotList');
+  list.innerHTML = '';
+  SLOT_ORDER.forEach(slotType => {
+    const spec = ASSET_TYPES[slotType];
+    const assetId = assign[slotType];
+    const asset = assetId ? store.assets[assetId] : null;
+    const done = !!asset;
+
+    const slot = document.createElement('div');
+    slot.className = 'slot-card';
+
+    // Thumbnail
+    const thumb = document.createElement('div');
+    thumb.className = 'slot-thumb';
+    if (done) {
+      const cvs = document.createElement('canvas');
+      const s = Math.min(56 / spec.w, 56 / spec.h);
+      cvs.width = Math.round(spec.w * s);
+      cvs.height = Math.round(spec.h * s);
+      renderAssetToCanvas(cvs, asset);
+      thumb.appendChild(cvs);
+    } else {
+      thumb.textContent = '?';
+      thumb.style.fontSize = '1.5rem';
+      thumb.style.color = 'var(--text-muted)';
+    }
+
+    // Info
+    const info = document.createElement('div');
+    info.className = 'slot-info';
+    const sharedLabel = spec.sharedBy === 'card' ? '' : ` (${T('shared-with')} ${getMetaForSlot(slotType, card)})`;
+    info.innerHTML = `
+      <div class="sname">${T(spec.i18nKey)}</div>
+      <div class="sdesc">${spec.w}×${spec.h}px${sharedLabel}</div>
+    `;
+
+    // Badge
+    const badge = document.createElement('span');
+    badge.className = 'slot-badge ' + (done ? 'badge-done' : spec.required ? 'badge-required' : 'badge-optional');
+    badge.textContent = done ? T('slot-done') : spec.required ? T('slot-required') : T('slot-optional');
+
+    // Action
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+    const btn = document.createElement('button');
+    btn.className = 'tool-btn' + (done ? '' : ' primary');
+    btn.textContent = done ? T('btn-edit') : T('btn-create');
+    btn.onclick = () => openEditor(cardCode, slotType);
+    const impBtn = document.createElement('button');
+    impBtn.className = 'tool-btn';
+    impBtn.textContent = T('import-json-btn');
+    impBtn.onclick = () => openImportJson(cardCode, slotType);
+    actions.appendChild(impBtn);
+    actions.appendChild(btn);
+
+    slot.appendChild(thumb);
+    slot.appendChild(info);
+    slot.appendChild(badge);
+    slot.appendChild(actions);
+    list.appendChild(slot);
+  });
+
+  // Preview
+  updateCompositePreview(cardCode);
+}
+
+function updateCompositePreview(cardCode) {
+  const assign = getAssignments(cardCode);
+  const hasRequired = assign.character && store.assets[assign.character] && assign.frame && store.assets[assign.frame];
+  document.getElementById('exportPngBtn').disabled = !hasRequired;
+  document.getElementById('exportJsonBtn').disabled = !hasRequired;
+  document.getElementById('copyJsonBtn').disabled = !hasRequired;
+
+  const canvas = document.getElementById('compositeCanvas');
+  const ctx = canvas.getContext('2d');
+  const scale = 6;
+  canvas.width = 32 * scale; canvas.height = 48 * scale;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Checkerboard background for transparency
+  for (let r = 0; r < 48; r++) {
+    for (let c = 0; c < 32; c++) {
+      ctx.fillStyle = (r + c) % 2 === 0 ? '#eee' : '#ddd';
+      ctx.fillRect(c * scale, r * scale, scale, scale);
+    }
+  }
+
+  // Layer 1: frame
+  const frame = assign.frame ? store.assets[assign.frame] : null;
+  if (frame) drawAssetLayer(ctx, frame, 0, 0, scale);
+
+  // Layer 2: character (centered in body region rows 8-39)
+  const char = assign.character ? store.assets[assign.character] : null;
+  if (char) {
+    const bodyStartRow = 8, bodyRows = 32;
+    const ox = Math.floor((32 - char.width) / 2);
+    const oy = bodyStartRow + Math.floor((bodyRows - char.height) / 2);
+    drawAssetLayer(ctx, char, ox, oy, scale);
+  }
+
+  // Layer 3: points (top right)
+  const pts = assign.points ? store.assets[assign.points] : null;
+  if (pts) drawAssetLayer(ctx, pts, 32 - pts.width - 1, 2, scale);
+
+  // Layer 4: icon (bottom left)
+  const icon = assign.icon ? store.assets[assign.icon] : null;
+  if (icon) drawAssetLayer(ctx, icon, 1, 40, scale);
+}
+
+function drawAssetLayer(ctx, asset, gx, gy, scale) {
+  for (let r = 0; r < asset.height; r++) {
+    for (let c = 0; c < asset.width; c++) {
+      const val = asset.grid[r][c];
+      if (val === 0) continue;
+      ctx.fillStyle = asset.customColors[val] || '#888';
+      ctx.fillRect((gx + c) * scale, (gy + r) * scale, scale, scale);
+    }
+  }
+}
+
+function renderAssetToCanvas(canvas, asset) {
+  const ctx = canvas.getContext('2d');
+  const sx = canvas.width / asset.width, sy = canvas.height / asset.height;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let r = 0; r < asset.height; r++) {
+    for (let c = 0; c < asset.width; c++) {
+      const val = asset.grid[r][c];
+      if (val === 0) continue;
+      ctx.fillStyle = asset.customColors[val] || '#888';
+      ctx.fillRect(c * sx, r * sy, sx, sy);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 8: Pixel Editor
+// ═══════════════════════════════════════════════════════════════
+let GRID_W = 32, GRID_H = 48;
+let grid = [];
+let selectedColor = 1;
+let isPainting = false, paintVal = null;
+let undoStack = [], redoStack = [];
+let customColors = {};
+let partVisible = {};
+let PART_TYPES = [];
+let nextTypeValue = 9;
+let deleteMode = false, palLpTimer = null;
+// Animation state
+let animations = {};         // { "1": { type, enabled, params }, ... }
+let animFrameId = null;
+let animStartTime = 0;
+let animatingParts = [];     // part values being animated
+let selectedAnimPart = null; // currently selected part in anim drawer
+
+function pushUndo() { undoStack.push(grid.map(r => Int8Array.from(r))); if (undoStack.length > 50) undoStack.shift(); redoStack = []; }
+function undo() { if (!undoStack.length) return; redoStack.push(grid.map(r => Int8Array.from(r))); grid = undoStack.pop(); render(); }
+function redo() { if (!redoStack.length) return; undoStack.push(grid.map(r => Int8Array.from(r))); grid = redoStack.pop(); render(); }
+
+function openEditor(cardCode, slotType) {
+  const card = CARD_DATA[cardCode];
+  const spec = ASSET_TYPES[slotType];
+  const assign = getAssignments(cardCode);
+  let assetId = assign[slotType];
+  let asset = assetId ? store.assets[assetId] : null;
+
+  editingSlotType = slotType;
+  GRID_W = spec.w;
+  GRID_H = spec.h;
+
+  if (asset) {
+    // Load existing
+    editingAssetKey = assetId;
+    grid = asset.grid.map(r => Int8Array.from(r));
+    customColors = { ...asset.customColors };
+    PART_TYPES = (asset.partTypes || []).map(pt => makePartType(pt));
+    nextTypeValue = Math.max(...PART_TYPES.map(p => p.value), 0) + 1;
+  } else {
+    // New asset
+    editingAssetKey = null;
+    grid = Array.from({ length: GRID_H }, () => new Int8Array(GRID_W));
+    // Initialize part types from defaults with tier-adjusted colors
+    const defaults = ASSET_PART_DEFAULTS[slotType] || ASSET_PART_DEFAULTS.character;
+    const tierColors = TIER_COLORS[card.tier];
+    const adjusted = defaults.map(d => {
+      const pt = { ...d };
+      // Adjust frame/back/icon/points colors to match tier
+      if (slotType !== 'character' && tierColors) {
+        if (d.label === 'Border' || d.label === 'Base' || d.label === 'Digit') pt.color = tierColors.back;
+        if (d.label === 'Accent' || d.label === 'Main') pt.color = tierColors.accent;
+        if (d.label === 'Stripe') pt.color = tierColors.back.replace(/[0-9a-f]{2}$/i, m => Math.min(255, parseInt(m, 16) + 20).toString(16));
+      }
+      return pt;
+    });
+    customColors = {};
+    adjusted.forEach(pt => { customColors[pt.value] = pt.color; });
+    PART_TYPES = adjusted.map(pt => makePartType(pt));
+    nextTypeValue = Math.max(...adjusted.map(p => p.value), 0) + 1;
+  }
+
+  partVisible = {};
+  PART_TYPES.forEach(pt => { partVisible[pt.value] = true; });
+  selectedColor = 1;
+  undoStack = [];
+  redoStack = [];
+  deleteMode = false;
+
+  // Load animations
+  stopAnims();
+  animations = asset ? JSON.parse(JSON.stringify(asset.animations || {})) : {};
+  selectedAnimPart = null;
+
+  // Update title
+  const cardName = lang === 'ja' ? card.name : card.nameEn;
+  document.getElementById('editorTitle').textContent = T(spec.i18nKey);
+  document.getElementById('editorSubtitle').textContent = `${cardName} \u2014 ${spec.w}\u00D7${spec.h}px`;
+
+  showView('viewEditor');
+  buildPalette();
+  buildPartVisibility();
+  buildAnimPartChips();
+  render();
+}
+
+function saveAsset() {
+  const card = CARD_DATA[selectedCardCode];
+  const spec = ASSET_TYPES[editingSlotType];
+
+  if (!editingAssetKey) {
+    // Create new asset
+    editingAssetKey = crypto.randomUUID();
+  }
+
+  store.assets[editingAssetKey] = {
+    id: editingAssetKey,
+    type: editingSlotType,
+    label: (lang === 'ja' ? card.name : card.nameEn) + ' ' + T(spec.i18nKey),
+    width: GRID_W,
+    height: GRID_H,
+    grid: grid.map(r => Int8Array.from(r)),
+    partTypes: PART_TYPES.map(pt => ({ value: pt.value, label: pt.label, labelJa: pt.labelJa, color: customColors[pt.value], custom: pt.custom || false })),
+    customColors: { ...customColors },
+    animations: JSON.parse(JSON.stringify(animations)),
+    meta: getMetaForSlot(editingSlotType, card),
+    createdAt: store.assets[editingAssetKey]?.createdAt || Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  // Assign to card
+  const assign = getAssignments(selectedCardCode);
+  assign[editingSlotType] = editingAssetKey;
+  store.cardAssignments[selectedCardCode] = assign;
+
+  saveStore();
+  toast(T('toast-saved'));
+
+  // Go back to dashboard
+  showView('viewDashboard');
+  initDashboard(selectedCardCode);
+}
+
+// ── Part types ──
+function makePartType(pt) {
+  const val = pt.value;
+  return {
+    value: val, label: pt.label, labelJa: pt.labelJa, custom: pt.custom || false,
+    get color() { return customColors[val]; },
+    get textColor() { return getContrastText(customColors[val]); },
+  };
+}
+function getContrastText(hex) {
+  if (!hex || hex.length < 7) return '#333';
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (0.299*r + 0.587*g + 0.114*b)/255 > 0.6 ? '#333' : '#fff';
+}
+const FLAT_COLORS = new Proxy({}, { get(_, prop) { return customColors[prop] || '#F5F5F5'; } });
+
+// ── Palette UI ──
+function buildPalette() {
+  const el = document.getElementById('palette'); el.innerHTML = '';
+  PART_TYPES.forEach(pt => {
+    const btn = document.createElement('button');
+    btn.className = 'palette-btn' + (selectedColor === pt.value ? ' active' : '');
+    btn.style.background = pt.color;
+    const lbl = document.createElement('span');
+    lbl.className = 'palette-label'; lbl.style.color = pt.textColor;
+    lbl.textContent = lang === 'ja' ? pt.labelJa : pt.label;
+    btn.appendChild(lbl);
+    if (pt.value !== 0) {
+      const dot = document.createElement('span'); dot.className = 'color-edit'; dot.textContent = '\u270E';
+      dot.onclick = (e) => { e.stopPropagation(); selectedColor = pt.value; openColorPicker(pt.value); buildPalette(); };
+      btn.appendChild(dot);
+    }
+    if (pt.custom && deleteMode) {
+      const del = document.createElement('span'); del.className = 'color-delete'; del.textContent = '\u00D7';
+      del.onclick = (e) => { e.stopPropagation(); removePartType(pt.value); };
+      btn.appendChild(del);
+    }
+    if (pt.custom) {
+      btn.addEventListener('mousedown', () => { palLpTimer = setTimeout(() => { deleteMode = true; buildPalette(); }, 500); });
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); palLpTimer = setTimeout(() => { deleteMode = true; buildPalette(); }, 500); }, { passive: false });
+      const cancel = () => { if (palLpTimer) { clearTimeout(palLpTimer); palLpTimer = null; } };
+      btn.addEventListener('mouseup', cancel); btn.addEventListener('touchend', cancel);
+      btn.addEventListener('mouseleave', cancel); btn.addEventListener('touchcancel', cancel);
+    }
+    btn.onclick = () => { if (deleteMode) { deleteMode = false; buildPalette(); return; } selectedColor = pt.value; buildPalette(); };
+    el.appendChild(btn);
+  });
+  const addBtn = document.createElement('button'); addBtn.className = 'palette-add'; addBtn.textContent = '+';
+  addBtn.onclick = () => openAddType(); el.appendChild(addBtn);
+}
+
+function buildPartVisibility() {
+  const el = document.getElementById('partVisibility'); el.innerHTML = '';
+  const row = document.createElement('div'); row.className = 'part-vis-row';
+  PART_TYPES.forEach(pt => {
+    if (pt.value === 0) return;
+    const chip = document.createElement('span');
+    chip.className = 'vis-chip' + (partVisible[pt.value] ? '' : ' hidden');
+    chip.innerHTML = `<span class="vis-swatch" style="background:${pt.color}"></span>${lang === 'ja' ? pt.labelJa : pt.label}`;
+    chip.onclick = () => { partVisible[pt.value] = !partVisible[pt.value]; buildPartVisibility(); render(); };
+    row.appendChild(chip);
+  });
+  el.appendChild(row);
+}
+
+// ── Add/Remove types ──
+function openAddType() {
+  if (PART_TYPES.length >= 12) { toast(T('toast-type-max')); return; }
+  document.getElementById('addTypeLabel').textContent = T('add-type');
+  document.getElementById('addTypeConfirm').textContent = T('add-btn');
+  document.getElementById('addTypeInput').value = '';
+  document.getElementById('addTypeOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('addTypeInput').focus(), 200);
+}
+function closeAddType() { document.getElementById('addTypeOverlay').classList.remove('open'); }
+function confirmAddType() {
+  const name = document.getElementById('addTypeInput').value.trim(); if (!name) return;
+  const val = nextTypeValue++;
+  customColors[val] = '#888888'; partVisible[val] = true;
+  PART_TYPES.push(makePartType({ value: val, label: name, labelJa: name, color: '#888888', custom: true }));
+  closeAddType(); selectedColor = val; buildPalette(); buildPartVisibility();
+  openColorPicker(val); toast(T('toast-type-added'));
+}
+document.getElementById('addTypeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmAddType(); if (e.key === 'Escape') closeAddType(); });
+
+function removePartType(val) {
+  const idx = PART_TYPES.findIndex(pt => pt.value === val); if (idx === -1 || !PART_TYPES[idx].custom) return;
+  PART_TYPES.splice(idx, 1); delete customColors[val]; delete partVisible[val];
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) if (grid[r][c] === val) grid[r][c] = 0;
+  if (selectedColor === val) selectedColor = 1;
+  deleteMode = false; buildPalette(); buildPartVisibility(); render(); toast(T('toast-type-removed'));
+}
+
+// ── Color Picker ──
+let colorPickerTarget = null;
+function generate256Palette() {
+  const colors = [];
+  for (let i = 0; i < 16; i++) { const v = Math.round(255 - i*(255/15)); colors.push('#'+v.toString(16).padStart(2,'0').repeat(3)); }
+  const lS=[90,82,74,66,58,50,45,40,35,30,25,20,16,12,8], sS=[60,70,80,85,90,95,95,90,85,80,75,70,65,60,55];
+  for (let row=0;row<15;row++) for (let col=0;col<16;col++) colors.push(hslToHex(col*(360/16),sS[row],lS[row]));
+  return colors;
+}
+function hslToHex(h,s,l) { s/=100;l/=100; const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l), f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1))); const x=n=>Math.round(f(n)*255).toString(16).padStart(2,'0'); return '#'+x(0)+x(8)+x(4); }
+function buildColorGrid() {
+  const el = document.getElementById('colorGrid'); el.innerHTML = '';
+  generate256Palette().forEach(hex => {
+    const sw = document.createElement('button'); sw.className = 'color-swatch';
+    if (colorPickerTarget !== null && customColors[colorPickerTarget] === hex) sw.classList.add('active');
+    sw.style.background = hex; sw.onclick = () => { customColors[colorPickerTarget] = hex; buildPalette(); buildPartVisibility(); buildColorGrid(); render(); };
+    el.appendChild(sw);
+  });
+}
+function openColorPicker(val) {
+  colorPickerTarget = val;
+  const pt = PART_TYPES.find(p => p.value === val); const name = pt ? (lang==='ja'?pt.labelJa:pt.label) : '';
+  document.getElementById('colorPickerLabel').textContent = lang==='ja' ? name+T('pick-color') : T('pick-color')+' '+name;
+  buildColorGrid(); document.getElementById('colorPickerOverlay').classList.add('open');
+}
+function closeColorPicker() { document.getElementById('colorPickerOverlay').classList.remove('open'); colorPickerTarget = null; }
+
+// ── Grid rendering ──
+const gridCanvas = document.getElementById('gridCanvas');
+const gridCtx = gridCanvas.getContext('2d');
+
+function renderGrid() {
+  const maxW = Math.min(window.innerWidth - 80, GRID_W <= 12 ? 280 : 420);
+  const cellPx = Math.max(2, Math.floor(maxW / Math.max(GRID_W, GRID_H * 0.67)));
+  const totalW = cellPx * GRID_W, totalH = cellPx * GRID_H;
+  gridCanvas.width = totalW; gridCanvas.height = totalH;
+  gridCanvas.style.width = totalW+'px'; gridCanvas.style.height = totalH+'px';
+
+  gridCtx.fillStyle = '#F5F5F5'; gridCtx.fillRect(0, 0, totalW, totalH);
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
+    const val = grid[r][c]; if (val === 0) continue;
+    gridCtx.globalAlpha = partVisible[val] ? 1 : 0.15;
+    gridCtx.fillStyle = FLAT_COLORS[val]; gridCtx.fillRect(c*cellPx, r*cellPx, cellPx, cellPx);
+    gridCtx.globalAlpha = 1;
+  }
+  gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
+  for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
+  for (let i = 0; i <= GRID_H; i++) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+  if (GRID_W >= 16) {
+    gridCtx.strokeStyle = 'rgba(0,0,0,0.18)'; gridCtx.lineWidth = 1;
+    for (let i = 0; i <= GRID_W; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
+    for (let i = 0; i <= GRID_H; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+  }
+}
+
+function renderPreview() {
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  const maxDim = 180;
+  const s = Math.min(maxDim / GRID_W, maxDim / GRID_H);
+  const pw = Math.round(GRID_W * s), ph = Math.round(GRID_H * s);
+  canvas.width = pw; canvas.height = ph;
+  canvas.style.width = pw+'px'; canvas.style.height = ph+'px';
+  const bw = pw / GRID_W, bh = ph / GRID_H;
+  ctx.clearRect(0, 0, pw, ph);
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
+    const val = grid[r][c]; if (val === 0 || !partVisible[val]) continue;
+    const x = c*bw, y = r*bh;
+    ctx.fillStyle = customColors[val] || '#888'; ctx.fillRect(x, y, bw, bh);
+    // Emboss
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+bw,y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+bh); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.beginPath(); ctx.moveTo(x,y+bh); ctx.lineTo(x+bw,y+bh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+bw,y); ctx.lineTo(x+bw,y+bh); ctx.stroke();
+  }
+}
+
+function render() { renderGrid(); renderPreview(); }
+
+// ── Grid interaction ──
+function cellFromEvent(e) {
+  const rect = gridCanvas.getBoundingClientRect();
+  const sx = gridCanvas.width/rect.width, sy = gridCanvas.height/rect.height;
+  let cx, cy;
+  if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; } else { cx = e.clientX; cy = e.clientY; }
+  const col = Math.floor((cx-rect.left)*sx / (gridCanvas.width/GRID_W));
+  const row = Math.floor((cy-rect.top)*sy / (gridCanvas.height/GRID_H));
+  if (col < 0 || col >= GRID_W || row < 0 || row >= GRID_H) return null;
+  return { row, col };
+}
+function startPaint(e) {
+  e.preventDefault(); const cell = cellFromEvent(e); if (!cell) return;
+  pushUndo(); isPainting = true;
+  paintVal = grid[cell.row][cell.col] === selectedColor ? 0 : selectedColor;
+  if (paintVal !== 0 && !partVisible[paintVal]) return;
+  grid[cell.row][cell.col] = paintVal; render();
+}
+function movePaint(e) {
+  e.preventDefault(); if (!isPainting) return; const cell = cellFromEvent(e); if (!cell) return;
+  if (paintVal !== 0 && !partVisible[paintVal]) return;
+  grid[cell.row][cell.col] = paintVal; render();
+}
+function endPaint(e) { if (e) e.preventDefault(); isPainting = false; }
+gridCanvas.addEventListener('mousedown', startPaint);
+gridCanvas.addEventListener('mousemove', movePaint);
+document.addEventListener('mouseup', endPaint);
+gridCanvas.addEventListener('touchstart', startPaint, { passive: false });
+gridCanvas.addEventListener('touchmove', movePaint, { passive: false });
+document.addEventListener('touchend', endPaint);
+
+// ── Tools ──
+function clearGrid() { pushUndo(); grid = Array.from({length:GRID_H}, ()=>new Int8Array(GRID_W)); render(); toast(T('toast-cleared')); }
+function fillSelected() { pushUndo(); for(let r=0;r<GRID_H;r++) for(let c=0;c<GRID_W;c++) if(grid[r][c]===0) grid[r][c]=selectedColor; render(); toast(T('toast-filled')); }
+function clearPart() { pushUndo(); for(let r=0;r<GRID_H;r++) for(let c=0;c<GRID_W;c++) if(grid[r][c]===selectedColor) grid[r][c]=0; render(); toast(T('toast-part-cleared')); }
+
+// ── Image Import ──
+let importedImageData = null;
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); const f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')) loadImageFile(f); });
+fileInput.addEventListener('change', () => { const f=fileInput.files[0]; if(f) loadImageFile(f); });
+
+function loadImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const cvs = document.createElement('canvas'); cvs.width = GRID_W; cvs.height = GRID_H;
+      const ctx = cvs.getContext('2d'); ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(img, 0, 0, GRID_W, GRID_H);
+      importedImageData = ctx.getImageData(0, 0, GRID_W, GRID_H);
+      document.getElementById('applyImportBtn').disabled = false;
+      toast(T('toast-image-loaded'));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyImportedImage() {
+  if (!importedImageData) return; pushUndo();
+  const mode = document.getElementById('mapMode').value, data = importedImageData.data;
+  for (let r=0;r<GRID_H;r++) for (let c=0;c<GRID_W;c++) {
+    const idx=(r*GRID_W+c)*4, pr=data[idx], pg=data[idx+1], pb=data[idx+2], pa=data[idx+3];
+    if (pa < 30) { grid[r][c]=0; continue; }
+    if (mode==='brightness') { grid[r][c]=(0.299*pr+0.587*pg+0.114*pb)/255<0.9?1:0; }
+    else { grid[r][c]=findNearestPart(pr,pg,pb); }
+  }
+  render(); importedImageData=null; document.getElementById('applyImportBtn').disabled=true;
+}
+
+function findNearestPart(r,g,b) {
+  let best=Infinity, val=0;
+  for (let i=1;i<PART_TYPES.length;i++) {
+    const hex=customColors[PART_TYPES[i].value];
+    const pr=parseInt(hex.slice(1,3),16), pg=parseInt(hex.slice(3,5),16), pb=parseInt(hex.slice(5,7),16);
+    const d=(r-pr)**2*0.299+(g-pg)**2*0.587+(b-pb)**2*0.114;
+    if (d<best) { best=d; val=PART_TYPES[i].value; }
+  }
+  if ((0.299*r+0.587*g+0.114*b)/255>0.92 && best>2000) return 0;
+  return val;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 8b: Animation System
+// ═══════════════════════════════════════════════════════════════
+
+// ── Animation Drawer UI ──
+function buildAnimPartChips() {
+  const container = document.getElementById('animPartChips');
+  if (!container) return;
+  container.innerHTML = '';
+  PART_TYPES.filter(pt => pt.value > 0).forEach(pt => {
+    const chip = document.createElement('div');
+    chip.className = 'anim-chip' + (selectedAnimPart === pt.value ? ' active' : '');
+    const hasAnim = animations[String(pt.value)] && animations[String(pt.value)].type;
+    chip.innerHTML = `<span class="chip-dot" style="background:${customColors[pt.value]||'#888'}"></span>`
+      + `<span>${lang==='ja'&&pt.labelJa?pt.labelJa:pt.label}</span>`
+      + (hasAnim ? '<span class="chip-star">★</span>' : '');
+    chip.onclick = () => selectAnimPart(pt.value);
+    container.appendChild(chip);
+  });
+  // Hide controls if no part selected
+  const ctrl = document.getElementById('animControls');
+  if (ctrl && selectedAnimPart === null) ctrl.style.display = 'none';
+}
+
+function selectAnimPart(val) {
+  selectedAnimPart = val;
+  buildAnimPartChips();
+  const ctrl = document.getElementById('animControls');
+  ctrl.style.display = '';
+  const key = String(val);
+  const anim = animations[key] || { type: '', enabled: true, params: {} };
+  document.getElementById('animTypeSelect').value = anim.type || '';
+  document.getElementById('animEnabled').checked = anim.enabled !== false;
+  buildAnimParams();
+}
+
+function onAnimTypeChange() {
+  if (selectedAnimPart === null) return;
+  const key = String(selectedAnimPart);
+  const type = document.getElementById('animTypeSelect').value;
+  if (!type) {
+    delete animations[key];
+  } else {
+    const defaults = getDefaultParams(type);
+    animations[key] = { type, enabled: document.getElementById('animEnabled').checked, params: defaults };
+  }
+  buildAnimParams();
+  buildAnimPartChips();
+}
+
+function onAnimEnabledChange() {
+  if (selectedAnimPart === null) return;
+  const key = String(selectedAnimPart);
+  if (animations[key]) {
+    animations[key].enabled = document.getElementById('animEnabled').checked;
+  }
+  buildAnimPartChips();
+}
+
+function getDefaultParams(type) {
+  switch (type) {
+    case 'shake':  return { speed: 3, amplitude: 2, axis: 'x' };
+    case 'move':   return { speed: 2, distance: 3, direction: 'up' };
+    case 'fade':   return { speed: 2, minOpacity: 0.2 };
+    case 'color':  return { speed: 2, targetColor: '#ffffff' };
+    case 'rotate': return { speed: 2, angle: 15 };
+    default: return {};
+  }
+}
+
+function buildAnimParams() {
+  const container = document.getElementById('animParams');
+  container.innerHTML = '';
+  if (selectedAnimPart === null) return;
+  const key = String(selectedAnimPart);
+  const anim = animations[key];
+  if (!anim || !anim.type) return;
+  const p = anim.params;
+
+  function addSlider(i18nKey, param, min, max, step, val) {
+    const row = document.createElement('div'); row.className = 'anim-row';
+    const valSpan = `<span class="range-val">${val}</span>`;
+    row.innerHTML = `<label data-i18n="${i18nKey}">${T(i18nKey)}</label>`
+      + `<input type="range" min="${min}" max="${max}" step="${step}" value="${val}" oninput="updateAnimParam('${param}', Number(this.value)); this.nextElementSibling.textContent=this.value">`
+      + valSpan;
+    container.appendChild(row);
+  }
+
+  function addSelect(i18nKey, param, options, val) {
+    const row = document.createElement('div'); row.className = 'anim-row';
+    const opts = options.map(o => `<option value="${o.value}" ${o.value===val?'selected':''}>${T(o.i18n)}</option>`).join('');
+    row.innerHTML = `<label data-i18n="${i18nKey}">${T(i18nKey)}</label>`
+      + `<select onchange="updateAnimParam('${param}', this.value)">${opts}</select>`;
+    container.appendChild(row);
+  }
+
+  function addColorInput(i18nKey, param, val) {
+    const row = document.createElement('div'); row.className = 'anim-row';
+    row.innerHTML = `<label data-i18n="${i18nKey}">${T(i18nKey)}</label>`
+      + `<input type="color" value="${val||'#ffffff'}" oninput="updateAnimParam('${param}', this.value)">`;
+    container.appendChild(row);
+  }
+
+  // Common: speed slider
+  addSlider('anim-speed', 'speed', 1, 5, 0.5, p.speed || 3);
+
+  switch (anim.type) {
+    case 'shake':
+      addSlider('anim-amplitude', 'amplitude', 1, 4, 0.5, p.amplitude || 2);
+      addSelect('anim-axis', 'axis', [
+        { value: 'x', i18n: 'anim-axis-x' }, { value: 'y', i18n: 'anim-axis-y' }, { value: 'xy', i18n: 'anim-axis-xy' }
+      ], p.axis || 'x');
+      break;
+    case 'move':
+      addSlider('anim-distance', 'distance', 1, 8, 1, p.distance || 3);
+      addSelect('anim-direction', 'direction', [
+        { value: 'up', i18n: 'anim-dir-up' }, { value: 'down', i18n: 'anim-dir-down' },
+        { value: 'left', i18n: 'anim-dir-left' }, { value: 'right', i18n: 'anim-dir-right' }
+      ], p.direction || 'up');
+      break;
+    case 'fade':
+      addSlider('anim-min-opacity', 'minOpacity', 0, 0.8, 0.1, p.minOpacity ?? 0.2);
+      break;
+    case 'color':
+      addColorInput('anim-target-color', 'targetColor', p.targetColor || '#ffffff');
+      break;
+    case 'rotate':
+      addSlider('anim-angle', 'angle', 5, 45, 5, p.angle || 15);
+      break;
+  }
+}
+
+function updateAnimParam(param, value) {
+  if (selectedAnimPart === null) return;
+  const key = String(selectedAnimPart);
+  if (animations[key]) {
+    animations[key].params[param] = value;
+  }
+}
+
+// ── Animation Engine ──
+function lerpColor(c1, c2, t) {
+  const p = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const [r1,g1,b1] = p(c1), [r2,g2,b2] = p(c2);
+  const mix = (a,b) => Math.round(a + (b-a)*t);
+  return '#' + [mix(r1,r2),mix(g1,g2),mix(b1,b2)].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+
+function calcAnimOffset(anim, t) {
+  if (!anim || !anim.enabled || !anim.type) return { dx:0, dy:0, opacity:1, color:null, rotation:0 };
+  const p = anim.params;
+  const spd = p.speed || 3;
+  const cycle = Math.sin(t * spd * 0.004);
+  switch (anim.type) {
+    case 'shake': {
+      const amp = p.amplitude || 2;
+      return { dx: cycle*amp*(p.axis!=='y'?1:0), dy: cycle*amp*(p.axis!=='x'?1:0), opacity:1, color:null, rotation:0 };
+    }
+    case 'move': {
+      const dist = p.distance || 3;
+      const d = p.direction || 'up';
+      const dx = d==='left' ? -cycle*dist : d==='right' ? cycle*dist : 0;
+      const dy = d==='up' ? -cycle*dist : d==='down' ? cycle*dist : 0;
+      return { dx, dy, opacity:1, color:null, rotation:0 };
+    }
+    case 'fade': {
+      const minOp = p.minOpacity ?? 0.2;
+      return { dx:0, dy:0, opacity: minOp + (1-minOp)*(cycle*0.5+0.5), color:null, rotation:0 };
+    }
+    case 'color': {
+      const tc = p.targetColor || '#ffffff';
+      return { dx:0, dy:0, opacity:1, color: tc, colorT: cycle*0.5+0.5, rotation:0 };
+    }
+    case 'rotate': {
+      const ang = p.angle || 15;
+      return { dx:0, dy:0, opacity:1, color:null, rotation: cycle * ang * Math.PI/180 };
+    }
+    default: return { dx:0, dy:0, opacity:1, color:null, rotation:0 };
+  }
+}
+
+function renderAnimFrame(timestamp) {
+  const t = timestamp - animStartTime;
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  const maxDim = 180;
+  const s = Math.min(maxDim / GRID_W, maxDim / GRID_H);
+  const pw = Math.round(GRID_W * s), ph = Math.round(GRID_H * s);
+  canvas.width = pw; canvas.height = ph;
+  canvas.style.width = pw+'px'; canvas.style.height = ph+'px';
+  const bw = pw / GRID_W, bh = ph / GRID_H;
+  ctx.clearRect(0, 0, pw, ph);
+
+  // Precompute offsets per animated part
+  const offsets = {};
+  animatingParts.forEach(v => {
+    const anim = animations[String(v)];
+    offsets[v] = calcAnimOffset(anim, t);
+  });
+
+  // For rotate: precompute centroids
+  const centroids = {};
+  animatingParts.forEach(v => {
+    const off = offsets[v];
+    if (off && off.rotation !== 0) {
+      let sx=0, sy=0, cnt=0;
+      for (let r=0; r<GRID_H; r++) for (let c=0; c<GRID_W; c++) {
+        if (grid[r][c] === v) { sx += c; sy += r; cnt++; }
+      }
+      if (cnt > 0) centroids[v] = { cx: (sx/cnt+0.5)*bw, cy: (sy/cnt+0.5)*bh };
+    }
+  });
+
+  // Draw non-animated pixels first (stable base)
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
+    const val = grid[r][c]; if (val === 0 || !partVisible[val]) continue;
+    if (offsets[val]) continue; // skip animated parts in first pass
+    ctx.fillStyle = customColors[val] || '#888';
+    ctx.fillRect(c*bw, r*bh, bw, bh);
+  }
+
+  // Draw animated pixels
+  animatingParts.forEach(v => {
+    const off = offsets[v];
+    if (!off) return;
+    ctx.save();
+    if (off.rotation !== 0 && centroids[v]) {
+      ctx.translate(centroids[v].cx, centroids[v].cy);
+      ctx.rotate(off.rotation);
+      ctx.translate(-centroids[v].cx, -centroids[v].cy);
+    }
+    ctx.globalAlpha = off.opacity;
+    for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
+      if (grid[r][c] !== v || !partVisible[v]) continue;
+      let col = customColors[v] || '#888';
+      if (off.color) col = lerpColor(col, off.color, off.colorT || 0);
+      ctx.fillStyle = col;
+      ctx.fillRect(c*bw + off.dx*s, r*bh + off.dy*s, bw, bh);
+    }
+    ctx.restore();
+  });
+
+  // Draw non-animated pixels that were already drawn (no need to redraw)
+  // Actually we need to draw them in proper order. Let me redraw all:
+  // Simplified approach: draw everything in one pass with offsets
+
+  animFrameId = requestAnimationFrame(renderAnimFrame);
+}
+
+function playPartAnim() {
+  if (selectedAnimPart === null) return;
+  const key = String(selectedAnimPart);
+  if (!animations[key] || !animations[key].type) return;
+  stopAnims();
+  animatingParts = [selectedAnimPart];
+  animStartTime = performance.now();
+  document.getElementById('btnPlayPart').classList.add('playing');
+  animFrameId = requestAnimationFrame(renderAnimFrame);
+}
+
+function playAllAnims() {
+  stopAnims();
+  animatingParts = Object.keys(animations)
+    .filter(k => animations[k].enabled && animations[k].type)
+    .map(Number);
+  if (animatingParts.length === 0) return;
+  animStartTime = performance.now();
+  document.getElementById('btnPlayAll').classList.add('playing');
+  animFrameId = requestAnimationFrame(renderAnimFrame);
+}
+
+function stopAnims() {
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  animatingParts = [];
+  document.querySelectorAll('.anim-play-btns button').forEach(b => b.classList.remove('playing'));
+  renderPreview();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 9: Export
+// ═══════════════════════════════════════════════════════════════
+function exportCompositePNG() {
+  const assign = getAssignments(selectedCardCode);
+  if (!assign.character || !store.assets[assign.character] || !assign.frame || !store.assets[assign.frame]) {
+    toast(T('toast-export-block')); return;
+  }
+  const scale = 8;
+  const cvs = document.createElement('canvas'); cvs.width = 32*scale; cvs.height = 48*scale;
+  const ctx = cvs.getContext('2d');
+  // Render composite
+  const frame = store.assets[assign.frame]; if (frame) drawAssetLayer(ctx, frame, 0, 0, scale);
+  const char = store.assets[assign.character];
+  if (char) { const ox=Math.floor((32-char.width)/2), oy=8+Math.floor((32-char.height)/2); drawAssetLayer(ctx, char, ox, oy, scale); }
+  const pts = assign.points ? store.assets[assign.points] : null;
+  if (pts) drawAssetLayer(ctx, pts, 32-pts.width-1, 2, scale);
+  const icon = assign.icon ? store.assets[assign.icon] : null;
+  if (icon) drawAssetLayer(ctx, icon, 1, 40, scale);
+
+  const link = document.createElement('a');
+  link.download = `card-${selectedCardCode}.png`;
+  link.href = cvs.toDataURL('image/png'); link.click();
+  toast(T('toast-png'));
+}
+
+function exportCardJSON() {
+  const assign = getAssignments(selectedCardCode);
+  if (!assign.character || !store.assets[assign.character] || !assign.frame || !store.assets[assign.frame]) {
+    toast(T('toast-export-block')); return;
+  }
+  const card = CARD_DATA[selectedCardCode];
+  const exportAsset = (id) => {
+    if (!id || !store.assets[id]) return null;
+    const a = store.assets[id];
+    return { width: a.width, height: a.height, grid: a.grid.map(r=>Array.from(r)), customColors: { ...a.customColors }, animations: a.animations || {} };
+  };
+  // Build composite grid (32×48, hex color strings, null for transparent)
+  const compositeGrid = Array.from({length:48}, ()=>Array(32).fill(null));
+  function layComposite(asset, gx, gy) {
+    if (!asset) return;
+    for (let r=0;r<asset.height;r++) for (let c=0;c<asset.width;c++) {
+      const val=asset.grid[r][c]; if (val===0) continue;
+      const tr=gy+r, tc=gx+c;
+      if (tr>=0&&tr<48&&tc>=0&&tc<32) compositeGrid[tr][tc]=asset.customColors[val]||'#888';
+    }
+  }
+  const frameA=store.assets[assign.frame], charA=store.assets[assign.character];
+  layComposite(frameA, 0, 0);
+  if (charA) layComposite(charA, Math.floor((32-charA.width)/2), 8+Math.floor((32-charA.height)/2));
+  if (assign.points&&store.assets[assign.points]) { const p=store.assets[assign.points]; layComposite(p, 32-p.width-1, 2); }
+  if (assign.icon&&store.assets[assign.icon]) { const ic=store.assets[assign.icon]; layComposite(ic, 1, 40); }
+
+  const data = {
+    version: 2, cardCode: selectedCardCode,
+    card: { name: card.name, nameEn: card.nameEn, points: card.points, category: card.category, tier: card.tier },
+    assets: {
+      character: exportAsset(assign.character),
+      frame: exportAsset(assign.frame),
+      back: exportAsset(assign.back),
+      icon: exportAsset(assign.icon),
+      points: exportAsset(assign.points),
+    },
+    compositeGrid,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a'); link.download = `card-${selectedCardCode}.json`;
+  link.href = URL.createObjectURL(blob); link.click(); URL.revokeObjectURL(link.href);
+  toast(T('toast-json'));
+}
+
+function copyCardJSON() {
+  const assign = getAssignments(selectedCardCode);
+  if (!assign.character || !store.assets[assign.character] || !assign.frame || !store.assets[assign.frame]) {
+    toast(T('toast-export-block')); return;
+  }
+  const card = CARD_DATA[selectedCardCode];
+  const exportAsset = (id) => {
+    if (!id || !store.assets[id]) return null;
+    const a = store.assets[id];
+    return { width: a.width, height: a.height, grid: a.grid.map(r=>Array.from(r)), customColors: { ...a.customColors }, animations: a.animations || {} };
+  };
+  const data = {
+    version: 2, cardCode: selectedCardCode,
+    card: { name: card.name, nameEn: card.nameEn, points: card.points, category: card.category, tier: card.tier },
+    assets: {
+      character: exportAsset(assign.character), frame: exportAsset(assign.frame),
+      back: exportAsset(assign.back), icon: exportAsset(assign.icon), points: exportAsset(assign.points),
+    },
+  };
+  navigator.clipboard.writeText(JSON.stringify(data)).then(() => toast(T('toast-copied-json')));
+}
+
+function copyAllData() {
+  const exportData = {
+    _frogCardEditor: true,
+    version: 1,
+    assets: {},
+    cardAssignments: store.cardAssignments,
+    settings: store.settings,
+  };
+  // Deep-copy assets with plain arrays
+  Object.entries(store.assets).forEach(([id, a]) => {
+    exportData.assets[id] = {
+      ...a,
+      grid: a.grid.map(r => Array.from(r)),
+    };
+  });
+  navigator.clipboard.writeText(JSON.stringify(exportData)).then(() => toast(T('toast-all-copied')));
+}
+
+async function loadAllData() {
+  try {
+    const text = await navigator.clipboard.readText();
+    const data = JSON.parse(text);
+    if (!data._frogCardEditor) { toast(T('toast-import-error') + 'Not editor data'); return; }
+    // Restore assets with Int8Array grids
+    Object.entries(data.assets || {}).forEach(([id, a]) => {
+      store.assets[id] = { ...a, grid: a.grid.map(r => Int8Array.from(r)) };
+    });
+    store.cardAssignments = data.cardAssignments || {};
+    if (data.settings) store.settings = data.settings;
+    saveStore();
+    toast(T('toast-all-loaded'));
+    // Refresh current view
+    if (currentView === 'viewDashboard') initDashboard(selectedCardCode);
+    else if (currentView === 'viewCardSelect') buildCardGrid();
+  } catch (e) {
+    toast(T('toast-import-error') + (e.message || 'Clipboard error'));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 9b: JSON Import
+// ═══════════════════════════════════════════════════════════════
+let importTargetCardCode = null, importTargetSlotType = null;
+
+function openImportJson(cardCode, slotType) {
+  importTargetCardCode = cardCode;
+  importTargetSlotType = slotType;
+  document.getElementById('importJsonInput').value = '';
+  document.getElementById('importJsonError').textContent = '';
+  document.getElementById('importJsonOverlay').classList.add('open');
+}
+function closeImportJson() {
+  document.getElementById('importJsonOverlay').classList.remove('open');
+  importTargetCardCode = null; importTargetSlotType = null;
+}
+function confirmImportJson() {
+  const raw = document.getElementById('importJsonInput').value.trim();
+  const errEl = document.getElementById('importJsonError');
+  errEl.textContent = '';
+  let data;
+  try { data = JSON.parse(raw); } catch (e) { errEl.textContent = T('toast-import-error') + 'Invalid JSON'; return; }
+  const result = importAssetJSON(importTargetCardCode, importTargetSlotType, data);
+  if (result.error) { errEl.textContent = T('toast-import-error') + result.error; return; }
+  closeImportJson();
+  toast(T('toast-imported'));
+}
+
+function importAssetJSON(cardCode, slotType, jsonData) {
+  // Parse if string
+  if (typeof jsonData === 'string') {
+    try { jsonData = JSON.parse(jsonData); } catch (e) { return { error: 'Invalid JSON' }; }
+  }
+  // Validate grid
+  if (!jsonData.grid || !Array.isArray(jsonData.grid)) return { error: 'Missing grid' };
+  const spec = ASSET_TYPES[slotType];
+  if (!spec) return { error: 'Invalid slot type: ' + slotType };
+  const expectedH = spec.h, expectedW = spec.w;
+  if (jsonData.grid.length !== expectedH) return { error: `Grid height: expected ${expectedH}, got ${jsonData.grid.length}` };
+  for (let r = 0; r < expectedH; r++) {
+    if (!Array.isArray(jsonData.grid[r]) || jsonData.grid[r].length !== expectedW)
+      return { error: `Row ${r}: expected width ${expectedW}` };
+  }
+
+  // Build partTypes & customColors
+  const card = CARD_DATA[cardCode];
+  if (!card) return { error: 'Invalid card code: ' + cardCode };
+  let pts, cc;
+  if (jsonData.partTypes && Array.isArray(jsonData.partTypes)) {
+    pts = jsonData.partTypes;
+    cc = jsonData.customColors || {};
+    pts.forEach(pt => { if (pt.color && !cc[pt.value]) cc[pt.value] = pt.color; });
+  } else {
+    // Use defaults for this slot type
+    const defaults = ASSET_PART_DEFAULTS[slotType] || ASSET_PART_DEFAULTS.character;
+    const tierColors = TIER_COLORS[card.tier];
+    pts = defaults.map(d => {
+      const pt = { ...d };
+      if (slotType !== 'character' && tierColors) {
+        if (d.label === 'Border' || d.label === 'Base' || d.label === 'Digit') pt.color = tierColors.back;
+        if (d.label === 'Accent' || d.label === 'Main') pt.color = tierColors.accent;
+      }
+      return pt;
+    });
+    cc = jsonData.customColors || {};
+    pts.forEach(pt => { if (!cc[pt.value]) cc[pt.value] = pt.color; });
+  }
+
+  // Create asset
+  const assetId = crypto.randomUUID();
+  store.assets[assetId] = {
+    id: assetId,
+    type: slotType,
+    label: (lang === 'ja' ? card.name : card.nameEn) + ' ' + T(spec.i18nKey),
+    width: expectedW,
+    height: expectedH,
+    grid: jsonData.grid.map(r => Int8Array.from(r)),
+    partTypes: pts.map(pt => ({ value: pt.value, label: pt.label, labelJa: pt.labelJa || pt.label, color: cc[pt.value] || pt.color, custom: pt.custom || false })),
+    customColors: { ...cc },
+    animations: jsonData.animations || {},
+    meta: getMetaForSlot(slotType, card),
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  // Assign to card
+  const assign = getAssignments(cardCode);
+  assign[slotType] = assetId;
+  store.cardAssignments[cardCode] = assign;
+  saveStore();
+
+  // Refresh dashboard if visible
+  if (currentView === 'viewDashboard' && selectedCardCode === cardCode) {
+    initDashboard(cardCode);
+  }
+
+  return { success: true, assetId };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 10: Utilities
+// ═══════════════════════════════════════════════════════════════
+function toggleDrawer(btn) { btn.classList.toggle('open'); btn.nextElementSibling.classList.toggle('open'); }
+let toastTimer = null;
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); if(toastTimer)clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2000); }
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if ((e.metaKey||e.ctrlKey) && e.key==='z') { e.preventDefault(); if(e.shiftKey) redo(); else undo(); }
+});
+window.addEventListener('resize', () => { if (currentView === 'viewEditor') render(); });
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION 11: Init
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  loadStore();
+  if (store.settings.lang) {
+    setLang(store.settings.lang);
+  } else if ((navigator.language||'').startsWith('ja')) {
+    setLang('ja');
+  }
+  buildCardGrid();
+}
+init();
+</script>
+</body>
+</html>
