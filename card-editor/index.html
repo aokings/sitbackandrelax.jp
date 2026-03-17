@@ -455,6 +455,7 @@ const i18n = {
     'fx-title': 'Effects', 'fx-strength': 'Strength',
     'fx-gradient': 'Gradient', 'fx-emboss': 'Emboss', 'fx-forged': 'Forged',
     'fx-weathered': 'Weathered', 'fx-arcane': 'Arcane Glow', 'fx-moss': 'Moss', 'fx-sparkle': 'Sparkle',
+    'fx-frost': 'Frost', 'fx-flame': 'Flame', 'fx-holy': 'Holy', 'fx-shadow': 'Shadow', 'fx-holographic': 'Holographic',
   },
   ja: {
     back: 'Home', subtitle: 'Wind & Gate カード用ピクセルアートエディタ',
@@ -499,6 +500,7 @@ const i18n = {
     'fx-title': 'エフェクト', 'fx-strength': '強さ',
     'fx-gradient': 'グラデーション', 'fx-emboss': 'エンボス', 'fx-forged': '鍛鉄',
     'fx-weathered': '風化', 'fx-arcane': '魔力光', 'fx-moss': '苔むし', 'fx-sparkle': 'キラーン',
+    'fx-frost': '氷結', 'fx-flame': '炎', 'fx-holy': '神聖', 'fx-shadow': '暗黒', 'fx-holographic': 'ホログラム',
   }
 };
 let lang = 'en';
@@ -1408,6 +1410,11 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
       applyCanvasEmboss(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale);
       applyCanvasArcane(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
       applyCanvasSparkle(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasFrost(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasFlame(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasHoly(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasShadow(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasHolographic(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
     });
   }
 
@@ -1776,6 +1783,11 @@ function renderGrid() {
     applyCanvasEmboss(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0);
     applyCanvasArcane(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
     applyCanvasSparkle(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasFrost(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasFlame(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasHoly(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasShadow(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasHolographic(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
   });
   gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
   for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
@@ -1808,6 +1820,11 @@ const FX_DEFS = [
   { id: 'arcane',    i18n: 'fx-arcane',    hasStrength: false, defaultStr: 0 },
   { id: 'moss',      i18n: 'fx-moss',      hasStrength: false, defaultStr: 0 },
   { id: 'sparkle',   i18n: 'fx-sparkle',   hasStrength: false, defaultStr: 0 },
+  { id: 'frost',     i18n: 'fx-frost',     hasStrength: false, defaultStr: 0 },
+  { id: 'flame',     i18n: 'fx-flame',     hasStrength: false, defaultStr: 0 },
+  { id: 'holy',      i18n: 'fx-holy',      hasStrength: false, defaultStr: 0 },
+  { id: 'shadow',    i18n: 'fx-shadow',    hasStrength: false, defaultStr: 0 },
+  { id: 'holographic', i18n: 'fx-holographic', hasStrength: false, defaultStr: 0 },
 ];
 
 // State: { "1": { gradient: true, emboss: false, emboss_str: 50, ... }, ... }
@@ -2327,8 +2344,428 @@ function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
   ctx.restore();
 }
 
+// Canvas-native Frost: icy crystalline shimmer with cyan/white highlights
+function applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.frost) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Cool blue tint overlay
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      ctx.fillStyle = 'rgba(180,220,255,0.12)';
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Icy edge highlights (white-cyan, brighter than emboss)
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.15);
+  const shimmer = t > 0 ? Math.sin(t * 2) * 0.15 + 1 : 1;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      ctx.lineWidth = lw;
+      if (!top) {
+        ctx.strokeStyle = `rgba(200,240,255,${0.5 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke();
+      }
+      if (!left) {
+        ctx.strokeStyle = `rgba(180,230,255,${0.4 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke();
+      }
+      if (!bottom) {
+        ctx.strokeStyle = `rgba(100,180,220,${0.3 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke();
+      }
+      if (!right) {
+        ctx.strokeStyle = `rgba(120,190,230,${0.25 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke();
+      }
+    }
+  }
+
+  // Pass 3: Crystal sparkle points (fewer, larger, cyan-white)
+  const cells = [];
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+  const phase = t > 0 ? Math.floor(t * 1.5) : 0;
+  const rng = seededRand(partVal * 311 + phase * 577);
+  const count = Math.max(1, Math.floor(cells.length * 0.06));
+  for (let i = 0; i < count; i++) {
+    const cell = cells[Math.floor(rng() * cells.length)];
+    const cx = ox + (cell.c + 0.3 + rng() * 0.4) * bw;
+    const cy = oy + (cell.r + 0.3 + rng() * 0.4) * bh;
+    const life = t > 0 ? ((t * 1.5 + rng() * 6.28) % 1) : 1;
+    const alpha = Math.sin(life * Math.PI) * (0.4 + rng() * 0.6);
+    if (alpha < 0.05) continue;
+    const sz = bw * (0.2 + rng() * 0.3);
+    ctx.shadowBlur = sz * 2;
+    ctx.shadowColor = `rgba(180,230,255,${alpha})`;
+    ctx.fillStyle = `rgba(220,245,255,${alpha})`;
+    // 6-pointed snowflake-ish star
+    ctx.beginPath();
+    for (let a = 0; a < 6; a++) {
+      const ang = a * Math.PI / 3;
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(ang) * sz, cy + Math.sin(ang) * sz);
+    }
+    ctx.lineWidth = sz * 0.15;
+    ctx.strokeStyle = `rgba(220,245,255,${alpha})`;
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, sz * 0.15, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Flame: animated fire glow rising from bottom edges
+function applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.flame) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Warm tint on lower portions
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const fracY = r / gridH;
+      const warmth = Math.max(0, (fracY - 0.3) * 1.4);
+      if (warmth > 0) {
+        const x = ox + c * bw, y = oy + r * bh;
+        ctx.fillStyle = `rgba(255,80,0,${warmth * 0.15})`;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  // Pass 2: Fiery edge glow (bottom and sides, with flicker)
+  const glowSize = Math.max(bw, bh) * 0.8;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+
+      if (bottom && left && right && top) continue;
+
+      const flicker = t > 0 ? 0.6 + Math.sin(t * 8 + c * 2.3 + r * 1.7) * 0.4 : 1;
+      const fracY = r / gridH;
+      const heat = 0.3 + fracY * 0.7; // hotter at bottom
+
+      // Color shifts from yellow (top) to red-orange (bottom)
+      const rr = 255;
+      const gg = Math.round(200 - fracY * 150);
+      const bb = Math.round(50 - fracY * 50);
+      const alpha = 0.4 * flicker * heat;
+
+      ctx.shadowBlur = glowSize * flicker;
+      ctx.shadowColor = `rgba(${rr},${gg},${bb},${alpha})`;
+      ctx.strokeStyle = `rgba(${rr},${gg},${bb},${alpha * 0.7})`;
+      ctx.lineWidth = Math.max(1, Math.min(bw, bh) * 0.18);
+
+      if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+      if (!left) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke(); }
+      if (!right) { ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+      if (!top) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke(); }
+    }
+  }
+
+  // Pass 3: Rising ember particles
+  const cells = [];
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+  const phase = t > 0 ? Math.floor(t * 4) : 0;
+  const rng = seededRand(partVal * 433 + phase * 821);
+  const count = Math.max(1, Math.floor(cells.length * 0.08));
+  for (let i = 0; i < count; i++) {
+    const cell = cells[Math.floor(rng() * cells.length)];
+    const rise = t > 0 ? ((t * 2 + rng() * 10) % 1) : 0;
+    const cx = ox + (cell.c + 0.2 + rng() * 0.6) * bw;
+    const cy = oy + (cell.r + 0.5 - rise * 0.8) * bh;
+    const alpha = Math.sin(rise * Math.PI) * (0.5 + rng() * 0.5);
+    if (alpha < 0.05) continue;
+    const sz = bw * (0.1 + rng() * 0.15);
+    ctx.shadowBlur = sz * 3;
+    ctx.shadowColor = `rgba(255,150,0,${alpha})`;
+    ctx.fillStyle = `rgba(255,${Math.round(180 + rng() * 75)},0,${alpha})`;
+    ctx.beginPath(); ctx.arc(cx, cy, sz, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Holy: golden divine radial glow pulsing from center
+function applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.holy) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Find centroid of this part
+  let sx = 0, sy = 0, cnt = 0;
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) { sx += c; sy += r; cnt++; }
+  if (cnt === 0) { ctx.restore(); return; }
+  const centerX = ox + (sx / cnt + 0.5) * bw;
+  const centerY = oy + (sy / cnt + 0.5) * bh;
+  const maxR = Math.max(gridW * bw, gridH * bh) * 0.6;
+
+  // Pass 1: Golden radial glow from center (pulsing)
+  const pulse = t > 0 ? 0.7 + Math.sin(t * 1.8) * 0.3 : 1;
+  const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxR * pulse);
+  grad.addColorStop(0, `rgba(255,230,140,${0.25 * pulse})`);
+  grad.addColorStop(0.4, `rgba(255,200,80,${0.12 * pulse})`);
+  grad.addColorStop(1, 'rgba(255,180,40,0)');
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Bright golden edge highlights
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      if (top && left && bottom && right) continue;
+
+      ctx.lineWidth = lw;
+      ctx.shadowBlur = bw * 0.5 * pulse;
+      ctx.shadowColor = `rgba(255,210,80,${0.4 * pulse})`;
+
+      if (!top) {
+        ctx.strokeStyle = `rgba(255,230,130,${0.4 * pulse})`;
+        ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke();
+      }
+      if (!left) {
+        ctx.strokeStyle = `rgba(255,220,110,${0.35 * pulse})`;
+        ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke();
+      }
+      if (!bottom) {
+        ctx.strokeStyle = `rgba(200,170,60,${0.3 * pulse})`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke();
+      }
+      if (!right) {
+        ctx.strokeStyle = `rgba(210,180,70,${0.25 * pulse})`;
+        ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke();
+      }
+    }
+  }
+
+  // Pass 3: Floating light motes
+  const cells = [];
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+  const phase = t > 0 ? Math.floor(t * 2) : 0;
+  const rng = seededRand(partVal * 199 + phase * 641);
+  const moteCount = Math.max(1, Math.floor(cells.length * 0.05));
+  for (let i = 0; i < moteCount; i++) {
+    const cell = cells[Math.floor(rng() * cells.length)];
+    const float = t > 0 ? ((t * 0.8 + rng() * 10) % 1) : 0.5;
+    const cx = ox + (cell.c + 0.3 + rng() * 0.4) * bw;
+    const cy = oy + (cell.r + 0.8 - float * 0.6) * bh;
+    const alpha = Math.sin(float * Math.PI) * (0.5 + rng() * 0.5);
+    if (alpha < 0.05) continue;
+    const sz = bw * (0.12 + rng() * 0.12);
+    ctx.shadowBlur = sz * 4;
+    ctx.shadowColor = `rgba(255,220,100,${alpha})`;
+    ctx.fillStyle = `rgba(255,240,180,${alpha})`;
+    ctx.beginPath(); ctx.arc(cx, cy, sz, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Shadow: dark purple-black aura creeping along edges
+function applyCanvasShadow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.shadow) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const pulse = t > 0 ? 0.7 + Math.sin(t * 2) * 0.3 : 1;
+  const drift = t > 0 ? t * 0.5 : 0;
+
+  ctx.save();
+
+  // Pass 1: Dark inner overlay (darkens the part)
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const wave = Math.sin(c * 0.8 + r * 0.6 + drift) * 0.5 + 0.5;
+      ctx.fillStyle = `rgba(20,0,40,${0.08 + 0.06 * wave * pulse})`;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Dark glowing edges with shadowBlur
+  const glowSize = Math.max(bw, bh) * 0.7;
+  ctx.lineWidth = Math.max(1, Math.min(bw, bh) * 0.2);
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      if (top && left && bottom && right) continue;
+
+      const wave = Math.sin(c * 1.2 + r * 0.9 + drift * 2) * 0.5 + 0.5;
+      const rr = Math.round(60 + 40 * wave);
+      const gg = 0;
+      const bb = Math.round(80 + 60 * (1 - wave));
+      const alpha = 0.45 * pulse;
+
+      ctx.shadowBlur = glowSize * pulse;
+      ctx.shadowColor = `rgba(${rr},${gg},${bb},${alpha})`;
+      ctx.strokeStyle = `rgba(${rr},${gg},${bb},${alpha * 0.6})`;
+
+      if (!top) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke(); }
+      if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+      if (!left) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke(); }
+      if (!right) { ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+    }
+  }
+
+  // Pass 3: Shadow wisps (dark particles drifting)
+  const cells = [];
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+  const phase = t > 0 ? Math.floor(t * 2.5) : 0;
+  const rng = seededRand(partVal * 557 + phase * 733);
+  const count = Math.max(1, Math.floor(cells.length * 0.06));
+  for (let i = 0; i < count; i++) {
+    const cell = cells[Math.floor(rng() * cells.length)];
+    const driftX = t > 0 ? Math.sin(t * 1.5 + rng() * 10) * 0.3 : 0;
+    const cx = ox + (cell.c + 0.5 + driftX) * bw;
+    const cy = oy + (cell.r + 0.3 + rng() * 0.4) * bh;
+    const alpha = (0.3 + rng() * 0.4) * pulse;
+    const sz = bw * (0.15 + rng() * 0.2);
+    ctx.shadowBlur = sz * 2;
+    ctx.shadowColor = `rgba(60,0,80,${alpha})`;
+    ctx.fillStyle = `rgba(40,0,60,${alpha * 0.5})`;
+    ctx.beginPath(); ctx.arc(cx, cy, sz, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Holographic: animated rainbow hue shift across the part
+function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.holographic) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Rainbow tint that shifts with position and time
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      // Hue based on position + time
+      const hue = ((c / gridW + r / gridH) * 180 + (t > 0 ? t * 60 : 0)) % 360;
+      const alpha = 0.15 + Math.sin((c + r) * 0.5 + (t > 0 ? t * 2 : 0)) * 0.05;
+      ctx.fillStyle = `hsla(${hue},80%,60%,${alpha})`;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Iridescent edge highlights
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      if (top && left && bottom && right) continue;
+
+      const hue = ((c / gridW + r / gridH) * 180 + (t > 0 ? t * 80 : 0)) % 360;
+      ctx.lineWidth = lw;
+      ctx.shadowBlur = bw * 0.4;
+      ctx.shadowColor = `hsla(${hue},90%,70%,0.3)`;
+
+      if (!top) {
+        ctx.strokeStyle = `hsla(${hue},90%,80%,0.4)`;
+        ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke();
+      }
+      if (!left) {
+        ctx.strokeStyle = `hsla(${(hue+30)%360},90%,75%,0.35)`;
+        ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke();
+      }
+      if (!bottom) {
+        ctx.strokeStyle = `hsla(${(hue+60)%360},80%,50%,0.3)`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke();
+      }
+      if (!right) {
+        ctx.strokeStyle = `hsla(${(hue+90)%360},80%,55%,0.25)`;
+        ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke();
+      }
+    }
+  }
+
+  // Pass 3: Moving shine band (like a holographic card tilt)
+  const bandPos = t > 0 ? ((t * 0.3) % 2.0) - 0.5 : 0.5;
+  const bandWidth = 0.2;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const diag = (c / gridW + r / gridH) / 2;
+      const dist = Math.abs(diag - bandPos);
+      if (dist < bandWidth) {
+        const intensity = 1 - dist / bandWidth;
+        const shine = intensity * intensity;
+        const x = ox + c * bw, y = oy + r * bh;
+        ctx.fillStyle = `rgba(255,255,255,${shine * 0.3})`;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
 // Check if any animated effect is active (sparkle, arcane, moss, forged)
-const FX_ANIMATED = ['sparkle', 'arcane', 'moss', 'forged'];
+const FX_ANIMATED = ['sparkle', 'arcane', 'moss', 'forged', 'frost', 'flame', 'holy', 'shadow', 'holographic'];
 function hasAnimatedFx() {
   return Object.values(partEffects).some(fx =>
     fx && FX_ANIMATED.some(id => fx[id] === true)
@@ -2684,6 +3121,11 @@ function renderAnimFrame(timestamp) {
     applyCanvasEmboss(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0);
     applyCanvasArcane(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
     applyCanvasSparkle(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasFrost(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasFlame(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasHoly(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasShadow(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasHolographic(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
   });
 
   animatingParts.forEach(v => {
@@ -2721,6 +3163,11 @@ function renderAnimFrame(timestamp) {
     applyCanvasEmboss(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0);
     applyCanvasArcane(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
     applyCanvasSparkle(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasFrost(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasFlame(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasHoly(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasShadow(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasHolographic(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
     ctx.restore();
   });
 
