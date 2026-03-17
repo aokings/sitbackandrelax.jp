@@ -16,9 +16,8 @@ sitbackandrelax.jp/
     rules/                # ルール説明
     archives/             # アーカイブ
   frog-editor/            # Frog Pixel Editor（ピクセルアートツール）
-    index.html            # エディタ本体（HTML+CSS+JS 1ファイル完結、約3400行）
-    about.html            # 使い方ガイド（EN/JP対応、サイトからリンク）
-    SPEC.md               # 技術仕様書（Claude向け、次セッション用）
+    index.html            # エディタ本体（約3400行）※ソース: ~/Developer/frog-editor/
+    about.html            # 使い方ガイド（EN/JP対応）
   card-editor/            # Frog Card Editor（Wind & Gate カード用ピクセルアートエディタ）
     index.html            # エディタ本体（HTML+CSS+JS 1ファイル完結、約2100行）
                           # ソース元: aokings/frog-card-editor リポジトリの src/index.html をコピー
@@ -36,6 +35,9 @@ sitbackandrelax.jp/
 - デプロイ: mainブランチにpushで自動反映
 
 ## 関連プロジェクト（Masaruの他のプロジェクト）
+- **Frog Pixel Editor** — ピクセルアートエディタ（正規プロジェクト昇格済み）
+  - ローカル: `/Users/masaru/Developer/frog-editor/`（開発はここで行う）
+  - デプロイ: `frog-editor/index.html` をコピー → このリポジトリに push
 - **こども銀行（やりくりかぞく）** — 子ども向けおこづかい管理アプリ
   - ローカル: `/Users/masaru/Developer/こども銀行/kodomobank/`
   - GitHub: aokings/kodomobank（private）
