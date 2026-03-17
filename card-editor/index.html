@@ -450,27 +450,31 @@ function setLang(l) {
 document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 2: Card Data (from card_parts_data_v7.js)
+// SECTION 2: Card Data (Wind & Gate 中世ファンタジー版)
 // ═══════════════════════════════════════════════════════════════
 const CARD_DATA = {
-  FAR: { name: 'ペンギン', nameEn: 'Penguin', points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC27' },
-  MER: { name: 'キツネ',   nameEn: 'Fox',     points: 1, category: 'mob',    tier: 'legend', emoji: '\uD83E\uDD8A' },
-  CAR: { name: '作業員',   nameEn: 'Worker',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC77' },
-  TRV: { name: 'カメ',     nameEn: 'Turtle',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC22' },
-  BUT: { name: 'ゾンビ',   nameEn: 'Zombie',  points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83E\uDDDF' },
-  MAI: { name: 'ネズミ',   nameEn: 'Mouse',   points: 1, category: 'mob',    tier: 'mob',    emoji: '\uD83D\uDC2D' },
-  BAL: { name: '宝石',     nameEn: 'Jewel',   points: 1, category: 'mob',    tier: 'legend', emoji: '\uD83D\uDC8E' },
-  NOB: { name: 'ライオン', nameEn: 'Lion',    points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD81' },
-  KNI: { name: '忍者',     nameEn: 'Ninja',   points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD77' },
-  PRI: { name: '魔法使い', nameEn: 'Wizard',  points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDDD9' },
-  SCH: { name: 'フクロウ', nameEn: 'Owl',     points: 5, category: 'elite',  tier: 'elite',  emoji: '\uD83E\uDD89' },
-  HOR: { name: 'カエル',   nameEn: 'Frog',    points: 5, category: 'elite',  tier: 'legend', emoji: '\uD83D\uDC38' },
-  KIN: { name: 'ドラゴン', nameEn: 'Dragon',  points: 10, category: 'legend', tier: 'legend', emoji: '\uD83D\uDC09' },
-  QUE: { name: '炎',       nameEn: 'Flame',   points: 10, category: 'legend', tier: 'legend', emoji: '\uD83D\uDD25' },
-  WIT: { name: '吸血鬼',   nameEn: 'Vampire', points: 15, category: 'legend', tier: 'legend', emoji: '\uD83E\uDDDB' },
-  HOL: { name: 'ニンニク', nameEn: 'Garlic',  points: 5,  category: 'legend', tier: 'legend', emoji: '\uD83E\uDDC4' },
-  HOU: { name: '鳥居',     nameEn: 'Gate',    points: 3,  category: 'house',  tier: 'legend', emoji: '\u26E9\uFE0F' },
-  GHI: { name: '強奪',     nameEn: 'Gust',    points: 3,  category: 'wind',   tier: 'legend', emoji: '\uD83C\uDF00' },
+  // Mob (1pt × 5種)
+  GOB: { name: 'ゴブリン',     nameEn: 'Goblin',     points: 1,  category: 'mob',    tier: 'mob',    emoji: '👺' },
+  SKL: { name: 'スケルトン',   nameEn: 'Skeleton',   points: 1,  category: 'mob',    tier: 'mob',    emoji: '💀' },
+  SLM: { name: 'スライム',     nameEn: 'Slime',      points: 1,  category: 'mob',    tier: 'mob',    emoji: '🫧' },
+  KBD: { name: 'コボルト',     nameEn: 'Kobold',     points: 1,  category: 'mob',    tier: 'mob',    emoji: '🐲' },
+  BND: { name: '野盗',         nameEn: 'Bandit',     points: 1,  category: 'mob',    tier: 'mob',    emoji: '🗡️' },
+  // Elite (5pt × 4種)
+  KNT: { name: '騎士',         nameEn: 'Knight',     points: 5,  category: 'elite',  tier: 'elite',  emoji: '⚔️' },
+  ASN: { name: '暗殺者',       nameEn: 'Assassin',   points: 5,  category: 'elite',  tier: 'elite',  emoji: '🗡️' },
+  WIZ: { name: '魔法使い',     nameEn: 'Wizard',     points: 5,  category: 'elite',  tier: 'elite',  emoji: '🧙' },
+  SAG: { name: '賢者',         nameEn: 'Sage',       points: 5,  category: 'elite',  tier: 'elite',  emoji: '📖' },
+  // Legend (効果ペア用)
+  DRG: { name: 'ドラゴン',     nameEn: 'Dragon',     points: 10, category: 'legend', tier: 'legend', emoji: '🐉' },
+  DRF: { name: 'ドラゴンの炎', nameEn: 'Dragonfire', points: 10, category: 'legend', tier: 'legend', emoji: '🔥' },
+  LCH: { name: 'リッチ',       nameEn: 'Lich',       points: 15, category: 'legend', tier: 'legend', emoji: '💀' },
+  GRL: { name: '聖杯',         nameEn: 'Holy Grail', points: 5,  category: 'legend', tier: 'legend', emoji: '🏆' },
+  FML: { name: '使い魔',       nameEn: 'Familiar',   points: 5,  category: 'legend', tier: 'legend', emoji: '🐈‍⬛' },
+  GEM: { name: '宝石',         nameEn: 'Gem',        points: 1,  category: 'legend', tier: 'legend', emoji: '💎' },
+  JST: { name: '道化師',       nameEn: 'Jester',     points: 1,  category: 'legend', tier: 'legend', emoji: '🃏' },
+  // Special
+  GAT: { name: '門',           nameEn: 'Gate',       points: 3,  category: 'house',  tier: 'legend', emoji: '🏰' },
+  WND: { name: '風',           nameEn: 'Wind',       points: 3,  category: 'wind',   tier: 'legend', emoji: '🌪️' },
 };
 
 const TIER_COLORS = {
