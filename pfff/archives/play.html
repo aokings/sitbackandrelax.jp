@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pfff! Archives — Play</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;500;700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --off-white: #f2f0ed;
+      --warm-gray: #e8e4df;
+      --dark-bg: #1a1a1a;
+      --dark-surface: #2a2a2a;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6560;
+      --text-muted: #9e9890;
+      --text-on-dark: #e8e4df;
+      --accent: #e94560;
+      --card-bg: #ffffff;
+      --card-border: #e8e4df;
+      --shadow-soft: 0 2px 20px rgba(0,0,0,0.04);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--off-white); color: var(--text-primary); min-height: 100vh; }
+
+    .navbar { background: var(--dark-bg); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 48px; position: sticky; top: 0; z-index: 100; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-link-home { font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .nav-link-home:hover { color: var(--text-on-dark); }
+    .nav-sep { color: #444; font-size: 0.9rem; }
+    .nav-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text-on-dark); }
+    .nav-badge { font-family: 'Outfit', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: rgba(233,69,96,0.15); padding: 0.15rem 0.5rem; border-radius: 12px; }
+    .nav-right { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Outfit', sans-serif; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-link:hover { color: var(--text-on-dark); }
+
+    .game-wrapper { background: var(--dark-bg); padding: 0 0 8px 0; }
+    .game-container { max-width: 960px; margin: 0 auto; position: relative; }
+    .game-frame-wrap { position: relative; width: 100%; padding-bottom: 62.5%; background: #000; border-radius: 4px; overflow: hidden; }
+    .game-frame-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    .game-toolbar { max-width: 960px; margin: 0 auto; padding: 6px 0 0; display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; }
+    .toolbar-btn { font-family: 'Outfit', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; color: var(--text-muted); background: var(--dark-surface); border: 1px solid #444; border-radius: 4px; padding: 5px 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+    .toolbar-btn:hover { color: var(--text-on-dark); border-color: #666; background: #333; }
+
+    .content { max-width: 960px; margin: 0 auto; padding: 2rem 2rem 3rem; }
+    .content h1 { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .content .meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .content .desc { font-size: 0.9rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 1.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem; }
+    .tag { font-size: 0.72rem; font-weight: 500; color: var(--text-muted); background: var(--off-white); padding: 0.25rem 0.6rem; border-radius: 5px; border: 1px solid var(--warm-gray); }
+    .back-link { display: inline-flex; align-items: center; gap: 0.4rem; font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+    .back-link:hover { opacity: 0.7; }
+
+    .page-footer { text-align: center; padding: 2rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--warm-gray); }
+    .page-footer a { color: inherit; text-decoration: none; }
+    .page-footer a:hover { color: var(--text-secondary); }
+
+    @media (max-width: 480px) {
+      .navbar { padding: 0 1rem; }
+      .nav-link-home { display: none; }
+      .nav-sep:first-of-type { display: none; }
+      .game-frame-wrap { padding-bottom: 75%; }
+      .content { padding: 1.5rem 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-left">
+      <a class="nav-link-home" href="/pfff/">pfff!</a>
+      <span class="nav-sep">/</span>
+      <a class="nav-link-home" href="./">Archives</a>
+      <span class="nav-sep">/</span>
+      <span class="nav-title" id="navTitle">Loading...</span>
+      <span class="nav-badge" id="navBadge">ARCHIVE</span>
+    </div>
+    <div class="nav-right">
+      <a class="nav-link" href="/pfff/">Current Version</a>
+    </div>
+  </nav>
+
+  <section class="game-wrapper">
+    <div class="game-container">
+      <div class="game-frame-wrap" id="gameFrame">
+        <iframe id="gameIframe" src="about:blank" allowfullscreen></iframe>
+      </div>
+      <div class="game-toolbar">
+        <button class="toolbar-btn" onclick="toggleFullscreen()">
+          <span id="fsIcon">&#x26F6;</span>
+          Fullscreen
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <main class="content">
+    <h1 id="pageTitle">Loading...</h1>
+    <p class="meta" id="pageMeta"></p>
+    <p class="desc" id="pageDesc"></p>
+    <div class="tags" id="pageTags"></div>
+    <a class="back-link" href="./">&larr; Back to Archives</a>
+  </main>
+
+  <footer class="page-footer">
+    &copy; 2026 <a href="/">Sit Back and Relax</a>
+  </footer>
+
+  <script>
+    const VERSIONS = {
+      'v3_6_0_0': {
+        title: 'pfff! v3.6.0',
+        file: 'v3_6_0_0.html',
+        date: 'Mar 2026',
+        desc: 'The last version before Lite Rules. Features Set Awareness AI, score reveal animations, and the full 54-card deck with all effect pairs.',
+        tags: ['Set Awareness AI', 'Score Reveal', '54 Cards', 'Effect Pairs']
+      },
+      'v3_1_0_0': {
+        title: 'pfff! v3.1.0',
+        file: 'v3_1_0_0.html',
+        date: 'Feb 2026',
+        desc: 'Companion system with Nobby the advisor, refined AI strategies, and polished UI with Art Deco design language.',
+        tags: ['Nobby Companion', 'Refined AI', 'Art Deco UI']
+      },
+      'v3_0_0_0': {
+        title: 'pfff! v3.0.0',
+        file: 'v3_0_0_0.html',
+        date: 'Feb 2026',
+        desc: 'The first v3 build \u2014 major rules overhaul with new scoring, rebranded characters (Mob/Elite/Legend), and the foundation for modern pfff! gameplay.',
+        tags: ['v3 Rules', 'Rebranded Characters', 'AI Overhaul']
+      },
+      'v2_10_0_0': {
+        title: 'pfff! v2.10.0',
+        file: 'v2_10_0_0.html',
+        date: 'Feb 2026',
+        desc: 'The historic transition build \u2014 this is where "House & Wind" became "pfff!" The name change, new visual identity, and updated character designs debuted here.',
+        tags: ['Name Change', 'New Identity']
+      },
+      'v2_5_10_4': {
+        title: 'House & Wind v2.5',
+        file: 'v2_5_10_4.html',
+        date: 'Feb 2026',
+        desc: 'Feature-rich period with refined Gate/Gust mechanics, tournament mode, and Nobby the companion advisor making early appearances.',
+        tags: ['Tournament Mode', 'Nobby Appears', 'Gate System']
+      },
+      'v2_0_9': {
+        title: 'House & Wind v2.0',
+        file: 'v2_0_9.html',
+        date: 'Jan 2026',
+        desc: 'Complete rewrite introducing the two-phase game structure (Exploration \u2192 Old Maid Showdown), 4 AI opponents, and a dramatically improved UI.',
+        tags: ['Two-Phase System', '4 AI Players', 'New UI']
+      },
+      'v1_5_5': {
+        title: 'House & Wind v1.5.5',
+        file: 'v1_5_5.html',
+        date: 'Jan 2026',
+        desc: 'Where it all began. The very first browser-playable version \u2014 simple UI, core card mechanics, and the foundation of everything that followed.',
+        tags: ['First Prototype', 'Core Mechanics']
+      }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const vKey = params.get('v');
+    const ver = VERSIONS[vKey];
+
+    if (ver) {
+      document.title = ver.title + ' \u2014 pfff! Archives';
+      document.getElementById('navTitle').textContent = ver.title;
+      document.getElementById('gameIframe').src = ver.file;
+      document.getElementById('pageTitle').textContent = ver.title;
+      document.getElementById('pageMeta').textContent = ver.date + ' \u2022 Archived Version';
+      document.getElementById('pageDesc').textContent = ver.desc;
+      const tagsEl = document.getElementById('pageTags');
+      ver.tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = t;
+        tagsEl.appendChild(span);
+      });
+    } else {
+      document.getElementById('navTitle').textContent = 'Not Found';
+      document.getElementById('pageTitle').textContent = 'Version not found';
+      document.getElementById('pageDesc').textContent = 'The requested version does not exist. Go back to the archives page.';
+    }
+
+    function toggleFullscreen() {
+      const wrap = document.getElementById('gameFrame');
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        wrap.requestFullscreen().catch(() => {
+          document.getElementById('gameIframe').requestFullscreen().catch(() => {});
+        });
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      document.getElementById('fsIcon').innerHTML = document.fullscreenElement ? '&#x2716;' : '&#x26F6;';
+    });
+  </script>
+</body>
+</html>
