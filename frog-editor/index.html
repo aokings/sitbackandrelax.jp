@@ -1129,70 +1129,43 @@
       <!-- Right: Preview & Effects & Export -->
       <div class="right-col">
 
-        <!-- Preview -->
-        <div class="card fade-up fade-up-d1">
-          <div class="card-title" data-i18n="preview-title">Preview</div>
-          <div class="preview-section">
-            <!-- GIF animation preview (hidden by default) -->
-            <div id="gifPreview" style="display:none;">
-              <img id="gifPreviewImg" style="border-radius:12px; border:1px solid var(--card-border); image-rendering:pixelated; max-width:240px;" />
-              <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
-                <button class="btn btn-sm" onclick="closeGifPreview()">
-                  <span data-i18n="gif-close">✕</span>
-                </button>
-              </div>
+        <!-- Hidden canvases (used for rendering/export) -->
+        <div style="display:none">
+          <div id="gifPreview">
+            <img id="gifPreviewImg" style="border-radius:12px; border:1px solid var(--card-border); image-rendering:pixelated; max-width:240px;" />
+            <div style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
+              <button class="btn btn-sm" onclick="closeGifPreview()">
+                <span data-i18n="gif-close">✕</span>
+              </button>
             </div>
-            <!-- Static preview (shown by default) -->
-            <div id="staticPreview">
-              <canvas id="previewCanvas" width="240" height="240"></canvas>
-              <div class="variant-selector" id="variantSelector"></div>
-              <div class="preview-sizes">
-                <div>
-                  <canvas id="prevMd" width="80" height="80"></canvas>
-                  <div class="size-label">M</div>
-                </div>
-                <div>
-                  <canvas id="prevSm" width="40" height="40"></canvas>
-                  <div class="size-label">S</div>
-                </div>
-              </div>
+          </div>
+          <div id="staticPreview">
+            <canvas id="previewCanvas" width="240" height="240"></canvas>
+            <div class="preview-sizes">
+              <div><canvas id="prevMd" width="80" height="80"></canvas></div>
+              <div><canvas id="prevSm" width="40" height="40"></canvas></div>
             </div>
           </div>
         </div>
 
         <!-- Effects -->
-        <div class="card fade-up fade-up-d2 mt-md">
+        <div class="card fade-up fade-up-d1 mt-md">
           <div class="drawer-toggle open" onclick="toggleDrawer(this)">
             <div class="card-title" style="margin:0" data-i18n="effects-title">Effects</div>
             <span class="arrow">&#9660;</span>
           </div>
           <div class="drawer-body open">
-          <div class="effects-panel">
-            <div class="effect-row">
-              <span class="effect-label" data-i18n="fx-gradient">Gradient</span>
-              <div class="effect-controls">
-                <button class="toggle on" data-fx="gradient" onclick="toggleFx(this)"></button>
-              </div>
+            <div style="margin-top:6px;margin-bottom:10px;">
+              <div class="card-title" style="margin-bottom:4px" data-i18n="variant-title">Color</div>
+              <div class="variant-selector" id="variantSelector"></div>
             </div>
-            <div class="effect-row">
-              <span class="effect-label" data-i18n="fx-emboss">Emboss</span>
-              <div class="effect-controls">
-                <input type="range" class="slider" min="0" max="100" value="70" oninput="setFxStrength('emboss',this.value)" data-fx-slider="emboss">
-                <button class="toggle on" data-fx="emboss" onclick="toggleFx(this)"></button>
-              </div>
-            </div>
-            <div class="effect-row">
-              <span class="effect-label" data-i18n="fx-scanlines">Scanlines</span>
-              <div class="effect-controls">
-                <button class="toggle" data-fx="scanlines" onclick="toggleFx(this)"></button>
-              </div>
-            </div>
-          </div>
+            <div id="fxPartChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+            <div id="fxControls" style="display:none"></div>
           </div>
         </div>
 
         <!-- Export -->
-        <div class="card fade-up fade-up-d3 mt-md">
+        <div class="card fade-up fade-up-d2 mt-md">
           <div class="drawer-toggle open" onclick="toggleDrawer(this)">
             <div class="card-title" style="margin:0" data-i18n="export-title">Export</div>
             <span class="arrow">&#9660;</span>
@@ -1288,6 +1261,11 @@
       'toast-import': 'Imported!',
       'toast-import-fail': 'Could not parse Dart array',
       'about-link': 'About',
+      'fx-outline': 'Outline', 'fx-blink': 'Blink', 'fx-glow': 'Glow',
+      'fx-sparkle': 'Sparkle', 'fx-ethereal': 'Ethereal', 'fx-holographic': 'Holographic',
+      'fx-cat-basic': 'Basic', 'fx-cat-life': 'Life', 'fx-cat-decoration': 'Decoration', 'fx-cat-special': 'Special',
+      'variant-title': 'Color',
+      'fx-strength': 'Strength', 'fx-apply-all': 'Apply to all',
     },
     ja: {
       back: 'Home',
@@ -1329,6 +1307,11 @@
       'toast-import': 'インポートしました！',
       'toast-import-fail': 'Dart配列を読み取れませんでした',
       'about-link': 'このエディタについて',
+      'fx-outline': '縁取り', 'fx-blink': 'まばたき', 'fx-glow': '発光',
+      'fx-sparkle': 'キラキラ', 'fx-ethereal': '半透明', 'fx-holographic': 'ホログラム',
+      'fx-cat-basic': '基本', 'fx-cat-life': '生命感', 'fx-cat-decoration': '装飾', 'fx-cat-special': '特殊',
+      'variant-title': 'カラー',
+      'fx-strength': '強さ', 'fx-apply-all': '全パーツに適用',
     }
   };
 
@@ -1370,20 +1353,28 @@
   let undoStack = [];
   let redoStack = [];
   function pushUndo() {
-    undoStack.push(grid.map(r => Int8Array.from(r)));
+    undoStack.push({ g: grid.map(r => Int8Array.from(r)), pe: JSON.parse(JSON.stringify(partEffects)) });
     if (undoStack.length > 50) undoStack.shift();
     redoStack = [];
   }
   function undo() {
     if (!undoStack.length) return;
-    redoStack.push(grid.map(r => Int8Array.from(r)));
-    grid = undoStack.pop();
+    redoStack.push({ g: grid.map(r => Int8Array.from(r)), pe: JSON.parse(JSON.stringify(partEffects)) });
+    const state = undoStack.pop();
+    grid = state.g;
+    partEffects = state.pe || {};
+    buildFxPartChips();
+    if (selectedFxPart !== null) buildFxControls();
     render();
   }
   function redo() {
     if (!redoStack.length) return;
-    undoStack.push(grid.map(r => Int8Array.from(r)));
-    grid = redoStack.pop();
+    undoStack.push({ g: grid.map(r => Int8Array.from(r)), pe: JSON.parse(JSON.stringify(partEffects)) });
+    const state = redoStack.pop();
+    grid = state.g;
+    partEffects = state.pe || {};
+    buildFxPartChips();
+    if (selectedFxPart !== null) buildFxControls();
     render();
   }
 
@@ -1395,13 +1386,31 @@
   };
   let currentPalette = 'green';
 
-  // Effects
-  const fx = {
-    gradient: true,
-    emboss: true,
-    embossStrength: 0.7,
-    scanlines: false,
-  };
+  // Effects — per-part
+  let partEffects = {};
+  let selectedFxPart = null;
+
+  const FX_DEFS = [
+    { id: 'outline',      i18n: 'fx-outline',      hasStrength: false, category: 'basic', desc: 'Dark border around edges', descJa: 'パーツ外周の縁取り' },
+    { id: 'gradient',     i18n: 'fx-gradient',      hasStrength: true,  category: 'basic', desc: 'Top-to-bottom shading', descJa: '上下グラデーション', defaultStr: 50 },
+    { id: 'emboss',       i18n: 'fx-emboss',        hasStrength: true,  category: 'basic', desc: '3D edge highlight/shadow', descJa: '立体的なエッジ', defaultStr: 70 },
+    { id: 'blink',        i18n: 'fx-blink',         hasStrength: true,  category: 'life', desc: 'Periodic eye blink', descJa: 'まばたき', defaultStr: 50 },
+    { id: 'glow',         i18n: 'fx-glow',          hasStrength: true,  category: 'life', desc: 'Inner light emission', descJa: '内側から発光', defaultStr: 50 },
+    { id: 'sparkle',      i18n: 'fx-sparkle',       hasStrength: true,  category: 'decoration', desc: 'Twinkling stars', descJa: 'キラキラ', defaultStr: 50 },
+    { id: 'ethereal',     i18n: 'fx-ethereal',      hasStrength: true,  category: 'special', desc: 'Semi-transparent ghost', descJa: '半透明ゆらぎ', defaultStr: 50 },
+    { id: 'holographic',  i18n: 'fx-holographic',   hasStrength: true,  category: 'special', desc: 'Rainbow hue shift', descJa: '虹色ホログラム', defaultStr: 50 },
+  ];
+
+  const FX_CATEGORIES = [
+    { id: 'basic', i18n: 'fx-cat-basic' },
+    { id: 'life', i18n: 'fx-cat-life' },
+    { id: 'decoration', i18n: 'fx-cat-decoration' },
+    { id: 'special', i18n: 'fx-cat-special' },
+  ];
+
+  const FX_ANIMATED = ['sparkle', 'holographic', 'ethereal', 'glow', 'blink'];
+  let fxAnimTime = 0;
+  let fxAnimId = null;
 
   // Snapshots
   let snapshots = [];
@@ -2060,6 +2069,7 @@
     pushUndo();
     grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
     loadedPreset = null;
+    buildFxPartChips();
     render();
   }
 
@@ -2211,6 +2221,11 @@
           grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
           loadFrom8x8(p.grid);
           loadedPreset = key;
+          // Apply default effects to body if none are set yet
+          if (!partEffects[1] || !Object.values(partEffects[1]).some(v => v === true)) {
+            partEffects[1] = { gradient: true, gradient_str: 50, emboss: true, emboss_str: 60 };
+            if (selectedFxPart === 1) buildFxControls();
+          }
           buildPresets();
           render();
         } else {
@@ -2259,8 +2274,8 @@
       }
     }
 
-    // Grid lines
-    gridCtx.strokeStyle = 'rgba(0,0,0,0.12)';
+    // Grid lines (drawn before effects so effects are visible on top)
+    gridCtx.strokeStyle = 'rgba(0,0,0,0.08)';
     gridCtx.lineWidth = 0.5;
     for (let i = 0; i <= rw; i++) {
       const pos = i * cellPx;
@@ -2270,6 +2285,17 @@
       const pos = i * cellPx;
       gridCtx.beginPath(); gridCtx.moveTo(0, pos); gridCtx.lineTo(totalW, pos); gridCtx.stroke();
     }
+
+    // Effect overlay pass (on top of grid lines)
+    const visGrid = Array.from({length: rh}, (_, r2) =>
+      Array.from({length: rw}, (_, c2) => grid[r2 * bh][c2 * bw]));
+    const usedParts = new Set();
+    for (let r2 = 0; r2 < rh; r2++) for (let c2 = 0; c2 < rw; c2++) {
+      if (visGrid[r2][c2] !== 0) usedParts.add(visGrid[r2][c2]);
+    }
+    usedParts.forEach(partVal => {
+      applyAllCanvasEffects(gridCtx, partVal, visGrid, rw, rh, cellPx, cellPx, 0, 0, fxAnimTime);
+    });
 
     // Placement overlay (semi-transparent preset)
     renderPlacementOverlay();
@@ -2292,88 +2318,45 @@
   // =========================================================================
   // Preview rendering (with effects)
   // =========================================================================
-  function renderPreviewToCanvas(canvas, gridData, pal, cols, rows) {
+  function renderPreviewToCanvas(canvas, gridData, pal, cols, rows, time) {
     if (!pal) pal = palettes[currentPalette];
     if (!cols) cols = gridData[0].length;
     if (!rows) rows = gridData.length;
     const ctx = canvas.getContext('2d');
     const w = canvas.width, h = canvas.height;
     const bw = w / cols, bh = h / rows;
-    const isLarge = Math.max(w, h) >= 100;
 
     ctx.clearRect(0, 0, w, h);
 
+    // Draw flat colors first
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const val = gridData[r][c];
         if (val === 0) continue;
-        const x = c * bw, y = r * bh;
-
-        if (val === 1) {
-          // Body
-          if (fx.gradient) {
-            const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
-            grad.addColorStop(0, pal.light);
-            grad.addColorStop(1, pal.dark);
-            ctx.fillStyle = grad;
-          } else {
-            ctx.fillStyle = pal.base;
-          }
-          ctx.fillRect(x, y, bw, bh);
-
-          // Sub-pixel texture for large
-          if (isLarge) {
-            const sw = bw / 2, sh = bh / 2;
-            for (let sy = 0; sy < 2; sy++) {
-              for (let sx = 0; sx < 2; sx++) {
-                const v = ((r + c + sx + sy) % 3) * 0.015;
-                if (v > 0) {
-                  ctx.fillStyle = `rgba(0,0,0,${v})`;
-                  ctx.fillRect(x + sx * sw, y + sy * sh, sw, sh);
-                }
-              }
-            }
-          }
-        } else {
-          // Eye, Mouth, Highlight, or custom types — use customColors
-          ctx.fillStyle = customColors[val] || '#888';
-          ctx.fillRect(x, y, bw, bh);
-        }
-
-        // Emboss
-        if (fx.emboss) {
-          const s = fx.embossStrength;
-          const sw = isLarge ? 1.5 * s : 0.8 * s;
-          const hA = (isLarge ? 0.25 : 0.15) * s;
-          const sA = (isLarge ? 0.2 : 0.12) * s;
-
-          // Highlight (top-left)
-          ctx.strokeStyle = `rgba(255,255,255,${hA})`;
-          ctx.lineWidth = sw;
-          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke();
-
-          // Shadow (bottom-right)
-          ctx.strokeStyle = `rgba(0,0,0,${sA})`;
-          ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke();
-        }
+        ctx.fillStyle = customColors[val] || '#888';
+        ctx.fillRect(c * bw, r * bh, bw, bh);
       }
     }
 
-    // Scanlines
-    if (fx.scanlines) {
-      ctx.fillStyle = 'rgba(0,0,0,0.04)';
-      for (let y = 0; y < h; y += 2) {
-        ctx.fillRect(0, y, w, 1);
+    // Apply per-part effects
+    const usedParts = new Set();
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (gridData[r][c] !== 0) usedParts.add(gridData[r][c]);
       }
     }
+    const t = time !== undefined ? time : fxAnimTime;
+    usedParts.forEach(partVal => {
+      if (partEffects[partVal] && Object.values(partEffects[partVal]).some(v => v === true)) {
+        applyAllCanvasEffects(ctx, partVal, gridData, cols, rows, bw, bh, 0, 0, t);
+      }
+    });
   }
 
   function updatePreviewSizes() {
-    // Scale preview canvases to match aspect ratio
+    // Scale preview canvases to match aspect ratio using visible resolution
     const maxDim = 240;
-    const aspect = baseW / baseH; // >1 for wide, <1 for tall
+    const aspect = resW() / resH();
     let pw, ph;
     if (aspect >= 1) {
       pw = maxDim; ph = Math.round(maxDim / aspect);
@@ -2396,17 +2379,27 @@
     renderPreview();
   }
 
+  function exportAtRes() {
+    // Export at current visible resolution (resW x resH)
+    const rw = resW(), rh = resH();
+    const bw = blockW(), bh = blockH();
+    return Array.from({length: rh}, (_, r) =>
+      Array.from({length: rw}, (_, c) => grid[r * bh][c * bw]));
+  }
+
   function renderPreview() {
-    const gridData = exportAtBase();
+    const gridData = exportAtRes();
     renderPreviewToCanvas(document.getElementById('previewCanvas'), gridData);
     renderPreviewToCanvas(document.getElementById('prevMd'), gridData);
     renderPreviewToCanvas(document.getElementById('prevSm'), gridData);
     updateCodePreview();
   }
 
+  let _skipChipRebuild = false;
   function render() {
     renderGrid();
     renderPreview();
+    if (!_skipChipRebuild) buildFxPartChips();
   }
 
   // =========================================================================
@@ -2513,18 +2506,555 @@
   gridCanvas.addEventListener('touchend', endPaint);
 
   // =========================================================================
-  // Effects controls
+  // Effects helpers
   // =========================================================================
-  function toggleFx(btn) {
-    const key = btn.dataset.fx;
-    fx[key] = !fx[key];
-    btn.classList.toggle('on', fx[key]);
-    renderPreview();
+  function getPartFx(partVal) {
+    if (!partEffects[partVal]) partEffects[partVal] = {};
+    return partEffects[partVal];
   }
 
-  function setFxStrength(key, val) {
-    fx[key + 'Strength'] = val / 100;
-    renderPreview();
+  function hexToRgb(hex) {
+    if (!hex || hex.length < 7) return [128,128,128];
+    return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  }
+
+  function rgbToHex(r,g,b) { return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+
+  function adjustBrightness(hex, amt) { const [r,g,b]=hexToRgb(hex); return rgbToHex(r+amt,g+amt,b+amt); }
+
+  function seededRand(seed) { let s=seed; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+
+  // =========================================================================
+  // Effects UI: chips + controls
+  // =========================================================================
+  function buildFxPartChips() {
+    const el = document.getElementById('fxPartChips');
+    if (!el) return;
+    el.innerHTML = '';
+    // Collect part types that exist on the grid
+    const usedParts = new Set();
+    const rw = resW(), rh = resH();
+    const bw = blockW(), bh = blockH();
+    for (let r = 0; r < rh; r++) {
+      for (let c = 0; c < rw; c++) {
+        const val = grid[r * bh][c * bw];
+        if (val !== 0) usedParts.add(val);
+      }
+    }
+    // Also include parts that have effects (even if not on grid)
+    Object.keys(partEffects).forEach(k => { const v = parseInt(k); if (v !== 0) usedParts.add(v); });
+
+    if (usedParts.size === 0) {
+      el.innerHTML = '<span style="font-size:0.75rem;color:var(--text-muted);">Draw something first</span>';
+      document.getElementById('fxControls').style.display = 'none';
+      return;
+    }
+
+    const sorted = [...usedParts].sort((a,b) => a - b);
+    sorted.forEach(val => {
+      const ct = CELL_TYPES.find(c => c.value === val);
+      if (!ct) return;
+      const chip = document.createElement('button');
+      const hasAnyFx = partEffects[val] && Object.values(partEffects[val]).some(v => v === true);
+      const isActive = selectedFxPart === val;
+      chip.style.cssText = `font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:8px;border:2px solid ${isActive ? 'var(--accent)' : 'var(--card-border)'};background:${isActive ? 'rgba(76,175,80,0.08)' : 'var(--card-bg)'};color:${isActive ? 'var(--accent-dark)' : 'var(--text-secondary)'};cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:4px;`;
+      const dot = document.createElement('span');
+      dot.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:3px;background:${ct.color};flex-shrink:0;`;
+      chip.appendChild(dot);
+      const lbl = document.createElement('span');
+      lbl.textContent = (lang === 'ja' ? ct.labelJa : ct.label) + (hasAnyFx ? ' \u2605' : '');
+      chip.appendChild(lbl);
+      chip.onclick = () => {
+        selectedFxPart = val;
+        buildFxPartChips();
+        buildFxControls();
+      };
+      el.appendChild(chip);
+    });
+
+    if (selectedFxPart !== null && !usedParts.has(selectedFxPart)) {
+      selectedFxPart = sorted[0] || null;
+    }
+  }
+
+  function buildFxControls() {
+    const el = document.getElementById('fxControls');
+    if (!el) return;
+    if (selectedFxPart === null) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.innerHTML = '';
+
+    const fx = getPartFx(selectedFxPart);
+
+    FX_CATEGORIES.forEach(cat => {
+      const defs = FX_DEFS.filter(d => d.category === cat.id);
+      if (defs.length === 0) return;
+
+      const catLabel = document.createElement('div');
+      catLabel.style.cssText = 'font-family:"Outfit",sans-serif;font-size:0.65rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin:8px 0 4px;';
+      catLabel.textContent = i18n[lang][cat.i18n] || cat.id;
+      el.appendChild(catLabel);
+
+      defs.forEach(def => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--warm-gray);';
+
+        const label = document.createElement('span');
+        label.style.cssText = 'font-size:0.82rem;color:var(--text-secondary);';
+        label.textContent = i18n[lang][def.i18n] || def.id;
+        row.appendChild(label);
+
+        const controls = document.createElement('div');
+        controls.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+        if (def.hasStrength) {
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.className = 'slider';
+          slider.min = '0'; slider.max = '100';
+          slider.value = fx[def.id + '_str'] ?? def.defaultStr ?? 50;
+          slider.style.display = fx[def.id] ? '' : 'none';
+          slider.oninput = () => {
+            fx[def.id + '_str'] = parseInt(slider.value);
+            onFxChange();
+          };
+          controls.appendChild(slider);
+        }
+
+        const toggle = document.createElement('button');
+        toggle.className = 'toggle' + (fx[def.id] ? ' on' : '');
+        toggle.onclick = () => {
+          fx[def.id] = !fx[def.id];
+          if (fx[def.id] && def.hasStrength && fx[def.id + '_str'] === undefined) {
+            fx[def.id + '_str'] = def.defaultStr ?? 50;
+          }
+          buildFxControls();
+          onFxChange();
+        };
+        controls.appendChild(toggle);
+
+        row.appendChild(controls);
+        el.appendChild(row);
+      });
+    });
+
+    // Apply to all parts button
+    const applyAllBtn = document.createElement('button');
+    applyAllBtn.className = 'btn btn-sm';
+    applyAllBtn.style.marginTop = '10px';
+    applyAllBtn.textContent = i18n[lang]['fx-apply-all'] || 'Apply to all';
+    applyAllBtn.onclick = () => applyFxToAllParts();
+    el.appendChild(applyAllBtn);
+  }
+
+  function onFxChange() {
+    buildFxPartChips();
+    render();
+    if (hasAnimatedFx()) startFxAnimLoop();
+    else stopFxAnimLoop();
+  }
+
+  function applyFxToAllParts() {
+    if (selectedFxPart === null) return;
+    const srcFx = partEffects[selectedFxPart];
+    if (!srcFx) return;
+    // Find all used parts
+    const rw = resW(), rh = resH();
+    const bw = blockW(), bh = blockH();
+    const usedParts = new Set();
+    for (let r = 0; r < rh; r++) {
+      for (let c = 0; c < rw; c++) {
+        const val = grid[r * bh][c * bw];
+        if (val !== 0) usedParts.add(val);
+      }
+    }
+    usedParts.forEach(val => {
+      if (val === selectedFxPart) return;
+      partEffects[val] = JSON.parse(JSON.stringify(srcFx));
+    });
+    buildFxPartChips();
+    render();
+  }
+
+  // =========================================================================
+  // Canvas effect functions
+  // =========================================================================
+  function applyCanvasOutline(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.outline) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = lw;
+
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+        const left   = c > 0       && gridRef[r][c-1] === partVal;
+        const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+        const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+
+        if (!top) { ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke(); }
+        if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke(); }
+        if (!left) { ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke(); }
+        if (!right) { ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke(); }
+      }
+    }
+  }
+
+  function applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.gradient) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+
+    // For Body (val=1), use palette light/dark for rich frog gradient
+    // For other parts, derive light/dark from the part's own color
+    let lightColor, darkColor;
+    if (partVal === 1) {
+      const pal = palettes[currentPalette];
+      lightColor = pal.light;
+      darkColor = pal.dark;
+    } else {
+      const base = customColors[partVal] || '#888888';
+      lightColor = adjustBrightness(base, 35);
+      darkColor = adjustBrightness(base, -35);
+    }
+
+    // Per-pixel diagonal gradient (original Frog Editor style)
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
+        grad.addColorStop(0, lightColor);
+        grad.addColorStop(1, darkColor);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  function applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.emboss) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const str = (fx.emboss_str ?? 70) / 100;
+    // Scale stroke width to cell size — thick enough to be visible as raised tiles
+    const sw = Math.max(1, bw * 0.05 + 0.5 * str);
+    const hA = (0.15 + 0.2 * str);  // highlight alpha, 0.15–0.35
+    const sA = (0.1 + 0.15 * str);  // shadow alpha, 0.1–0.25
+
+    // Per-pixel emboss: every cell gets top-left highlight + bottom-right shadow
+    // This gives each pixel a cute "raised tile" look (original Frog Editor style)
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        ctx.lineWidth = sw;
+        // Highlight (top + left)
+        ctx.strokeStyle = `rgba(255,255,255,${hA})`;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke();
+        // Shadow (bottom + right)
+        ctx.strokeStyle = `rgba(0,0,0,${sA})`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke();
+      }
+    }
+  }
+
+  function applyCanvasGlow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.glow) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const t = time || 0;
+    const str = (fx.glow_str ?? 50) / 100;
+    const pulse = t > 0 ? 0.6 + Math.sin(t * 2) * 0.4 : 1;
+    const baseColor = customColors[partVal] || '#ffffff';
+    const [cr, cg, cb] = hexToRgb(baseColor);
+    // Brighten the base color
+    const lr = Math.min(255, cr + 80);
+    const lg = Math.min(255, cg + 80);
+    const lb = Math.min(255, cb + 80);
+
+    ctx.save();
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+        const left   = c > 0       && gridRef[r][c-1] === partVal;
+        const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+        const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+
+        // Inner glow overlay
+        const a = 0.1 * str * pulse;
+        ctx.fillStyle = `rgba(${lr},${lg},${lb},${a})`;
+        ctx.fillRect(x, y, bw, bh);
+
+        // Edge glow with shadowBlur
+        if (!(top && left && bottom && right)) {
+          const glowSize = Math.max(bw, bh) * 0.5 * str * pulse;
+          ctx.shadowBlur = glowSize;
+          ctx.shadowColor = `rgba(${lr},${lg},${lb},${0.4 * str * pulse})`;
+          const edgeLw = Math.max(0.5, Math.min(bw, bh) * 0.1);
+          ctx.lineWidth = edgeLw;
+          ctx.strokeStyle = `rgba(${lr},${lg},${lb},${0.3 * str * pulse})`;
+          if (!top) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke(); }
+          if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+          if (!left) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke(); }
+          if (!right) { ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+        }
+      }
+    }
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    ctx.restore();
+  }
+
+  // Blink state: tracks random intervals per part
+  const _blinkState = {}; // { partVal: { nextBlink, blinking, phase } }
+
+  function applyCanvasBlink(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.blink) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const t = time || 0;
+    if (t <= 0) return;
+
+    const str = (fx.blink_str ?? 50) / 100;
+
+    // Initialize blink state for this part
+    if (!_blinkState[partVal]) {
+      _blinkState[partVal] = { nextBlink: t + 1 + Math.random() * 3, blinkStart: -1 };
+    }
+    const bs = _blinkState[partVal];
+
+    // Slider controls interval range:
+    //   0%  = slow, fixed ~6s interval
+    //   50% = moderate ~3s
+    //   100% = random 1-4s (natural, like the Flutter app)
+    const blinkDur = 0.15; // seconds to close+open
+    let blinkPhase = 0;
+
+    if (bs.blinkStart > 0) {
+      // Currently in a blink
+      const elapsed = t - bs.blinkStart;
+      if (elapsed < blinkDur) {
+        blinkPhase = Math.sin((elapsed / blinkDur) * Math.PI);
+      } else {
+        // Blink finished, schedule next
+        bs.blinkStart = -1;
+        if (str >= 0.95) {
+          // Max slider = random 1-4s (natural blink, matches Flutter app)
+          bs.nextBlink = t + 1 + Math.random() * 3;
+        } else {
+          // Fixed interval based on slider: 6s (left) to 2s (right)
+          const interval = 6 - str * 4;
+          bs.nextBlink = t + interval;
+        }
+      }
+    } else if (t >= bs.nextBlink) {
+      // Time to blink
+      bs.blinkStart = t;
+      blinkPhase = 0;
+    }
+
+    if (blinkPhase < 0.01) return;
+
+    // Cover with body color (val=1) to simulate eyelid closing
+    // Matches Flutter PixelFrog: Color.lerp(eyeBlack, palette.base, blinkPhase)
+    const bodyColor = customColors[1] || '#4CAF50';
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        ctx.fillStyle = bodyColor;
+        ctx.globalAlpha = blinkPhase;
+        ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
+  function applyCanvasEthereal(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.ethereal) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const t = time || 0;
+    const str = (fx.ethereal_str ?? 50) / 100;
+
+    // Shimmer wave reduces alpha in bands
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const wave = t > 0 ? Math.sin(r * 0.5 + c * 0.3 + t * 1.5) : 0;
+        const fadeAmount = (0.2 + 0.15 * str) + wave * 0.08 * str;
+        ctx.fillStyle = `rgba(255,255,255,${fadeAmount})`;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  function applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.sparkle) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const t = time || 0;
+    const phase = t > 0 ? Math.floor(t * 3) : 0;
+
+    const cells = [];
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+      }
+    }
+    if (cells.length === 0) return;
+
+    const rng = seededRand(partVal * 773 + phase * 997);
+    const sparkleCount = Math.max(2, Math.floor(cells.length * 0.12));
+
+    ctx.save();
+    for (let i = 0; i < sparkleCount; i++) {
+      const idx = Math.floor(rng() * cells.length);
+      const cell = cells[idx];
+      const cx = ox + (cell.c + 0.2 + rng() * 0.6) * bw;
+      const cy = oy + (cell.r + 0.2 + rng() * 0.6) * bh;
+      const life = t > 0 ? ((t * 3 + rng() * 6.28) % 1) : 1;
+      const fade = Math.sin(life * Math.PI);
+      const alpha = (0.5 + rng() * 0.5) * fade;
+      if (alpha < 0.05) continue;
+      const starSize = bw * (0.3 + rng() * 0.5);
+      ctx.shadowBlur = starSize * 2;
+      ctx.shadowColor = `rgba(255,255,255,${alpha})`;
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      const armLen = starSize, armW = starSize * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(cx - armLen, cy); ctx.lineTo(cx, cy - armW);
+      ctx.lineTo(cx + armLen, cy); ctx.lineTo(cx, cy + armW);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - armLen); ctx.lineTo(cx + armW, cy);
+      ctx.lineTo(cx, cy + armLen); ctx.lineTo(cx - armW, cy);
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur = starSize * 3;
+      ctx.beginPath(); ctx.arc(cx, cy, armW * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    ctx.restore();
+  }
+
+  function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+    const fx = partEffects[partVal];
+    if (!fx || !fx.holographic) return;
+    const ox = offsetX || 0, oy = offsetY || 0;
+    const t = time || 0;
+
+    ctx.save();
+    // Rainbow tint
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const hue = ((c / gridW + r / gridH) * 180 + (t > 0 ? t * 60 : 0)) % 360;
+        const alpha = 0.15 + Math.sin((c + r) * 0.5 + (t > 0 ? t * 2 : 0)) * 0.05;
+        ctx.fillStyle = `hsla(${hue},80%,60%,${alpha})`;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+
+    // Iridescent edge highlights
+    const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const x = ox + c * bw, y = oy + r * bh;
+        const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+        const left   = c > 0       && gridRef[r][c-1] === partVal;
+        const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+        const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+        if (top && left && bottom && right) continue;
+        const hue = ((c / gridW + r / gridH) * 180 + (t > 0 ? t * 80 : 0)) % 360;
+        ctx.lineWidth = lw;
+        ctx.shadowBlur = bw * 0.4;
+        ctx.shadowColor = `hsla(${hue},90%,70%,0.3)`;
+        if (!top) { ctx.strokeStyle = `hsla(${hue},90%,80%,0.4)`; ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke(); }
+        if (!left) { ctx.strokeStyle = `hsla(${(hue+30)%360},90%,75%,0.35)`; ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke(); }
+        if (!bottom) { ctx.strokeStyle = `hsla(${(hue+60)%360},80%,50%,0.3)`; ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke(); }
+        if (!right) { ctx.strokeStyle = `hsla(${(hue+90)%360},80%,55%,0.25)`; ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke(); }
+      }
+    }
+
+    // Moving shine band
+    const bandPos = t > 0 ? ((t * 0.3) % 2.0) - 0.5 : 0.5;
+    const bandWidth = 0.2;
+    for (let r = 0; r < gridH; r++) {
+      for (let c = 0; c < gridW; c++) {
+        if (gridRef[r]?.[c] !== partVal) continue;
+        const diag = (c / gridW + r / gridH) / 2;
+        const dist = Math.abs(diag - bandPos);
+        if (dist < bandWidth) {
+          const intensity = 1 - dist / bandWidth;
+          const shine = intensity * intensity;
+          const x = ox + c * bw, y = oy + r * bh;
+          ctx.fillStyle = `rgba(255,255,255,${shine * 0.3})`;
+          ctx.fillRect(x, y, bw, bh);
+        }
+      }
+    }
+
+    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    ctx.restore();
+  }
+
+  // Apply all enabled effects for a given part in correct order
+  function applyAllCanvasEffects(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time) {
+    applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy);
+    applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy);
+    applyCanvasOutline(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy);
+    applyCanvasGlow(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time);
+    applyCanvasBlink(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time);
+    applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time);
+    applyCanvasEthereal(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time);
+    applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, ox, oy, time);
+  }
+
+  function hasAnimatedFx() {
+    for (const partVal of Object.keys(partEffects)) {
+      const fx = partEffects[partVal];
+      if (!fx) continue;
+      for (const anim of FX_ANIMATED) {
+        if (fx[anim]) return true;
+      }
+    }
+    return false;
+  }
+
+  function startFxAnimLoop() {
+    if (fxAnimId) return;
+    let lastTime = performance.now();
+    function step(now) {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      fxAnimTime += dt;
+      _skipChipRebuild = true;
+      render();
+      _skipChipRebuild = false;
+      if (hasAnimatedFx()) {
+        fxAnimId = requestAnimationFrame(step);
+      } else {
+        fxAnimId = null;
+      }
+    }
+    fxAnimId = requestAnimationFrame(step);
+  }
+
+  function stopFxAnimLoop() {
+    if (fxAnimId) {
+      cancelAnimationFrame(fxAnimId);
+      fxAnimId = null;
+    }
   }
 
   // =========================================================================
@@ -2539,6 +3069,7 @@
       gridFull: grid.map(r => Int8Array.from(r)),
       bw: baseW,
       bh: baseH,
+      partEffects: JSON.parse(JSON.stringify(partEffects)),
     };
   }
 
@@ -2591,6 +3122,10 @@
       grid = Array.from({length: INTERNAL}, () => new Int8Array(INTERNAL));
       loadFrom8x8(snap.grid8);
     }
+    partEffects = snap.partEffects ? JSON.parse(JSON.stringify(snap.partEffects)) : {};
+    buildFxPartChips();
+    if (selectedFxPart !== null) buildFxControls();
+    if (hasAnimatedFx()) startFxAnimLoop(); else stopFxAnimLoop();
     editingSnapIndex = idx;
     loadedPreset = null;
     updateSaveButton();
@@ -2637,7 +3172,11 @@
       if (snapAspect >= 1) { cvs.width = 64; cvs.height = Math.round(64 / snapAspect); }
       else { cvs.height = 64; cvs.width = Math.round(64 * snapAspect); }
       const snapData = snap.gridBase || snap.grid8;
-      renderPreviewToCanvas(cvs, snapData);
+      // Temporarily swap partEffects for this snapshot's effects
+      const savedPe = partEffects;
+      partEffects = snap.partEffects || {};
+      renderPreviewToCanvas(cvs, snapData, null, null, null, 0);
+      partEffects = savedPe;
 
       // Move buttons
       const moveRow = document.createElement('div');
@@ -2869,10 +3408,10 @@
   // =========================================================================
   function exportPNG() {
     const cvs = document.createElement('canvas');
-    const aspect = baseW / baseH;
+    const aspect = resW() / resH();
     if (aspect >= 1) { cvs.width = 256; cvs.height = Math.round(256 / aspect); }
     else { cvs.height = 256; cvs.width = Math.round(256 * aspect); }
-    renderPreviewToCanvas(cvs, exportAtBase());
+    renderPreviewToCanvas(cvs, exportAtRes());
     const link = document.createElement('a');
     link.download = 'frog-pixel.png';
     link.href = cvs.toDataURL('image/png');
@@ -2938,7 +3477,10 @@
         const tmp = document.createElement('canvas');
         tmp.width = rw; tmp.height = rh;
         const snapData = snap.gridBase || snap.grid8;
-        renderPreviewToCanvas(tmp, snapData);
+        const savedPe = partEffects;
+        partEffects = snap.partEffects || {};
+        renderPreviewToCanvas(tmp, snapData, null, null, null, 0);
+        partEffects = savedPe;
         // Center on the gif canvas
         const ox = Math.round((gifW - rw) / 2);
         const oy = Math.round((gifH - rh) / 2);
@@ -3033,6 +3575,7 @@
     buildPalette();
     buildVariants();
     buildPresets();
+    buildFxPartChips();
     updateResButtons();
     render();
   }
