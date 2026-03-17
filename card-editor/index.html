@@ -107,7 +107,7 @@
     .canvas-label { font-family: 'Outfit', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
     .canvas-wrapper { background: var(--card-bg); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; }
     canvas#gridCanvas { cursor: crosshair; display: block; image-rendering: pixelated; touch-action: none; }
-    canvas#previewCanvas { display: block; image-rendering: pixelated; }
+    /* previewCanvas removed — effects render directly on editor grid */
 
     /* Drawers */
     .drawer { max-width: 700px; margin: 0.8rem auto 0; }
@@ -275,10 +275,6 @@
           <span class="canvas-label" data-i18n="grid-label">EDITOR</span>
           <div class="canvas-wrapper"><canvas id="gridCanvas"></canvas></div>
         </div>
-        <div class="canvas-col">
-          <span class="canvas-label" data-i18n="preview-label">PREVIEW</span>
-          <div class="canvas-wrapper"><canvas id="previewCanvas"></canvas></div>
-        </div>
       </div>
 
       <!-- Parts Palette -->
@@ -418,8 +414,7 @@
 const i18n = {
   en: {
     back: 'Home', subtitle: 'Pixel art card editor for Wind & Gate',
-    'grid-label': 'EDITOR', 'preview-label': 'PREVIEW',
-    'parts-title': 'Parts', 'tools-title': 'Tools', 'import-title': 'Image Import',
+    'grid-label': 'EDITOR',    'parts-title': 'Parts', 'tools-title': 'Tools', 'import-title': 'Image Import',
     undo: 'Undo', redo: 'Redo', clear: 'Clear', fill: 'Fill', 'clear-part': 'Clear Part', save: 'Save & Back',
     'drop-hint': 'Drop image here or click to select', 'map-mode': 'Mapping:', 'apply-import': 'Apply',
     'export-png': 'Download PNG', 'export-json': 'Download JSON', 'card-preview': 'CARD PREVIEW',
@@ -463,8 +458,7 @@ const i18n = {
   },
   ja: {
     back: 'Home', subtitle: 'Wind & Gate カード用ピクセルアートエディタ',
-    'grid-label': 'エディタ', 'preview-label': 'プレビュー',
-    'parts-title': 'パーツ', 'tools-title': 'ツール', 'import-title': '画像読み込み',
+    'grid-label': 'エディタ',    'parts-title': 'パーツ', 'tools-title': 'ツール', 'import-title': '画像読み込み',
     undo: '戻す', redo: 'やり直し', clear: 'クリア', fill: '塗りつぶし', 'clear-part': 'パーツクリア', save: '保存して戻る',
     'drop-hint': '画像をドロップ、またはクリックで選択', 'map-mode': 'マッピング:', 'apply-import': '適用',
     'export-png': 'PNGダウンロード', 'export-json': 'JSONダウンロード', 'card-preview': 'カードプレビュー',
@@ -1844,7 +1838,7 @@ function buildFxControls() {
 
 function onFxChange() {
   buildFxPartChips(); // update stars
-  renderPreview();
+  render();
   // Start/stop FX animation loop based on whether animated effects are active
   if (hasAnimatedFx()) startFxAnimLoop();
   else stopFxAnimLoop();
@@ -2032,52 +2026,7 @@ function stopFxAnimLoop() {
   fxAnimTime = 0;
 }
 
-function renderPreview() {
-  const canvas = document.getElementById('previewCanvas');
-  const ctx = canvas.getContext('2d');
-  const maxDim = 180;
-  const s = Math.min(maxDim / GRID_W, maxDim / GRID_H);
-  const pw = Math.round(GRID_W * s), ph = Math.round(GRID_H * s);
-  canvas.width = pw; canvas.height = ph;
-  canvas.style.width = pw+'px'; canvas.style.height = ph+'px';
-  const bw = pw / GRID_W, bh = ph / GRID_H;
-  ctx.clearRect(0, 0, pw, ph);
-
-  // Check if any part has effects enabled
-  const hasAnyFx = Object.values(partEffects).some(fx => fx && Object.values(fx).some(v => v === true));
-
-  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
-    const val = grid[r][c]; if (val === 0 || !partVisible[val]) continue;
-    const x = c*bw, y = r*bh;
-    const baseColor = customColors[val] || '#888';
-    const fx = partEffects[val];
-    const partHasFx = fx && Object.values(fx).some(v => v === true);
-
-    if (partHasFx && bw >= 2 && bh >= 2) {
-      // Sub-pixel rendering: divide each cell into subDiv×subDiv sub-pixels
-      const subDiv = Math.min(Math.floor(bw), Math.floor(bh), 4);
-      const sw = bw / subDiv, sh = bh / subDiv;
-      for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
-        ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
-        ctx.fillRect(x + sc * sw, y + sr * sh, Math.ceil(sw), Math.ceil(sh));
-      }
-    } else {
-      // No effects: single fill per cell (fast path)
-      ctx.fillStyle = hasAnyFx ? applyFxToColor(baseColor, val, r, c, GRID_W, GRID_H) : baseColor;
-      ctx.fillRect(x, y, bw, bh);
-    }
-
-    // Default subtle emboss (always on, light)
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+bw,y); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+bh); ctx.stroke();
-    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-    ctx.beginPath(); ctx.moveTo(x,y+bh); ctx.lineTo(x+bw,y+bh); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x+bw,y); ctx.lineTo(x+bw,y+bh); ctx.stroke();
-  }
-}
-
-function render() { renderGrid(); renderPreview(); }
+function render() { renderGrid(); }
 
 // ── Grid interaction ──
 function getPointerXY(e) {
@@ -2351,11 +2300,11 @@ function calcAnimOffset(anim, t) {
 
 function renderAnimFrame(timestamp) {
   const t = timestamp - animStartTime;
-  const canvas = document.getElementById('previewCanvas');
+  const canvas = document.getElementById('gridCanvas');
   const ctx = canvas.getContext('2d');
   const pw = canvas.width, ph = canvas.height;
   const bw = pw / GRID_W, bh = ph / GRID_H;
-  const s = Math.min(180 / GRID_W, 180 / GRID_H);
+  const s = bw; // scale factor = cell pixel size
   ctx.clearRect(0, 0, pw, ph);
 
   // Precompute offsets per animated part
@@ -2377,12 +2326,28 @@ function renderAnimFrame(timestamp) {
     }
   });
 
+  // Draw background (empty cells) + grid lines
+  ctx.fillStyle = '#F5F5F5'; ctx.fillRect(0, 0, pw, ph);
+
   // Draw all pixels: non-animated first, then animated on top
   for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
     const val = grid[r][c]; if (val === 0 || !partVisible[val]) continue;
     if (offsets[val]) continue;
-    ctx.fillStyle = customColors[val] || '#888';
-    ctx.fillRect(c*bw, r*bh, bw, bh);
+    const baseColor = customColors[val] || '#888';
+    const fx = partEffects[val];
+    const partHasFx = fx && Object.values(fx).some(v => v === true);
+    if (partHasFx && bw >= 4) {
+      const subDiv = Math.min(Math.floor(bw / 2), 4);
+      const sw = bw / subDiv;
+      const x = c * bw, y = r * bh;
+      for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
+        ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+        ctx.fillRect(x + sc * sw, y + sr * sw, Math.ceil(sw), Math.ceil(sw));
+      }
+    } else {
+      ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : baseColor;
+      ctx.fillRect(c*bw, r*bh, bw, bh);
+    }
   }
 
   animatingParts.forEach(v => {
@@ -2399,8 +2364,20 @@ function renderAnimFrame(timestamp) {
       if (grid[r][c] !== v || !partVisible[v]) continue;
       let col = customColors[v] || '#888';
       if (off.color) col = lerpColor(col, off.color, off.colorT || 0);
-      ctx.fillStyle = col;
-      ctx.fillRect(c*bw + off.dx*s, r*bh + off.dy*s, bw, bh);
+      const fx = partEffects[v];
+      const partHasFx = fx && Object.values(fx).some(fv => fv === true);
+      const px = c*bw + off.dx*s, py = r*bh + off.dy*s;
+      if (partHasFx && bw >= 4) {
+        const subDiv = Math.min(Math.floor(bw / 2), 4);
+        const sw = bw / subDiv;
+        for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
+          ctx.fillStyle = applyFxToColorSub(col, v, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+          ctx.fillRect(px + sc * sw, py + sr * sw, Math.ceil(sw), Math.ceil(sw));
+        }
+      } else {
+        ctx.fillStyle = partHasFx ? applyFxToColorSub(col, v, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : col;
+        ctx.fillRect(px, py, bw, bh);
+      }
     }
     ctx.restore();
   });
@@ -2435,7 +2412,7 @@ function stopAnims() {
   animatingParts = [];
   stopFxAnimLoop();
   document.querySelectorAll('.anim-play-btns button').forEach(b => b.classList.remove('playing'));
-  renderPreview();
+  render();
 }
 
 // ═══════════════════════════════════════════════════════════════
