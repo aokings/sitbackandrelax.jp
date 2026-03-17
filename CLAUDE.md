@@ -19,6 +19,9 @@ sitbackandrelax.jp/
     index.html            # エディタ本体（HTML+CSS+JS 1ファイル完結、約3100行）
     about.html            # 使い方ガイド（EN/JP対応、サイトからリンク）
     SPEC.md               # 技術仕様書（Claude向け、次セッション用）
+  card-editor/            # Frog Card Editor（Wind & Gate カード用ピクセルアートエディタ）
+    index.html            # エディタ本体（HTML+CSS+JS 1ファイル完結、約1700行）
+                          # ソース元: aokings/frog-card-editor リポジトリの src/index.html をコピー
 ```
 
 ## デザイン仕様
