@@ -1316,6 +1316,13 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
   const savedPartEffects = partEffects;
   if (hasAnyFx) partEffects = effects;
 
+  // Track which parts exist in this asset for post-processing
+  const assetParts = new Set();
+
+  // Choose grid ref and dimensions for post-processing
+  const ppGridW = (scaleX > 1 || scaleY > 1) ? base.w : asset.width;
+  const ppGridH = (scaleX > 1 || scaleY > 1) ? base.h : asset.height;
+
   if (scaleX > 1 || scaleY > 1) {
     // Decomposed asset: render at base scale by averaging/sampling
     for (let br = 0; br < base.h; br++) {
@@ -1331,6 +1338,7 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
         const best = Object.entries(vals).sort((a,b) => b[1] - a[1])[0];
         if (!best) continue;
         const val = parseInt(best[0]);
+        assetParts.add(val);
         const baseColor = asset.customColors[val] || '#888';
         const fxForPart = effects[val];
         const partHasFx = fxForPart && Object.values(fxForPart).some(v => v === true);
@@ -1339,11 +1347,11 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
           const sw = scale / subDiv;
           const px = (gx + bc) * scale, py = (gy + br) * scale;
           for (let ssr = 0; ssr < subDiv; ssr++) for (let ssc = 0; ssc < subDiv; ssc++) {
-            ctx.fillStyle = applyFxToColorSub(baseColor, val, br, bc, ssr, ssc, subDiv, base.w, base.h, asset.grid);
+            ctx.fillStyle = applyFxToColorSub(baseColor, val, br, bc, ssr, ssc, subDiv, base.w, base.h, asset.grid, 0, true);
             ctx.fillRect(px + ssc * sw, py + ssr * sw, Math.ceil(sw), Math.ceil(sw));
           }
         } else {
-          ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, br, bc, 0, 0, 1, base.w, base.h, asset.grid) : baseColor;
+          ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, br, bc, 0, 0, 1, base.w, base.h, asset.grid, 0, true) : baseColor;
           ctx.fillRect((gx + bc) * scale, (gy + br) * scale, scale, scale);
         }
       }
@@ -1353,6 +1361,7 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
       for (let c = 0; c < asset.width; c++) {
         const val = asset.grid[r][c];
         if (val === 0) continue;
+        assetParts.add(val);
         const baseColor = asset.customColors[val] || '#888';
         const fxForPart = effects[val];
         const partHasFx = fxForPart && Object.values(fxForPart).some(v => v === true);
@@ -1361,15 +1370,45 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
           const sw = scale / subDiv;
           const px = (gx + c) * scale, py = (gy + r) * scale;
           for (let ssr = 0; ssr < subDiv; ssr++) for (let ssc = 0; ssc < subDiv; ssc++) {
-            ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, ssr, ssc, subDiv, asset.width, asset.height, asset.grid);
+            ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, ssr, ssc, subDiv, asset.width, asset.height, asset.grid, 0, true);
             ctx.fillRect(px + ssc * sw, py + ssr * sw, Math.ceil(sw), Math.ceil(sw));
           }
         } else {
-          ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, asset.width, asset.height, asset.grid) : baseColor;
+          ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, asset.width, asset.height, asset.grid, 0, true) : baseColor;
           ctx.fillRect((gx + c) * scale, (gy + r) * scale, scale, scale);
         }
       }
     }
+  }
+
+  // Canvas-native post-processing for this layer (Gradient + Emboss)
+  // Build a base-resolution grid for the overlay functions (downsampled if decomposed)
+  if (hasAnyFx) {
+    const ppGrid = [];
+    if (scaleX > 1 || scaleY > 1) {
+      for (let br = 0; br < base.h; br++) {
+        ppGrid[br] = new Int8Array(base.w);
+        for (let bc = 0; bc < base.w; bc++) {
+          const sr2 = Math.floor(br * scaleY), sc3 = Math.floor(bc * scaleX);
+          const vs = {};
+          for (let dr = 0; dr < scaleY && sr2+dr < asset.height; dr++)
+            for (let dc = 0; dc < scaleX && sc3+dc < asset.width; dc++) {
+              const vv = asset.grid[sr2+dr][sc3+dc]; if (vv !== 0) vs[vv] = (vs[vv]||0)+1;
+            }
+          const b = Object.entries(vs).sort((a,b2)=>b2[1]-a[1])[0];
+          ppGrid[br][bc] = b ? parseInt(b[0]) : 0;
+        }
+      }
+    } else {
+      for (let rr = 0; rr < asset.height; rr++) ppGrid[rr] = asset.grid[rr];
+    }
+    assetParts.forEach(pv => {
+      applyCanvasGradient(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale);
+      applyCanvasForged(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasEmboss(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale);
+      applyCanvasArcane(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyCanvasSparkle(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+    });
   }
 
   partEffects = savedPartEffects;
@@ -1720,15 +1759,24 @@ function renderGrid() {
       const sw = cellPx / subDiv;
       const x = c * cellPx, y = r * cellPx;
       for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
-        gridCtx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+        gridCtx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime, true);
         gridCtx.fillRect(x + sc * sw, y + sr * sw, Math.ceil(sw), Math.ceil(sw));
       }
     } else {
-      gridCtx.fillStyle = (hasAnyFxGrid && partHasFx) ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : baseColor;
+      gridCtx.fillStyle = (hasAnyFxGrid && partHasFx) ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime, true) : baseColor;
       gridCtx.fillRect(c*cellPx, r*cellPx, cellPx, cellPx);
     }
     gridCtx.globalAlpha = 1;
   }
+  // Canvas-native post-processing: Gradient + Emboss overlays
+  PART_TYPES.forEach(pt => {
+    if (pt.value === 0) return;
+    applyCanvasGradient(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0);
+    applyCanvasForged(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasEmboss(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0);
+    applyCanvasArcane(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyCanvasSparkle(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+  });
   gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
   for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
   for (let i = 0; i <= GRID_H; i++) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
@@ -1863,10 +1911,11 @@ function seededRand(seed) { let s=seed; return ()=>{ s=(s*9301+49297)%233280; re
 let fxAnimTime = 0;    // current effect animation time (seconds)
 let fxAnimId = null;    // requestAnimationFrame ID for effect animation loop
 
-function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef, time) {
+function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef, time, useNativeOverlay) {
   const fx = partEffects[val];
   if (!fx) return hex;
   const t = time || 0;
+  const native = useNativeOverlay || false; // true = Canvas API handles Gradient/Emboss
   let [cr, cg, cb] = hexToRgb(hex);
 
   // fractional position within the whole grid (0..1)
@@ -1882,14 +1931,14 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
   const isBottom = r < gridH-1 && gridRef[r+1]?.[c] !== val;
   const isRight = c < gridW-1 && gridRef[r][c+1] !== val;
 
-  // Gradient: dramatic top-to-bottom shading
-  if (fx.gradient) {
+  // Gradient: dramatic top-to-bottom shading (skip if Canvas native overlay handles it)
+  if (fx.gradient && !native) {
     const shift = (0.5 - fracY) * 80;
     cr += shift; cg += shift; cb += shift;
   }
 
-  // Forged: bold metallic edge highlight/shadow with animated shimmer
-  if (fx.forged) {
+  // Forged: bold metallic edge highlight/shadow with animated shimmer (skip if Canvas native)
+  if (fx.forged && !native) {
     const edgeFade = 0.5;
     let highlight = 0, shadow = 0;
     if (isTop) highlight += Math.max(0, 1 - cellFracY / edgeFade);
@@ -1919,8 +1968,8 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
     }
   }
 
-  // Emboss: pronounced 3D edge with sub-pixel fade
-  if (fx.emboss) {
+  // Emboss: pronounced 3D edge with sub-pixel fade (skip if Canvas native overlay handles it)
+  if (fx.emboss && !native) {
     const str = (fx.emboss_str ?? 50) / 100;
     const edgeFade = 0.5;
     let highlight = 0, shadow = 0;
@@ -1933,8 +1982,8 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
     cr += h - s; cg += h - s; cb += h - s;
   }
 
-  // Arcane: vivid magical glow — not just edges, also inner shimmer
-  if (fx.arcane) {
+  // Arcane: vivid magical glow — not just edges, also inner shimmer (skip if Canvas native)
+  if (fx.arcane && !native) {
     const isEdge = isTop || isBottom || isLeft || isRight;
     const huePhase = t > 0 ? t * 0.8 : 0;
     const pulse = t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1;
@@ -1975,8 +2024,8 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
     }
   }
 
-  // Sparkle: bright twinkling stars — larger, more frequent, more visible
-  if (fx.sparkle) {
+  // Sparkle: bright twinkling stars — larger, more frequent, more visible (skip if Canvas native)
+  if (fx.sparkle && !native) {
     const phase = t > 0 ? Math.floor(t * 3) : 0;
     const rng = seededRand(r * 337 + c * 61 + sr * 199 + sc * 83 + val * 17 + phase * 997);
     const threshold = rng();
@@ -1998,6 +2047,284 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
 // Backward-compat wrapper for non-sub-pixel callers (e.g. composite export — static, time=0)
 function applyFxToColor(hex, val, r, c, gridW, gridH) {
   return applyFxToColorSub(hex, val, r, c, 0, 0, 1, gridW, gridH, grid, 0);
+}
+
+// ── Canvas-native post-processing overlays ──
+// These use Canvas API (gradients, strokes) for smooth results that beat per-pixel math.
+// Called AFTER all cells are drawn for a given part.
+
+function applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.gradient) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  // Single vertical gradient: light at top, dark at bottom
+  const grad = ctx.createLinearGradient(0, oy, 0, oy + gridH * bh);
+  grad.addColorStop(0, 'rgba(255,255,255,0.3)');
+  grad.addColorStop(0.45, 'rgba(0,0,0,0)');
+  grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  // Apply only to cells belonging to this part
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillStyle = grad;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+}
+
+function applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.emboss) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const str = (fx.emboss_str ?? 50) / 100;
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.15 * str);
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+
+      // Check neighbors — only draw edges at part boundary
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+
+      ctx.lineWidth = lw;
+
+      // Highlight: top + left edges where boundary exists
+      if (!top) {
+        ctx.strokeStyle = `rgba(255,255,255,${0.35 * str})`;
+        ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke();
+      }
+      if (!left) {
+        ctx.strokeStyle = `rgba(255,255,255,${0.3 * str})`;
+        ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke();
+      }
+
+      // Shadow: bottom + right edges where boundary exists
+      if (!bottom) {
+        ctx.strokeStyle = `rgba(0,0,0,${0.3 * str})`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke();
+      }
+      if (!right) {
+        ctx.strokeStyle = `rgba(0,0,0,${0.25 * str})`;
+        ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke();
+      }
+    }
+  }
+}
+
+// Canvas-native Sparkle: draw glowing ✦ star shapes with shadowBlur
+function applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.sparkle) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const phase = t > 0 ? Math.floor(t * 3) : 0;
+
+  // Collect cells belonging to this part
+  const cells = [];
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+    }
+  }
+  if (cells.length === 0) return;
+
+  // Deterministic sparkle positions using seeded random
+  const rng = seededRand(partVal * 773 + phase * 997);
+  const sparkleCount = Math.max(2, Math.floor(cells.length * 0.12));
+
+  ctx.save();
+  for (let i = 0; i < sparkleCount; i++) {
+    const idx = Math.floor(rng() * cells.length);
+    const cell = cells[idx];
+    const cx = ox + (cell.c + 0.2 + rng() * 0.6) * bw;
+    const cy = oy + (cell.r + 0.2 + rng() * 0.6) * bh;
+
+    // Animated fade in/out
+    const life = t > 0 ? ((t * 3 + rng() * 6.28) % 1) : 1;
+    const fade = Math.sin(life * Math.PI);
+    const alpha = (0.5 + rng() * 0.5) * fade;
+    if (alpha < 0.05) continue;
+
+    const starSize = bw * (0.3 + rng() * 0.5);
+
+    // Glow effect
+    ctx.shadowBlur = starSize * 2;
+    ctx.shadowColor = `rgba(255,255,255,${alpha})`;
+
+    // Draw 4-pointed star ✦
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.beginPath();
+    const armLen = starSize;
+    const armW = starSize * 0.15;
+    // Horizontal arm
+    ctx.moveTo(cx - armLen, cy);
+    ctx.lineTo(cx, cy - armW);
+    ctx.lineTo(cx + armLen, cy);
+    ctx.lineTo(cx, cy + armW);
+    ctx.closePath();
+    ctx.fill();
+    // Vertical arm
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - armLen);
+    ctx.lineTo(cx + armW, cy);
+    ctx.lineTo(cx, cy + armLen);
+    ctx.lineTo(cx - armW, cy);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bright center dot
+    ctx.shadowBlur = starSize * 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, armW * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Arcane: glowing purple-blue aura around part edges with shadowBlur
+function applyCanvasArcane(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.arcane) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const pulse = t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1;
+  const hueShift = t > 0 ? t * 0.8 : 0;
+
+  ctx.save();
+
+  // Pass 1: Inner shimmer overlay on all cells
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const shimmer = Math.sin((c / gridW) * 15 + (r / gridH) * 11 + hueShift * 1.3) * 0.5 + 0.5;
+      const a = 0.08 * shimmer * pulse;
+      ctx.fillStyle = `rgba(120,60,255,${a})`;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Glowing edge strokes with shadowBlur
+  const glowSize = Math.max(bw, bh) * 0.6;
+  ctx.lineWidth = Math.max(1, Math.min(bw, bh) * 0.2);
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+
+      if (top && left && bottom && right) continue; // inner cell, skip
+
+      const hue = Math.sin((c / gridW) * 10 + (r / gridH) * 7 + hueShift) * 0.5 + 0.5;
+      const rr = Math.round(80 + 70 * hue);
+      const gg = Math.round(30 + 30 * (1 - hue));
+      const bb = Math.round(200 + 55 * pulse);
+      const alpha = 0.5 * pulse;
+
+      ctx.shadowBlur = glowSize * pulse;
+      ctx.shadowColor = `rgba(${rr},${gg},${bb},${alpha})`;
+      ctx.strokeStyle = `rgba(${rr},${gg},${bb},${alpha * 0.8})`;
+
+      if (!top) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw, y); ctx.stroke(); }
+      if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+      if (!left) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + bh); ctx.stroke(); }
+      if (!right) { ctx.beginPath(); ctx.moveTo(x + bw, y); ctx.lineTo(x + bw, y + bh); ctx.stroke(); }
+    }
+  }
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Forged: diagonal metallic reflection band with shimmer
+function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.forged) return;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Steel blue tint on all cells
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      ctx.fillStyle = 'rgba(70,80,110,0.1)';
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Moving diagonal shine band
+  const bandPos = t > 0 ? ((t * 0.4) % 2.0) - 0.5 : 0.3; // 0..1.5 sweeping position
+  const bandWidth = 0.25;
+  const totalW = gridW * bw, totalH = gridH * bh;
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      // Diagonal position (top-left to bottom-right)
+      const diag = (c / gridW + r / gridH) / 2;
+      const dist = Math.abs(diag - bandPos);
+      if (dist < bandWidth) {
+        const intensity = 1 - dist / bandWidth;
+        const shine = intensity * intensity; // quadratic falloff for soft edge
+        // Bright white band
+        const grad = ctx.createLinearGradient(x, y, x + bw, y + bh);
+        grad.addColorStop(0, `rgba(255,255,255,${shine * 0.4})`);
+        grad.addColorStop(0.5, `rgba(200,210,255,${shine * 0.5})`);
+        grad.addColorStop(1, `rgba(255,255,255,${shine * 0.3})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, y, bw, bh);
+      }
+    }
+  }
+
+  // Pass 3: Strong metallic edge highlights (like polished metal)
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
+  const shimmer = t > 0 ? Math.sin(t * 1.5) * 0.15 + 1 : 1;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+
+      ctx.lineWidth = lw;
+      // Warm metallic highlight (top + left)
+      if (!top) {
+        ctx.strokeStyle = `rgba(220,200,160,${0.45 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke();
+      }
+      if (!left) {
+        ctx.strokeStyle = `rgba(200,185,150,${0.35 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke();
+      }
+      // Cool metallic shadow (bottom + right)
+      if (!bottom) {
+        ctx.strokeStyle = `rgba(30,30,50,${0.35 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke();
+      }
+      if (!right) {
+        ctx.strokeStyle = `rgba(20,20,40,${0.3 * shimmer})`;
+        ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
 }
 
 // Check if any animated effect is active (sparkle, arcane, moss, forged)
@@ -2341,14 +2668,23 @@ function renderAnimFrame(timestamp) {
       const sw = bw / subDiv;
       const x = c * bw, y = r * bh;
       for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
-        ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+        ctx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime, true);
         ctx.fillRect(x + sc * sw, y + sr * sw, Math.ceil(sw), Math.ceil(sw));
       }
     } else {
-      ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : baseColor;
+      ctx.fillStyle = partHasFx ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime, true) : baseColor;
       ctx.fillRect(c*bw, r*bh, bw, bh);
     }
   }
+  // Canvas-native post-processing for non-animated parts
+  PART_TYPES.forEach(pt => {
+    if (pt.value === 0 || offsets[pt.value]) return;
+    applyCanvasGradient(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0);
+    applyCanvasForged(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasEmboss(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0);
+    applyCanvasArcane(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasSparkle(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+  });
 
   animatingParts.forEach(v => {
     const off = offsets[v];
@@ -2371,14 +2707,20 @@ function renderAnimFrame(timestamp) {
         const subDiv = Math.min(Math.floor(bw / 2), 4);
         const sw = bw / subDiv;
         for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
-          ctx.fillStyle = applyFxToColorSub(col, v, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+          ctx.fillStyle = applyFxToColorSub(col, v, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime, true);
           ctx.fillRect(px + sc * sw, py + sr * sw, Math.ceil(sw), Math.ceil(sw));
         }
       } else {
-        ctx.fillStyle = partHasFx ? applyFxToColorSub(col, v, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : col;
+        ctx.fillStyle = partHasFx ? applyFxToColorSub(col, v, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime, true) : col;
         ctx.fillRect(px, py, bw, bh);
       }
     }
+    // Canvas-native post-processing for this animated part (within transform context)
+    applyCanvasGradient(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0);
+    applyCanvasForged(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasEmboss(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0);
+    applyCanvasArcane(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyCanvasSparkle(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
     ctx.restore();
   });
 
