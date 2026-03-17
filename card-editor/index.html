@@ -106,7 +106,7 @@
     .canvas-col { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
     .canvas-label { font-family: 'Outfit', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
     .canvas-wrapper { background: var(--card-bg); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; }
-    canvas#gridCanvas { cursor: crosshair; display: block; image-rendering: pixelated; }
+    canvas#gridCanvas { cursor: crosshair; display: block; image-rendering: pixelated; touch-action: none; }
     canvas#previewCanvas { display: block; image-rendering: pixelated; }
 
     /* Drawers */
@@ -1430,7 +1430,8 @@ const gridCanvas = document.getElementById('gridCanvas');
 const gridCtx = gridCanvas.getContext('2d');
 
 function renderGrid() {
-  const maxW = Math.min(window.innerWidth - 80, GRID_W <= 12 ? 280 : 420);
+  const isMobile = window.innerWidth <= 700;
+  const maxW = Math.min(window.innerWidth - (isMobile ? 40 : 80), GRID_W <= 12 ? 280 : isMobile ? Math.min(window.innerWidth - 40, 360) : 420);
   const cellPx = Math.max(2, Math.floor(maxW / Math.max(GRID_W, GRID_H * 0.67)));
   const totalW = cellPx * GRID_W, totalH = cellPx * GRID_H;
   gridCanvas.width = totalW; gridCanvas.height = totalH;
@@ -1480,13 +1481,16 @@ function renderPreview() {
 function render() { renderGrid(); renderPreview(); }
 
 // ── Grid interaction ──
+function getPointerXY(e) {
+  if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches && e.changedTouches.length > 0) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
 function cellFromEvent(e) {
   const rect = gridCanvas.getBoundingClientRect();
-  const sx = gridCanvas.width/rect.width, sy = gridCanvas.height/rect.height;
-  let cx, cy;
-  if (e.touches) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; } else { cx = e.clientX; cy = e.clientY; }
-  const col = Math.floor((cx-rect.left)*sx / (gridCanvas.width/GRID_W));
-  const row = Math.floor((cy-rect.top)*sy / (gridCanvas.height/GRID_H));
+  const { x: cx, y: cy } = getPointerXY(e);
+  const col = Math.floor((cx - rect.left) / rect.width * GRID_W);
+  const row = Math.floor((cy - rect.top) / rect.height * GRID_H);
   if (col < 0 || col >= GRID_W || row < 0 || row >= GRID_H) return null;
   return { row, col };
 }
@@ -1502,7 +1506,7 @@ function movePaint(e) {
   if (paintVal !== 0 && !partVisible[paintVal]) return;
   grid[cell.row][cell.col] = paintVal; render();
 }
-function endPaint(e) { if (e) e.preventDefault(); isPainting = false; }
+function endPaint() { isPainting = false; }
 gridCanvas.addEventListener('mousedown', startPaint);
 gridCanvas.addEventListener('mousemove', movePaint);
 document.addEventListener('mouseup', endPaint);
