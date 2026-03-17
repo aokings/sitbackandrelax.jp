@@ -1714,10 +1714,25 @@ function renderGrid() {
   gridCanvas.style.width = totalW+'px'; gridCanvas.style.height = totalH+'px';
 
   gridCtx.fillStyle = '#F5F5F5'; gridCtx.fillRect(0, 0, totalW, totalH);
+  const hasAnyFxGrid = Object.values(partEffects).some(fx => fx && Object.values(fx).some(v => v === true));
   for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) {
     const val = grid[r][c]; if (val === 0) continue;
     gridCtx.globalAlpha = partVisible[val] ? 1 : 0.15;
-    gridCtx.fillStyle = customColors[val] || '#F5F5F5'; gridCtx.fillRect(c*cellPx, r*cellPx, cellPx, cellPx);
+    const baseColor = customColors[val] || '#F5F5F5';
+    const fx = partEffects[val];
+    const partHasFx = fx && Object.values(fx).some(v => v === true);
+    if (partHasFx && cellPx >= 4) {
+      const subDiv = Math.min(Math.floor(cellPx / 2), 4);
+      const sw = cellPx / subDiv;
+      const x = c * cellPx, y = r * cellPx;
+      for (let sr = 0; sr < subDiv; sr++) for (let sc = 0; sc < subDiv; sc++) {
+        gridCtx.fillStyle = applyFxToColorSub(baseColor, val, r, c, sr, sc, subDiv, GRID_W, GRID_H, grid, fxAnimTime);
+        gridCtx.fillRect(x + sc * sw, y + sr * sw, Math.ceil(sw), Math.ceil(sw));
+      }
+    } else {
+      gridCtx.fillStyle = (hasAnyFxGrid && partHasFx) ? applyFxToColorSub(baseColor, val, r, c, 0, 0, 1, GRID_W, GRID_H, grid, fxAnimTime) : baseColor;
+      gridCtx.fillRect(c*cellPx, r*cellPx, cellPx, cellPx);
+    }
     gridCtx.globalAlpha = 1;
   }
   gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
@@ -2005,7 +2020,7 @@ function startFxAnimLoop() {
   const t0 = performance.now();
   function tick(now) {
     fxAnimTime = (now - t0) / 1000;
-    renderPreview();
+    render(); // update both grid and preview with animated effects
     if (hasAnimatedFx()) fxAnimId = requestAnimationFrame(tick);
     else { fxAnimId = null; fxAnimTime = 0; }
   }
