@@ -344,6 +344,7 @@
           <span class="arrow">&#9654;</span> <span data-i18n="fx-title">Effects</span>
         </button>
         <div class="drawer-body"><div class="drawer-inner">
+          <div id="fxPresets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
           <div id="fxPartChips" class="anim-part-chips"></div>
           <div id="fxControls" class="anim-controls" style="display:none"></div>
         </div></div>
@@ -453,9 +454,14 @@ const i18n = {
     'adjust-pos': '⇄ Adjust Positions', 'adjust-pos-done': '✓ Done', 'reset-pos': 'Reset',
     'toast-pos-reset': 'Positions reset!',
     'fx-title': 'Effects', 'fx-strength': 'Strength',
-    'fx-gradient': 'Gradient', 'fx-emboss': 'Emboss', 'fx-forged': 'Forged',
-    'fx-weathered': 'Weathered', 'fx-arcane': 'Arcane Glow', 'fx-moss': 'Moss', 'fx-sparkle': 'Sparkle',
+    'fx-outline': 'Outline', 'fx-gradient': 'Gradient', 'fx-emboss': 'Emboss', 'fx-forged': 'Forged',
+    'fx-weathered': 'Weathered', 'fx-wood': 'Wood', 'fx-stone': 'Stone', 'fx-marble': 'Marble', 'fx-fur': 'Fur', 'fx-scales': 'Scales',
+    'fx-arcane': 'Arcane Glow', 'fx-moss': 'Moss', 'fx-poison': 'Poison', 'fx-sparkle': 'Sparkle',
     'fx-frost': 'Frost', 'fx-flame': 'Flame', 'fx-holy': 'Holy', 'fx-shadow': 'Shadow', 'fx-holographic': 'Holographic',
+    'fx-blink': 'Blink', 'fx-glow': 'Glow', 'fx-drip': 'Drip', 'fx-tint': 'Tint', 'fx-ethereal': 'Ethereal',
+    'fx-preset-mob': 'Mob', 'fx-preset-elite': 'Elite', 'fx-preset-legend': 'Legend', 'fx-preset-cursed': 'Cursed', 'fx-preset-ice': 'Ice', 'fx-preset-fire': 'Fire', 'fx-preset-holy': 'Holy', 'fx-preset-clear': 'Clear',
+    'fx-cat-basic': 'Basic', 'fx-cat-texture': 'Texture', 'fx-cat-element': 'Element', 'fx-cat-decoration': 'Decoration',
+    'fx-apply-all': '→ All',
   },
   ja: {
     back: 'Home', subtitle: 'Wind & Gate カード用ピクセルアートエディタ',
@@ -498,9 +504,14 @@ const i18n = {
     'adjust-pos': '⇄ 位置調整', 'adjust-pos-done': '✓ 完了', 'reset-pos': 'リセット',
     'toast-pos-reset': '位置をリセットしました！',
     'fx-title': 'エフェクト', 'fx-strength': '強さ',
-    'fx-gradient': 'グラデーション', 'fx-emboss': 'エンボス', 'fx-forged': '鍛鉄',
-    'fx-weathered': '風化', 'fx-arcane': '魔力光', 'fx-moss': '苔むし', 'fx-sparkle': 'キラーン',
+    'fx-outline': '輪郭線', 'fx-gradient': 'グラデーション', 'fx-emboss': 'エンボス', 'fx-forged': '鍛鉄',
+    'fx-weathered': '風化', 'fx-wood': '木目', 'fx-stone': '石', 'fx-marble': '大理石', 'fx-fur': '毛皮', 'fx-scales': '鱗',
+    'fx-arcane': '魔力光', 'fx-moss': '苔むし', 'fx-poison': '猛毒', 'fx-sparkle': 'キラーン',
     'fx-frost': '氷結', 'fx-flame': '炎', 'fx-holy': '神聖', 'fx-shadow': '暗黒', 'fx-holographic': 'ホログラム',
+    'fx-blink': 'まばたき', 'fx-glow': '発光', 'fx-drip': '滴り', 'fx-tint': '色調', 'fx-ethereal': '霊体',
+    'fx-preset-mob': 'モブ', 'fx-preset-elite': 'エリート', 'fx-preset-legend': 'レジェンド', 'fx-preset-cursed': '呪い', 'fx-preset-ice': '氷', 'fx-preset-fire': '炎', 'fx-preset-holy': '聖', 'fx-preset-clear': 'なし',
+    'fx-cat-basic': '基本', 'fx-cat-texture': '素材', 'fx-cat-element': '属性', 'fx-cat-decoration': '装飾',
+    'fx-apply-all': '→ 全部',
   }
 };
 let lang = 'en';
@@ -514,7 +525,7 @@ function setLang(l) {
   // Rebuild dynamic UI based on current view
   if (currentView === 'viewCardSelect') buildCardGrid();
   if (currentView === 'viewDashboard') initDashboard(selectedCardCode);
-  if (currentView === 'viewEditor') { buildPalette(); buildPartVisibility(); buildAnimPartChips(); }
+  if (currentView === 'viewEditor') { buildPalette(); buildPartVisibility(); buildAnimPartChips(); buildFxPresets(); buildFxPartChips(); buildFxControls(); }
 }
 document.querySelectorAll('.lang-btn').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
 
@@ -1561,6 +1572,7 @@ function openEditor(cardCode, slotType) {
   buildPalette();
   buildPartVisibility();
   buildAnimPartChips();
+  buildFxPresets();
   buildFxPartChips();
   updateDecomposeBtn();
   render();
@@ -1795,19 +1807,42 @@ function renderGrid() {
 // ═══════════════════════════════════════════════════════════════
 // Effect definitions — add new effects here and they auto-appear in UI
 const FX_DEFS = [
-  { id: 'gradient',  i18n: 'fx-gradient',  hasStrength: false, defaultStr: 0 },
-  { id: 'emboss',    i18n: 'fx-emboss',    hasStrength: true,  defaultStr: 50 },
-  { id: 'forged',    i18n: 'fx-forged',    hasStrength: false, defaultStr: 0 },
-  { id: 'weathered', i18n: 'fx-weathered', hasStrength: true,  defaultStr: 40 },
-  { id: 'arcane',    i18n: 'fx-arcane',    hasStrength: false, defaultStr: 0 },
-  { id: 'moss',      i18n: 'fx-moss',      hasStrength: false, defaultStr: 0 },
-  { id: 'sparkle',   i18n: 'fx-sparkle',   hasStrength: false, defaultStr: 0 },
-  { id: 'frost',     i18n: 'fx-frost',     hasStrength: false, defaultStr: 0 },
-  { id: 'flame',     i18n: 'fx-flame',     hasStrength: false, defaultStr: 0 },
-  { id: 'holy',      i18n: 'fx-holy',      hasStrength: false, defaultStr: 0 },
-  { id: 'shadow',    i18n: 'fx-shadow',    hasStrength: false, defaultStr: 0 },
-  { id: 'holographic', i18n: 'fx-holographic', hasStrength: false, defaultStr: 0 },
+  { id: 'outline',     i18n: 'fx-outline',     hasStrength: true, defaultStr: 50, category: 'basic',      desc: 'Dark pixel border around silhouette', descJa: 'シルエット外周の暗い縁取り' },
+  { id: 'gradient',    i18n: 'fx-gradient',    hasStrength: true, defaultStr: 50, category: 'basic',      desc: 'Smooth vertical light-to-dark gradient', descJa: '上から下へ滑らかなグラデーション' },
+  { id: 'emboss',      i18n: 'fx-emboss',      hasStrength: true, defaultStr: 50, category: 'basic',      desc: 'Raised 3D emboss effect on edges', descJa: 'エッジに立体的なエンボス効果' },
+  { id: 'forged',      i18n: 'fx-forged',      hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Hammered metal texture with shimmer', descJa: '鍛造された金属の質感' },
+  { id: 'weathered',   i18n: 'fx-weathered',   hasStrength: true, defaultStr: 40, category: 'texture',    desc: 'Aged and worn surface noise', descJa: '経年劣化した表面のノイズ' },
+  { id: 'wood',        i18n: 'fx-wood',        hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Vertical wood grain pattern', descJa: '縦方向の木目模様' },
+  { id: 'stone',       i18n: 'fx-stone',       hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Rough stone surface with cracks', descJa: 'ひび割れのある石の表面' },
+  { id: 'marble',      i18n: 'fx-marble',      hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Smooth marble with dark veins', descJa: '暗い脈のある滑らかな大理石' },
+  { id: 'fur',         i18n: 'fx-fur',         hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Soft fur texture with sway', descJa: '揺れる柔らかな毛並み' },
+  { id: 'scales',      i18n: 'fx-scales',      hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Reptilian scale pattern', descJa: '爬虫類の鱗模様' },
+  { id: 'arcane',      i18n: 'fx-arcane',      hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Pulsing magical glow aura', descJa: '脈動する魔力のオーラ' },
+  { id: 'frost',       i18n: 'fx-frost',       hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Icy crystalline frost overlay', descJa: '氷の結晶オーバーレイ' },
+  { id: 'flame',       i18n: 'fx-flame',       hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Flickering fire effect', descJa: 'ゆらめく炎エフェクト' },
+  { id: 'holy',        i18n: 'fx-holy',        hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Divine golden radiance', descJa: '神聖な黄金の輝き' },
+  { id: 'shadow',      i18n: 'fx-shadow',      hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Dark shadowy tendrils', descJa: '暗い影の触手' },
+  { id: 'moss',        i18n: 'fx-moss',        hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Green mossy overgrowth patches', descJa: '緑の苔むした斑点' },
+  { id: 'poison',      i18n: 'fx-poison',      hasStrength: true, defaultStr: 50, category: 'element',    desc: 'Toxic bubbling green-purple', descJa: '毒々しい緑紫の泡立ち' },
+  { id: 'ethereal',    i18n: 'fx-ethereal',    hasStrength: true, defaultStr: 50, category: 'texture',    desc: 'Semi-transparent ghostly look', descJa: '半透明の霊体的な外見' },
+  { id: 'sparkle',     i18n: 'fx-sparkle',     hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Twinkling star particles', descJa: 'きらめく星のパーティクル' },
+  { id: 'holographic', i18n: 'fx-holographic', hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Rainbow holographic shimmer', descJa: '虹色のホログラムの揺らめき' },
+  { id: 'blink',       i18n: 'fx-blink',       hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Periodic blink animation', descJa: '定期的なまばたきアニメ' },
+  { id: 'glow',        i18n: 'fx-glow',        hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Inner glow using base color', descJa: 'ベースカラーで内側から発光' },
+  { id: 'drip',        i18n: 'fx-drip',        hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Liquid dripping from bottom', descJa: '下端から滴り落ちる液体' },
+  { id: 'tint',        i18n: 'fx-tint',        hasStrength: true, defaultStr: 50, category: 'decoration', desc: 'Hue shift (strength = degrees)', descJa: '色相シフト（強さ＝角度）' },
 ];
+
+const FX_PRESETS = {
+  mob:    { _all: { outline: true, outline_str: 40, gradient: true, gradient_str: 50, emboss: true, emboss_str: 40 } },
+  elite:  { _all: { outline: true, outline_str: 50, gradient: true, gradient_str: 50, emboss: true, emboss_str: 60, forged: true, forged_str: 60 } },
+  legend: { _all: { outline: true, outline_str: 50, gradient: true, gradient_str: 50, emboss: true, emboss_str: 50, arcane: true, arcane_str: 60, sparkle: true, sparkle_str: 60 } },
+  cursed: { _all: { shadow: true, shadow_str: 60, weathered: true, weathered_str: 50, poison: true, poison_str: 40 } },
+  ice:    { _all: { frost: true, frost_str: 60, emboss: true, emboss_str: 50 } },
+  fire:   { _all: { flame: true, flame_str: 60, emboss: true, emboss_str: 40 } },
+  holy:   { _all: { holy: true, holy_str: 60, gradient: true, gradient_str: 50, sparkle: true, sparkle_str: 60, glow: true, glow_str: 40 } },
+  clear:  { _all: {} },
+};
 
 // State: { "1": { gradient: true, emboss: false, emboss_str: 50, ... }, ... }
 let partEffects = {};
@@ -1816,6 +1851,48 @@ let selectedFxPart = null;
 function getPartFx(partVal) {
   if (!partEffects[partVal]) partEffects[partVal] = {};
   return partEffects[partVal];
+}
+
+function buildFxPresets() {
+  const container = document.getElementById('fxPresets');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.keys(FX_PRESETS).forEach(key => {
+    const btn = document.createElement('button');
+    btn.textContent = T('fx-preset-' + key);
+    btn.style.cssText = 'cursor:pointer;padding:3px 10px;border-radius:12px;border:1px solid #bbb;background:#f0f0f0;font-size:12px;';
+    btn.onclick = () => applyFxPreset(key);
+    container.appendChild(btn);
+  });
+}
+
+function applyFxPreset(presetKey) {
+  const preset = FX_PRESETS[presetKey];
+  if (!preset) return;
+  const template = preset._all;
+  // Find all unique non-zero part values in the grid
+  const usedParts = new Set();
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) { if (grid[r][c] !== 0) usedParts.add(grid[r][c]); }
+  usedParts.forEach(partVal => { partEffects[partVal] = JSON.parse(JSON.stringify(template)); });
+  buildFxPresets();
+  buildFxPartChips();
+  buildFxControls();
+  render();
+  if (hasAnimatedFx()) startFxAnimLoop();
+  else stopFxAnimLoop();
+}
+
+function applyFxToAllParts() {
+  if (selectedFxPart === null) return;
+  const srcFx = getPartFx(selectedFxPart);
+  const usedParts = new Set();
+  for (let r = 0; r < GRID_H; r++) for (let c = 0; c < GRID_W; c++) { if (grid[r][c] !== 0) usedParts.add(grid[r][c]); }
+  usedParts.forEach(partVal => { if (partVal !== selectedFxPart) partEffects[partVal] = JSON.parse(JSON.stringify(srcFx)); });
+  buildFxPartChips();
+  buildFxControls();
+  render();
+  if (hasAnimatedFx()) startFxAnimLoop();
+  else stopFxAnimLoop();
 }
 
 function buildFxPartChips() {
@@ -1845,7 +1922,18 @@ function buildFxPartChips() {
     chip.onclick = () => { selectedFxPart = pt.value; buildFxPartChips(); buildFxControls(); };
     container.appendChild(chip);
   });
+  // "Apply to All" button
+  if (selectedFxPart !== null) {
+    const allBtn = document.createElement('div');
+    allBtn.className = 'anim-chip';
+    allBtn.style.cssText = 'cursor:pointer;background:#e8e8ff;border:1px dashed #99a;font-size:11px;';
+    allBtn.textContent = T('fx-apply-all');
+    allBtn.onclick = applyFxToAllParts;
+    container.appendChild(allBtn);
+  }
 }
+
+const FX_CATEGORIES = ['basic', 'texture', 'element', 'decoration'];
 
 function buildFxControls() {
   const container = document.getElementById('fxControls');
@@ -1854,32 +1942,41 @@ function buildFxControls() {
   container.style.display = '';
   container.innerHTML = '';
   const fx = getPartFx(selectedFxPart);
-  FX_DEFS.forEach(def => {
-    const row = document.createElement('div');
-    row.className = 'anim-row';
-    const lbl = document.createElement('label');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !!fx[def.id];
-    cb.onchange = () => { fx[def.id] = cb.checked; onFxChange(); };
-    lbl.appendChild(cb);
-    const span = document.createElement('span');
-    span.textContent = ' ' + T(def.i18n);
-    lbl.appendChild(span);
-    row.appendChild(lbl);
-    if (def.hasStrength) {
-      const slider = document.createElement('input');
-      slider.type = 'range'; slider.min = 0; slider.max = 100;
-      slider.value = fx[def.id + '_str'] ?? def.defaultStr;
-      slider.style.maxWidth = '80px';
-      const valSpan = document.createElement('span');
-      valSpan.className = 'range-val';
-      valSpan.textContent = slider.value + '%';
-      slider.oninput = () => { fx[def.id + '_str'] = +slider.value; valSpan.textContent = slider.value + '%'; onFxChange(); };
-      row.appendChild(slider);
-      row.appendChild(valSpan);
-    }
-    container.appendChild(row);
+  FX_CATEGORIES.forEach(cat => {
+    const defsInCat = FX_DEFS.filter(d => d.category === cat);
+    if (defsInCat.length === 0) return;
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:11px;color:#999;margin-top:8px;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.5px;';
+    header.textContent = T('fx-cat-' + cat);
+    container.appendChild(header);
+    defsInCat.forEach(def => {
+      const row = document.createElement('div');
+      row.className = 'anim-row';
+      const lbl = document.createElement('label');
+      lbl.title = lang === 'ja' ? (def.descJa || def.desc) : def.desc;
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!fx[def.id];
+      cb.onchange = () => { fx[def.id] = cb.checked; onFxChange(); };
+      lbl.appendChild(cb);
+      const span = document.createElement('span');
+      span.textContent = ' ' + T(def.i18n);
+      lbl.appendChild(span);
+      row.appendChild(lbl);
+      if (def.hasStrength) {
+        const slider = document.createElement('input');
+        slider.type = 'range'; slider.min = 0; slider.max = 100;
+        slider.value = fx[def.id + '_str'] ?? def.defaultStr;
+        slider.style.maxWidth = '80px';
+        const valSpan = document.createElement('span');
+        valSpan.className = 'range-val';
+        valSpan.textContent = slider.value + '%';
+        slider.oninput = () => { fx[def.id + '_str'] = +slider.value; valSpan.textContent = slider.value + '%'; onFxChange(); };
+        row.appendChild(slider);
+        row.appendChild(valSpan);
+      }
+      container.appendChild(row);
+    });
   });
 }
 
@@ -1932,12 +2029,14 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
 
   // Gradient: dramatic top-to-bottom shading (skip if Canvas native overlay handles it)
   if (fx.gradient && !native) {
-    const shift = (0.5 - fracY) * 80;
+    const gradStr = (fx.gradient_str ?? 50) / 100;
+    const shift = (0.5 - fracY) * 80 * gradStr;
     cr += shift; cg += shift; cb += shift;
   }
 
   // Forged: bold metallic edge highlight/shadow with animated shimmer (skip if Canvas native)
   if (fx.forged && !native) {
+    const forgedStr = (fx.forged_str ?? 50) / 100;
     const edgeFade = 0.5;
     let highlight = 0, shadow = 0;
     if (isTop) highlight += Math.max(0, 1 - cellFracY / edgeFade);
@@ -1947,11 +2046,11 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
     highlight = Math.min(highlight, 1.2); shadow = Math.min(shadow, 1.2);
     const shimmer = t > 0 ? Math.sin(t * 1.5 + fracX * 8 + fracY * 6) * 0.25 + 1 : 1;
     // Strong metallic: warm highlight, cool shadow
-    cr += (80 * highlight - 55 * shadow) * shimmer;
-    cg += (70 * highlight - 55 * shadow) * shimmer;
-    cb += (90 * highlight - 40 * shadow) * shimmer;
+    cr += (80 * highlight - 55 * shadow) * shimmer * forgedStr;
+    cg += (70 * highlight - 55 * shadow) * shimmer * forgedStr;
+    cb += (90 * highlight - 40 * shadow) * shimmer * forgedStr;
     // Inner metallic tint (shift toward steel blue)
-    cr -= 8; cb += 12;
+    cr -= 8 * forgedStr; cb += 12 * forgedStr;
   }
 
   // Weathered: coarse noise + dark speckles for dirt/damage
@@ -1984,9 +2083,10 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
 
   // Arcane: vivid magical glow — not just edges, also inner shimmer (skip if Canvas native)
   if (fx.arcane && !native) {
+    const arcStr = (fx.arcane_str ?? 50) / 100;
     const isEdge = isTop || isBottom || isLeft || isRight;
     const huePhase = t > 0 ? t * 0.8 : 0;
-    const pulse = t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1;
+    const pulse = (t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1) * arcStr;
     if (isEdge) {
       let glow = 0;
       if (isTop) glow += Math.max(0, 1 - cellFracY / 0.6);
@@ -2009,6 +2109,7 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
   // Moss: vivid green growth on lower half with organic clumps
   // (intentionally runs in BOTH native and export mode — organic noise works best as RGB math, no Canvas API version)
   if (fx.moss) {
+    const mossStr = (fx.moss_str ?? 50) / 100;
     const swayOffset = t > 0 ? Math.sin(t * 0.6 + fracX * 4) * 0.05 : 0;
     const adjustedFracY = fracY + swayOffset;
     if (adjustedFracY > 0.35) {
@@ -2016,27 +2117,27 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
       const baseIntensity = Math.min((adjustedFracY - 0.35) * 1.8, 1.0);
       const noise = 0.1 + rng() * 0.9;
       const clump = rng() > 0.3 ? 1 : 0.2; // patchy clumps
-      const intensity = baseIntensity * noise * clump;
+      const intensity = baseIntensity * noise * clump * mossStr;
       cg += 70 * intensity; cr -= 30 * intensity; cb -= 25 * intensity;
       // Darker spots in heavy moss
       if (intensity > 0.5 && rng() > 0.6) {
-        cr -= 15; cg -= 5; cb -= 10;
+        cr -= 15 * mossStr; cg -= 5 * mossStr; cb -= 10 * mossStr;
       }
     }
   }
 
   // Sparkle: bright twinkling stars — larger, more frequent, more visible (skip if Canvas native)
   if (fx.sparkle && !native) {
+    const spkStr = (fx.sparkle_str ?? 50) / 100;
     const phase = t > 0 ? Math.floor(t * 3) : 0;
     const rng = seededRand(r * 337 + c * 61 + sr * 199 + sc * 83 + val * 17 + phase * 997);
     const threshold = rng();
-    if (threshold > 0.88) { // ~12% of sub-pixels sparkle
+    if (threshold > 1 - 0.12 * spkStr) {
       const sparkleLife = t > 0 ? (t * 3) % 1 : 1;
       const fade = Math.sin(sparkleLife * Math.PI);
       const intensity = (0.5 + rng() * 0.5) * (t > 0 ? fade : 1);
       if (intensity > 0.05) {
-        // Pure white sparkle for maximum visibility
-        const boost = 200 * intensity;
+        const boost = 200 * intensity * spkStr;
         cr += boost; cg += boost; cb += boost;
       }
     }
@@ -2044,36 +2145,114 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
 
   // Frost: cool blue tint + bright edges (fallback for export)
   if (fx.frost && !native) {
-    cr -= 10; cg += 5; cb += 20;
-    if (isTop || isLeft) { cr += 30; cg += 35; cb += 40; }
-    if (isBottom || isRight) { cr -= 10; cg -= 5; cb += 5; }
+    const frostStr = (fx.frost_str ?? 50) / 100;
+    cr -= 10 * frostStr; cg += 5 * frostStr; cb += 20 * frostStr;
+    if (isTop || isLeft) { cr += 30 * frostStr; cg += 35 * frostStr; cb += 40 * frostStr; }
+    if (isBottom || isRight) { cr -= 10 * frostStr; cg -= 5 * frostStr; cb += 5 * frostStr; }
   }
 
   // Flame: warm orange tint, hotter at bottom (fallback for export)
   if (fx.flame && !native) {
-    const heat = fracY * 0.7;
+    const flameStr = (fx.flame_str ?? 50) / 100;
+    const heat = fracY * 0.7 * flameStr;
     cr += 40 * heat; cg -= 20 * heat; cb -= 30 * heat;
   }
 
   // Holy: golden tint with radial brightening from center (fallback for export)
   if (fx.holy && !native) {
+    const holyStr = (fx.holy_str ?? 50) / 100;
     const dist = Math.sqrt((fracX - 0.5) ** 2 + (fracY - 0.5) ** 2);
-    const glow = Math.max(0, 1 - dist * 2) * 30;
-    cr += 20 + glow; cg += 15 + glow * 0.8; cb -= 5;
+    const glow = Math.max(0, 1 - dist * 2) * 30 * holyStr;
+    cr += (20 + glow) * holyStr; cg += (15 + glow * 0.8) * holyStr; cb -= 5 * holyStr;
   }
 
   // Shadow: dark purple tint (fallback for export)
   if (fx.shadow && !native) {
-    cr -= 15; cg -= 20; cb -= 5;
-    if (isTop || isLeft || isBottom || isRight) { cr -= 10; cb += 15; }
+    const shadowStr = (fx.shadow_str ?? 50) / 100;
+    cr -= 15 * shadowStr; cg -= 20 * shadowStr; cb -= 5 * shadowStr;
+    if (isTop || isLeft || isBottom || isRight) { cr -= 10 * shadowStr; cb += 15 * shadowStr; }
   }
 
   // Holographic: position-based hue tint (fallback for export)
   if (fx.holographic && !native) {
+    const holoStr = (fx.holographic_str ?? 50) / 100;
     const hue = (fracX + fracY) * 180;
-    const shift = Math.sin(hue * Math.PI / 180) * 25;
+    const shift = Math.sin(hue * Math.PI / 180) * 25 * holoStr;
     cr += shift; cg += shift * 0.6; cb -= shift * 0.3;
   }
+
+  // Outline: dark border fallback for export (simple darken at edges)
+  if (fx.outline && !native) {
+    const outStr = (fx.outline_str ?? 50) / 100;
+    if (isTop || isLeft || isBottom || isRight) {
+      cr -= 60 * outStr; cg -= 60 * outStr; cb -= 60 * outStr;
+    }
+  }
+
+  // Ethereal: ghostly transparency fallback
+  if (fx.ethereal && !native) {
+    const ethStr = (fx.ethereal_str ?? 50) / 100;
+    const ghostly = 40 * ethStr;
+    cr += ghostly; cg += ghostly; cb += ghostly;
+  }
+
+  // Poison: green-purple tint fallback
+  if (fx.poison && !native) {
+    const poisStr = (fx.poison_str ?? 50) / 100;
+    cg += 30 * poisStr; cr -= 10 * poisStr; cb += 20 * poisStr;
+  }
+
+  // Wood: warm brown tint fallback
+  if (fx.wood && !native) {
+    const woodStr = (fx.wood_str ?? 50) / 100;
+    cr += 15 * woodStr; cg += 5 * woodStr; cb -= 15 * woodStr;
+  }
+
+  // Stone: gray tint fallback
+  if (fx.stone && !native) {
+    const stoneStr = (fx.stone_str ?? 50) / 100;
+    const avg = (cr + cg + cb) / 3;
+    cr += (avg - cr) * 0.3 * stoneStr; cg += (avg - cg) * 0.3 * stoneStr; cb += (avg - cb) * 0.3 * stoneStr;
+  }
+
+  // Marble: slight brightness fallback
+  if (fx.marble && !native) {
+    const marbStr = (fx.marble_str ?? 50) / 100;
+    cr += 10 * marbStr; cg += 10 * marbStr; cb += 12 * marbStr;
+  }
+
+  // Fur: slight warm tint fallback
+  if (fx.fur && !native) {
+    const furStr = (fx.fur_str ?? 50) / 100;
+    cr += 8 * furStr; cg += 4 * furStr; cb -= 4 * furStr;
+  }
+
+  // Scales: slight green shift fallback
+  if (fx.scales && !native) {
+    const scStr = (fx.scales_str ?? 50) / 100;
+    cg += 10 * scStr; cr -= 5 * scStr;
+  }
+
+  // Tint: hue rotation fallback
+  if (fx.tint && !native) {
+    const tintStr = (fx.tint_str ?? 50) / 100;
+    const degrees = tintStr * 3.6; // 0-360
+    const rad = degrees * Math.PI / 180;
+    const cosA = Math.cos(rad), sinA = Math.sin(rad);
+    const rr = cr, gg = cg, bb = cb;
+    cr = rr * (0.213 + cosA * 0.787 - sinA * 0.213) + gg * (0.715 - cosA * 0.715 - sinA * 0.715) + bb * (0.072 - cosA * 0.072 + sinA * 0.928);
+    cg = rr * (0.213 - cosA * 0.213 + sinA * 0.143) + gg * (0.715 + cosA * 0.285 + sinA * 0.140) + bb * (0.072 - cosA * 0.072 - sinA * 0.283);
+    cb = rr * (0.213 - cosA * 0.213 - sinA * 0.787) + gg * (0.715 - cosA * 0.715 + sinA * 0.715) + bb * (0.072 + cosA * 0.928 + sinA * 0.072);
+  }
+
+  // Blink: handled only in canvas mode (no RGB fallback needed)
+  // Glow: brightness boost fallback
+  if (fx.glow && !native) {
+    const glowStr = (fx.glow_str ?? 50) / 100;
+    cr += 20 * glowStr; cg += 20 * glowStr; cb += 20 * glowStr;
+  }
+
+  // Drip: no RGB fallback (canvas-only visual)
 
   return rgbToHex(cr, cg, cb);
 }
@@ -2090,12 +2269,13 @@ function applyFxToColor(hex, val, r, c, gridW, gridH) {
 function applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
   const fx = partEffects[partVal];
   if (!fx || !fx.gradient) return;
+  const str = (fx.gradient_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   // Single vertical gradient: light at top, dark at bottom
   const grad = ctx.createLinearGradient(0, oy, 0, oy + gridH * bh);
-  grad.addColorStop(0, 'rgba(255,255,255,0.3)');
+  grad.addColorStop(0, `rgba(255,255,255,${0.3 * str})`);
   grad.addColorStop(0.45, 'rgba(0,0,0,0)');
-  grad.addColorStop(1, 'rgba(0,0,0,0.3)');
+  grad.addColorStop(1, `rgba(0,0,0,${0.3 * str})`);
   // Apply only to cells belonging to this part
   for (let r = 0; r < gridH; r++) {
     for (let c = 0; c < gridW; c++) {
@@ -2153,6 +2333,7 @@ function applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
 function applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.sparkle) return;
+  const str = (fx.sparkle_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
   const phase = t > 0 ? Math.floor(t * 3) : 0;
@@ -2168,7 +2349,7 @@ function applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX
 
   // Deterministic sparkle positions using seeded random
   const rng = seededRand(partVal * 773 + phase * 997);
-  const sparkleCount = Math.max(2, Math.floor(cells.length * 0.12));
+  const sparkleCount = Math.max(2, Math.floor(cells.length * 0.12 * str));
 
   ctx.save();
   for (let i = 0; i < sparkleCount; i++) {
@@ -2225,9 +2406,10 @@ function applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX
 function applyCanvasArcane(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.arcane) return;
+  const str = (fx.arcane_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
-  const pulse = t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1;
+  const pulse = (t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1) * str;
   const hueShift = t > 0 ? t * 0.8 : 0;
 
   ctx.save();
@@ -2284,6 +2466,7 @@ function applyCanvasArcane(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
 function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.forged) return;
+  const str = (fx.forged_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
@@ -2294,7 +2477,7 @@ function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
     for (let c = 0; c < gridW; c++) {
       if (gridRef[r]?.[c] !== partVal) continue;
       const x = ox + c * bw, y = oy + r * bh;
-      ctx.fillStyle = 'rgba(70,80,110,0.1)';
+      ctx.fillStyle = `rgba(70,80,110,${0.1 * str})`;
       ctx.fillRect(x, y, bw, bh);
     }
   }
@@ -2326,8 +2509,8 @@ function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
   }
 
   // Pass 3: Strong metallic edge highlights (like polished metal)
-  const lw = Math.max(0.5, Math.min(bw, bh) * 0.12);
-  const shimmer = t > 0 ? Math.sin(t * 1.5) * 0.15 + 1 : 1;
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.12 * str);
+  const shimmer = (t > 0 ? Math.sin(t * 1.5) * 0.15 + 1 : 1) * str;
   for (let r = 0; r < gridH; r++) {
     for (let c = 0; c < gridW; c++) {
       if (gridRef[r]?.[c] !== partVal) continue;
@@ -2365,6 +2548,7 @@ function applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
 function applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.frost) return;
+  const str = (fx.frost_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
@@ -2375,7 +2559,7 @@ function applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, 
     for (let c = 0; c < gridW; c++) {
       if (gridRef[r]?.[c] !== partVal) continue;
       const x = ox + c * bw, y = oy + r * bh;
-      ctx.fillStyle = 'rgba(180,220,255,0.12)';
+      ctx.fillStyle = `rgba(180,220,255,${0.12 * str})`;
       ctx.fillRect(x, y, bw, bh);
     }
   }
@@ -2450,6 +2634,7 @@ function applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, 
 function applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.flame) return;
+  const str = (fx.flame_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
@@ -2463,7 +2648,7 @@ function applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, 
       const warmth = Math.max(0, (fracY - 0.3) * 1.4);
       if (warmth > 0) {
         const x = ox + c * bw, y = oy + r * bh;
-        ctx.fillStyle = `rgba(255,80,0,${warmth * 0.15})`;
+        ctx.fillStyle = `rgba(255,80,0,${warmth * 0.15 * str})`;
         ctx.fillRect(x, y, bw, bh);
       }
     }
@@ -2533,6 +2718,7 @@ function applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, 
 function applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.holy) return;
+  const str = (fx.holy_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
@@ -2549,7 +2735,7 @@ function applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, o
   const maxR = Math.max(gridW * bw, gridH * bh) * 0.6;
 
   // Pass 1: Golden radial glow from center (pulsing)
-  const pulse = t > 0 ? 0.7 + Math.sin(t * 1.8) * 0.3 : 1;
+  const pulse = (t > 0 ? 0.7 + Math.sin(t * 1.8) * 0.3 : 1) * str;
   const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxR * pulse);
   grad.addColorStop(0, `rgba(255,230,140,${0.25 * pulse})`);
   grad.addColorStop(0.4, `rgba(255,200,80,${0.12 * pulse})`);
@@ -2628,9 +2814,10 @@ function applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, o
 function applyCanvasShadow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.shadow) return;
+  const str = (fx.shadow_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
-  const pulse = t > 0 ? 0.7 + Math.sin(t * 2) * 0.3 : 1;
+  const pulse = (t > 0 ? 0.7 + Math.sin(t * 2) * 0.3 : 1) * str;
   const drift = t > 0 ? t * 0.5 : 0;
 
   ctx.save();
@@ -2705,6 +2892,7 @@ function applyCanvasShadow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX,
 function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx || !fx.holographic) return;
+  const str = (fx.holographic_str ?? 50) / 100;
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
@@ -2717,7 +2905,7 @@ function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, off
       const x = ox + c * bw, y = oy + r * bh;
       // Hue based on position + time
       const hue = ((c / gridW + r / gridH) * 180 + (t > 0 ? t * 60 : 0)) % 360;
-      const alpha = 0.15 + Math.sin((c + r) * 0.5 + (t > 0 ? t * 2 : 0)) * 0.05;
+      const alpha = (0.15 + Math.sin((c + r) * 0.5 + (t > 0 ? t * 2 : 0)) * 0.05) * str;
       ctx.fillStyle = `hsla(${hue},80%,60%,${alpha})`;
       ctx.fillRect(x, y, bw, bh);
     }
@@ -2781,26 +2969,549 @@ function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, off
   ctx.restore();
 }
 
+// Canvas-native Outline: dark border around part silhouette edges
+function applyCanvasOutline(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.outline) return;
+  const str = (fx.outline_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const baseColor = customColors[partVal] || '#888888';
+  const outColor = adjustBrightness(baseColor, -80);
+  const [oR, oG, oB] = hexToRgb(outColor);
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.18 * str);
+
+  ctx.save();
+  ctx.strokeStyle = `rgba(${oR},${oG},${oB},${0.7 * str})`;
+  ctx.lineWidth = lw;
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      if (top && left && bottom && right) continue;
+      if (!top)    { ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke(); }
+      if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke(); }
+      if (!left)   { ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke(); }
+      if (!right)  { ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke(); }
+    }
+  }
+  ctx.restore();
+}
+
+// Canvas-native Blink: periodic blink animation (brief invisibility)
+function applyCanvasBlink(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.blink) return;
+  const str = (fx.blink_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  if (t === 0) return; // no blink in static mode
+
+  const cycle = t % (3 + partVal * 0.7);
+  const blinking = cycle > 2.85;
+  if (!blinking) return;
+
+  ctx.save();
+  ctx.fillStyle = `rgba(0,0,0,${0.8 * str})`;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+  ctx.restore();
+}
+
+// Canvas-native Glow: inner glow using part's base color with pulsing
+function applyCanvasGlow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.glow) return;
+  const str = (fx.glow_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const baseColor = customColors[partVal] || '#888888';
+  const [bR, bG, bB] = hexToRgb(baseColor);
+  const pulse = t > 0 ? 0.6 + Math.sin(t * 2.5) * 0.4 : 1;
+
+  ctx.save();
+
+  // Pass 1: Soft glow overlay on all cells
+  const glowAlpha = 0.2 * str * pulse;
+  ctx.shadowBlur = Math.max(bw, bh) * 0.8 * str;
+  ctx.shadowColor = `rgba(${bR},${bG},${bB},${0.6 * str * pulse})`;
+  ctx.fillStyle = `rgba(${bR},${bG},${bB},${glowAlpha})`;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Brighter edge glow
+  const brightR = Math.min(255, bR + 80), brightG = Math.min(255, bG + 80), brightB = Math.min(255, bB + 80);
+  ctx.shadowBlur = Math.max(bw, bh) * 1.2 * str;
+  ctx.shadowColor = `rgba(${brightR},${brightG},${brightB},${0.4 * str * pulse})`;
+  const lw = Math.max(0.5, Math.min(bw, bh) * 0.15 * str);
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = `rgba(${brightR},${brightG},${brightB},${0.3 * str * pulse})`;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const top    = r > 0       && gridRef[r-1]?.[c] === partVal;
+      const left   = c > 0       && gridRef[r][c-1] === partVal;
+      const bottom = r < gridH-1 && gridRef[r+1]?.[c] === partVal;
+      const right  = c < gridW-1 && gridRef[r][c+1] === partVal;
+      if (top && left && bottom && right) continue;
+      if (!top)    { ctx.beginPath(); ctx.moveTo(x, y + lw/2); ctx.lineTo(x + bw, y + lw/2); ctx.stroke(); }
+      if (!bottom) { ctx.beginPath(); ctx.moveTo(x, y + bh - lw/2); ctx.lineTo(x + bw, y + bh - lw/2); ctx.stroke(); }
+      if (!left)   { ctx.beginPath(); ctx.moveTo(x + lw/2, y); ctx.lineTo(x + lw/2, y + bh); ctx.stroke(); }
+      if (!right)  { ctx.beginPath(); ctx.moveTo(x + bw - lw/2, y); ctx.lineTo(x + bw - lw/2, y + bh); ctx.stroke(); }
+    }
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Ethereal: semi-transparent ghostly overlay with pulsing
+function applyCanvasEthereal(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.ethereal) return;
+  const str = (fx.ethereal_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const pulse = t > 0 ? 0.7 + Math.sin(t * 1.5) * 0.3 : 1;
+
+  ctx.save();
+  const alpha = 0.2 * str * pulse;
+  ctx.fillStyle = `rgba(200,220,255,${alpha})`;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Bright silhouette shimmer
+  const shimAlpha = 0.1 * str * pulse;
+  ctx.shadowBlur = Math.max(bw, bh) * 0.5 * str;
+  ctx.shadowColor = `rgba(180,200,255,${0.3 * str * pulse})`;
+  ctx.fillStyle = `rgba(220,230,255,${shimAlpha})`;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const wave = Math.sin((r / gridH) * 6 + (t > 0 ? t * 2 : 0)) * 0.5 + 0.5;
+      ctx.globalAlpha = shimAlpha * wave;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Drip: liquid dripping from bottom edges
+function applyCanvasDrip(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.drip) return;
+  const str = (fx.drip_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+  const baseColor = customColors[partVal] || '#888888';
+  const [bR, bG, bB] = hexToRgb(baseColor);
+
+  // Find bottom-edge cells (cell has the part, but cell below does not)
+  const bottomEdges = [];
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const below = r < gridH - 1 && gridRef[r+1]?.[c] === partVal;
+      if (!below) bottomEdges.push({ r, c });
+    }
+  }
+  if (bottomEdges.length === 0) return;
+
+  ctx.save();
+  const rng = seededRand(partVal * 431);
+  const dripCount = Math.max(1, Math.floor(bottomEdges.length * 0.3 * str));
+  for (let i = 0; i < dripCount; i++) {
+    const edge = bottomEdges[Math.floor(rng() * bottomEdges.length)];
+    const dropSpeed = 0.5 + rng() * 1.0;
+    const dropPhase = t > 0 ? ((t * dropSpeed + rng() * 10) % 2.5) : 0;
+    const dropY = dropPhase * bh * 1.2;
+    const dropAlpha = Math.max(0, 1 - dropPhase / 2.5) * str;
+    if (dropAlpha < 0.05) continue;
+
+    const cx = ox + (edge.c + 0.3 + rng() * 0.4) * bw;
+    const cy = oy + (edge.r + 1) * bh + dropY;
+    const dropW = bw * (0.15 + rng() * 0.15) * str;
+    const dropH = bh * (0.3 + rng() * 0.3) * str;
+
+    ctx.fillStyle = `rgba(${bR},${bG},${bB},${dropAlpha * 0.7})`;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, dropW, dropH, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Canvas-native Poison: toxic green-purple bubbling effect
+function applyCanvasPoison(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.poison) return;
+  const str = (fx.poison_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Green-purple tint overlay
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      const wave = Math.sin((c * 0.5 + r * 0.3) + (t > 0 ? t * 1.5 : 0)) * 0.5 + 0.5;
+      const greenA = 0.1 * str * (1 - wave);
+      const purpleA = 0.08 * str * wave;
+      ctx.fillStyle = `rgba(0,255,80,${greenA})`;
+      ctx.fillRect(x, y, bw, bh);
+      ctx.fillStyle = `rgba(160,0,200,${purpleA})`;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+
+  // Pass 2: Rising bubbles from bottom edges
+  const bottomEdges = [];
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const below = r < gridH - 1 && gridRef[r+1]?.[c] === partVal;
+      if (!below) bottomEdges.push({ r, c });
+    }
+  }
+  const phase = t > 0 ? Math.floor(t * 3) : 0;
+  const rng = seededRand(partVal * 613 + phase * 337);
+  const bubbleCount = Math.max(1, Math.floor(bottomEdges.length * 0.2 * str));
+  for (let i = 0; i < bubbleCount; i++) {
+    const edge = bottomEdges.length > 0 ? bottomEdges[Math.floor(rng() * bottomEdges.length)] : { r: gridH - 1, c: Math.floor(rng() * gridW) };
+    const rise = t > 0 ? ((t * 1.5 + rng() * 10) % 2) : 0;
+    const cx = ox + (edge.c + 0.2 + rng() * 0.6) * bw;
+    const cy = oy + (edge.r + 1 - rise * 1.5) * bh;
+    const alpha = Math.sin(rise / 2 * Math.PI) * str * (0.4 + rng() * 0.4);
+    if (alpha < 0.05) continue;
+    const sz = bw * (0.1 + rng() * 0.15) * str;
+    const isGreen = rng() > 0.4;
+    ctx.shadowBlur = sz * 2;
+    ctx.shadowColor = isGreen ? `rgba(0,255,80,${alpha})` : `rgba(160,0,200,${alpha})`;
+    ctx.fillStyle = isGreen ? `rgba(50,255,100,${alpha})` : `rgba(180,50,220,${alpha})`;
+    ctx.beginPath(); ctx.arc(cx, cy, sz, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  ctx.restore();
+}
+
+// Canvas-native Wood: vertical wood grain pattern
+function applyCanvasWood(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.wood) return;
+  const str = (fx.wood_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+
+  ctx.save();
+
+  // Pass 1: Warm brown tint
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillStyle = `rgba(120,80,30,${0.1 * str})`;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Vertical grain lines
+  const rng = seededRand(partVal * 271);
+  const grainCount = Math.max(3, Math.floor(gridW * 0.8));
+  ctx.lineWidth = Math.max(0.5, bw * 0.08 * str);
+
+  for (let i = 0; i < grainCount; i++) {
+    const grainX = rng() * gridW;
+    const alpha = (0.08 + rng() * 0.12) * str;
+    const dark = rng() > 0.5;
+    ctx.strokeStyle = dark ? `rgba(60,30,0,${alpha})` : `rgba(160,120,60,${alpha})`;
+    ctx.beginPath();
+    for (let r = 0; r < gridH; r++) {
+      const c = Math.floor(grainX + Math.sin(r * 0.3 + i) * 0.5);
+      if (c < 0 || c >= gridW || gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + (grainX + Math.sin(r * 0.3 + i) * 0.5) * bw;
+      const y = oy + r * bh;
+      if (r === 0 || gridRef[r-1]?.[c] !== partVal) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y + bh);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Canvas-native Stone: gray noise overlay + crack lines
+function applyCanvasStone(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.stone) return;
+  const str = (fx.stone_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+
+  ctx.save();
+
+  // Pass 1: Gray desaturation overlay
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const rng = seededRand(r * 137 + c * 59 + partVal * 23);
+      const noise = (rng() - 0.5) * 40 * str;
+      const gray = 128 + noise;
+      ctx.fillStyle = `rgba(${Math.round(gray)},${Math.round(gray)},${Math.round(gray)},${0.15 * str})`;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Crack lines
+  const rng = seededRand(partVal * 389);
+  const crackCount = Math.max(1, Math.floor(Math.sqrt(gridW * gridH) * 0.3 * str));
+  ctx.strokeStyle = `rgba(40,35,30,${0.25 * str})`;
+  ctx.lineWidth = Math.max(0.5, Math.min(bw, bh) * 0.06 * str);
+
+  for (let i = 0; i < crackCount; i++) {
+    let cx = Math.floor(rng() * gridW);
+    let cy = Math.floor(rng() * gridH);
+    if (gridRef[cy]?.[cx] !== partVal) continue;
+    ctx.beginPath();
+    ctx.moveTo(ox + (cx + 0.5) * bw, oy + (cy + 0.5) * bh);
+    const segments = 3 + Math.floor(rng() * 4);
+    for (let s = 0; s < segments; s++) {
+      cx += Math.floor(rng() * 3) - 1;
+      cy += Math.floor(rng() * 2);
+      if (cx < 0 || cx >= gridW || cy < 0 || cy >= gridH) break;
+      if (gridRef[cy]?.[cx] !== partVal) break;
+      ctx.lineTo(ox + (cx + 0.5) * bw, oy + (cy + 0.5) * bh);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Canvas-native Marble: smooth surface with serpentine dark veins
+function applyCanvasMarble(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.marble) return;
+  const str = (fx.marble_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+
+  ctx.save();
+
+  // Pass 1: Slight brightening overlay
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillStyle = `rgba(240,240,245,${0.08 * str})`;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Serpentine vein lines using sin-based paths
+  const rng = seededRand(partVal * 523);
+  const veinCount = Math.max(1, Math.floor(Math.sqrt(gridW * gridH) * 0.25 * str));
+  ctx.lineWidth = Math.max(0.5, Math.min(bw, bh) * 0.08 * str);
+
+  for (let i = 0; i < veinCount; i++) {
+    const startY = rng() * gridH;
+    const startX = rng() * gridW;
+    const freq = 0.3 + rng() * 0.5;
+    const amp = 0.5 + rng() * 1.5;
+    const alpha = (0.1 + rng() * 0.15) * str;
+    ctx.strokeStyle = `rgba(60,50,70,${alpha})`;
+    ctx.beginPath();
+    let started = false;
+    for (let step = 0; step < gridW * 1.5; step++) {
+      const x = startX + step * 0.3;
+      const y = startY + Math.sin(step * freq + i * 2) * amp;
+      const gx = Math.floor(x), gy = Math.floor(y);
+      if (gx < 0 || gx >= gridW || gy < 0 || gy >= gridH) { started = false; continue; }
+      if (gridRef[gy]?.[gx] !== partVal) { started = false; continue; }
+      const px = ox + x * bw, py = oy + y * bh;
+      if (!started) { ctx.moveTo(px, py); started = true; }
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Canvas-native Fur: short diagonal hair strokes with highlighted tips
+function applyCanvasFur(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.fur) return;
+  const str = (fx.fur_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Warm tint
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillStyle = `rgba(140,110,70,${0.06 * str})`;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Hair strokes
+  const rng = seededRand(partVal * 347);
+  const cells = [];
+  for (let r = 0; r < gridH; r++)
+    for (let c = 0; c < gridW; c++)
+      if (gridRef[r]?.[c] === partVal) cells.push({ r, c });
+
+  const hairCount = Math.max(2, Math.floor(cells.length * 0.3 * str));
+  const sway = t > 0 ? Math.sin(t * 1.8) * 0.15 : 0;
+
+  for (let i = 0; i < hairCount; i++) {
+    const cell = cells[Math.floor(rng() * cells.length)];
+    const startX = ox + (cell.c + 0.2 + rng() * 0.6) * bw;
+    const startY = oy + (cell.r + 0.2 + rng() * 0.6) * bh;
+    const angle = -0.5 + rng() * 1.0 + sway; // mostly downward-diagonal
+    const len = bh * (0.3 + rng() * 0.4) * str;
+    const endX = startX + Math.sin(angle) * len;
+    const endY = startY + Math.cos(angle) * len;
+
+    // Hair strand
+    const alpha = (0.15 + rng() * 0.2) * str;
+    ctx.strokeStyle = `rgba(80,60,30,${alpha})`;
+    ctx.lineWidth = Math.max(0.3, bw * 0.04 * str);
+    ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(endX, endY); ctx.stroke();
+
+    // Highlighted tip
+    ctx.strokeStyle = `rgba(200,180,140,${alpha * 0.8})`;
+    ctx.lineWidth = Math.max(0.2, bw * 0.03 * str);
+    const midX = (startX + endX) / 2, midY = (startY + endY) / 2;
+    ctx.beginPath(); ctx.moveTo(midX, midY); ctx.lineTo(endX, endY); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// Canvas-native Scales: diamond-shaped repeating pattern
+function applyCanvasScales(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.scales) return;
+  const str = (fx.scales_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const t = time || 0;
+
+  ctx.save();
+
+  // Pass 1: Subtle green shift
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      ctx.fillStyle = `rgba(0,60,20,${0.06 * str})`;
+      ctx.fillRect(ox + c * bw, oy + r * bh, bw, bh);
+    }
+  }
+
+  // Pass 2: Diamond scale pattern
+  const scaleW = bw * 0.8;
+  const scaleH = bh * 0.6;
+  const shimmer = t > 0 ? Math.sin(t * 1.2) * 0.1 : 0;
+
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw + bw / 2;
+      const y = oy + r * bh + bh / 2;
+      const offsetRow = r % 2 === 0 ? 0 : bw * 0.4;
+
+      // Diamond shape
+      const alpha = (0.12 + shimmer) * str;
+
+      // Highlight top edge of scale
+      ctx.strokeStyle = `rgba(200,220,180,${alpha})`;
+      ctx.lineWidth = Math.max(0.3, bw * 0.05 * str);
+      ctx.beginPath();
+      ctx.moveTo(x - scaleW/2 + offsetRow, y);
+      ctx.lineTo(x + offsetRow, y - scaleH/2);
+      ctx.lineTo(x + scaleW/2 + offsetRow, y);
+      ctx.stroke();
+
+      // Shadow bottom edge of scale
+      ctx.strokeStyle = `rgba(20,40,10,${alpha * 0.8})`;
+      ctx.beginPath();
+      ctx.moveTo(x - scaleW/2 + offsetRow, y);
+      ctx.lineTo(x + offsetRow, y + scaleH/2);
+      ctx.lineTo(x + scaleW/2 + offsetRow, y);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// Canvas-native Tint: hue rotation overlay
+function applyCanvasTint(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY) {
+  const fx = partEffects[partVal];
+  if (!fx || !fx.tint) return;
+  const str = (fx.tint_str ?? 50) / 100;
+  const ox = offsetX || 0, oy = offsetY || 0;
+  const degrees = str * 360; // full range
+
+  ctx.save();
+
+  // Use hue-rotate filter if available, otherwise overlay approach
+  const hue = degrees % 360;
+  for (let r = 0; r < gridH; r++) {
+    for (let c = 0; c < gridW; c++) {
+      if (gridRef[r]?.[c] !== partVal) continue;
+      const x = ox + c * bw, y = oy + r * bh;
+      // Use HSL overlay at the target hue with blend
+      ctx.fillStyle = `hsla(${hue},70%,50%,0.2)`;
+      ctx.fillRect(x, y, bw, bh);
+    }
+  }
+  ctx.restore();
+}
+
 // Unified helper: apply all canvas-native effects in the correct order
-// Order: color effects first (Gradient, Forged, Frost, Flame, Holy, Shadow),
-//        then 3D (Arcane, Holographic, Emboss), then particles (Sparkle)
+// Order: Gradient > Forged > Wood > Stone > Marble > Fur > Scales > Frost > Flame > Holy > Shadow > Arcane > Moss > Poison > Holographic > Ethereal > Emboss > Outline > Glow > Sparkle > Blink > Drip > Tint
 function applyAllCanvasEffects(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
   const fx = partEffects[partVal];
   if (!fx) return;
   if (fx.gradient)    applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
   if (fx.forged)      applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.wood)        applyCanvasWood(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.stone)       applyCanvasStone(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.marble)      applyCanvasMarble(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.fur)         applyCanvasFur(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.scales)      applyCanvasScales(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.frost)       applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.flame)       applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.holy)        applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.shadow)      applyCanvasShadow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.arcane)      applyCanvasArcane(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.poison)      applyCanvasPoison(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.holographic) applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.ethereal)    applyCanvasEthereal(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.emboss)      applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.outline)     applyCanvasOutline(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.glow)        applyCanvasGlow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
   if (fx.sparkle)     applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.blink)       applyCanvasBlink(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.drip)        applyCanvasDrip(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.tint)        applyCanvasTint(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
 }
 
-// Check if any animated effect is active (sparkle, arcane, moss, forged)
-const FX_ANIMATED = ['sparkle', 'arcane', 'moss', 'forged', 'frost', 'flame', 'holy', 'shadow', 'holographic'];
+// Check if any animated effect is active
+const FX_ANIMATED = ['sparkle', 'arcane', 'moss', 'forged', 'frost', 'flame', 'holy', 'shadow', 'holographic', 'blink', 'glow', 'drip', 'poison', 'fur', 'scales', 'ethereal'];
 function hasAnimatedFx() {
   return Object.values(partEffects).some(fx =>
     fx && FX_ANIMATED.some(id => fx[id] === true)
