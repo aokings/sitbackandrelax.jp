@@ -1405,16 +1405,7 @@ function drawAssetLayer(ctx, asset, gx, gy, scale) {
       for (let rr = 0; rr < asset.height; rr++) ppGrid[rr] = asset.grid[rr];
     }
     assetParts.forEach(pv => {
-      applyCanvasGradient(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale);
-      applyCanvasForged(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasEmboss(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale);
-      applyCanvasArcane(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasSparkle(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasFrost(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasFlame(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasHoly(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasShadow(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
-      applyCanvasHolographic(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
+      applyAllCanvasEffects(ctx, pv, ppGrid, ppGridW, ppGridH, scale, scale, gx * scale, gy * scale, 0);
     });
   }
 
@@ -1778,16 +1769,7 @@ function renderGrid() {
   // Canvas-native post-processing: Gradient + Emboss overlays
   PART_TYPES.forEach(pt => {
     if (pt.value === 0) return;
-    applyCanvasGradient(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0);
-    applyCanvasForged(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasEmboss(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0);
-    applyCanvasArcane(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasSparkle(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasFrost(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasFlame(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasHoly(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasShadow(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
-    applyCanvasHolographic(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
+    applyAllCanvasEffects(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
   });
   gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
   for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
@@ -1973,6 +1955,7 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
   }
 
   // Weathered: coarse noise + dark speckles for dirt/damage
+  // (intentionally runs in BOTH native and export mode — noise texture works best as RGB math, no Canvas API version)
   if (fx.weathered) {
     const str = (fx.weathered_str ?? 40) / 100;
     const rng = seededRand(r * 1000 + c * 7 + sr * 137 + sc * 53 + val * 31);
@@ -2024,6 +2007,7 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
   }
 
   // Moss: vivid green growth on lower half with organic clumps
+  // (intentionally runs in BOTH native and export mode — organic noise works best as RGB math, no Canvas API version)
   if (fx.moss) {
     const swayOffset = t > 0 ? Math.sin(t * 0.6 + fracX * 4) * 0.05 : 0;
     const adjustedFracY = fracY + swayOffset;
@@ -2056,6 +2040,39 @@ function applyFxToColorSub(hex, val, r, c, sr, sc, subDiv, gridW, gridH, gridRef
         cr += boost; cg += boost; cb += boost;
       }
     }
+  }
+
+  // Frost: cool blue tint + bright edges (fallback for export)
+  if (fx.frost && !native) {
+    cr -= 10; cg += 5; cb += 20;
+    if (isTop || isLeft) { cr += 30; cg += 35; cb += 40; }
+    if (isBottom || isRight) { cr -= 10; cg -= 5; cb += 5; }
+  }
+
+  // Flame: warm orange tint, hotter at bottom (fallback for export)
+  if (fx.flame && !native) {
+    const heat = fracY * 0.7;
+    cr += 40 * heat; cg -= 20 * heat; cb -= 30 * heat;
+  }
+
+  // Holy: golden tint with radial brightening from center (fallback for export)
+  if (fx.holy && !native) {
+    const dist = Math.sqrt((fracX - 0.5) ** 2 + (fracY - 0.5) ** 2);
+    const glow = Math.max(0, 1 - dist * 2) * 30;
+    cr += 20 + glow; cg += 15 + glow * 0.8; cb -= 5;
+  }
+
+  // Shadow: dark purple tint (fallback for export)
+  if (fx.shadow && !native) {
+    cr -= 15; cg -= 20; cb -= 5;
+    if (isTop || isLeft || isBottom || isRight) { cr -= 10; cb += 15; }
+  }
+
+  // Holographic: position-based hue tint (fallback for export)
+  if (fx.holographic && !native) {
+    const hue = (fracX + fracY) * 180;
+    const shift = Math.sin(hue * Math.PI / 180) * 25;
+    cr += shift; cg += shift * 0.6; cb -= shift * 0.3;
   }
 
   return rgbToHex(cr, cg, cb);
@@ -2519,14 +2536,14 @@ function applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, o
   const ox = offsetX || 0, oy = offsetY || 0;
   const t = time || 0;
 
-  ctx.save();
-
   // Find centroid of this part
   let sx = 0, sy = 0, cnt = 0;
   for (let r = 0; r < gridH; r++)
     for (let c = 0; c < gridW; c++)
       if (gridRef[r]?.[c] === partVal) { sx += c; sy += r; cnt++; }
-  if (cnt === 0) { ctx.restore(); return; }
+  if (cnt === 0) return;
+
+  ctx.save();
   const centerX = ox + (sx / cnt + 0.5) * bw;
   const centerY = oy + (sy / cnt + 0.5) * bh;
   const maxR = Math.max(gridW * bw, gridH * bh) * 0.6;
@@ -2762,6 +2779,24 @@ function applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, off
 
   ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
   ctx.restore();
+}
+
+// Unified helper: apply all canvas-native effects in the correct order
+// Order: color effects first (Gradient, Forged, Frost, Flame, Holy, Shadow),
+//        then 3D (Arcane, Holographic, Emboss), then particles (Sparkle)
+function applyAllCanvasEffects(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time) {
+  const fx = partEffects[partVal];
+  if (!fx) return;
+  if (fx.gradient)    applyCanvasGradient(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.forged)      applyCanvasForged(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.frost)       applyCanvasFrost(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.flame)       applyCanvasFlame(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.holy)        applyCanvasHoly(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.shadow)      applyCanvasShadow(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.arcane)      applyCanvasArcane(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.holographic) applyCanvasHolographic(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
+  if (fx.emboss)      applyCanvasEmboss(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY);
+  if (fx.sparkle)     applyCanvasSparkle(ctx, partVal, gridRef, gridW, gridH, bw, bh, offsetX, offsetY, time);
 }
 
 // Check if any animated effect is active (sparkle, arcane, moss, forged)
@@ -3116,16 +3151,7 @@ function renderAnimFrame(timestamp) {
   // Canvas-native post-processing for non-animated parts
   PART_TYPES.forEach(pt => {
     if (pt.value === 0 || offsets[pt.value]) return;
-    applyCanvasGradient(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0);
-    applyCanvasForged(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasEmboss(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0);
-    applyCanvasArcane(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasSparkle(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasFrost(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasFlame(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasHoly(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasShadow(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasHolographic(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyAllCanvasEffects(ctx, pt.value, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
   });
 
   animatingParts.forEach(v => {
@@ -3158,16 +3184,7 @@ function renderAnimFrame(timestamp) {
       }
     }
     // Canvas-native post-processing for this animated part (within transform context)
-    applyCanvasGradient(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0);
-    applyCanvasForged(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasEmboss(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0);
-    applyCanvasArcane(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasSparkle(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasFrost(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasFlame(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasHoly(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasShadow(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
-    applyCanvasHolographic(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
+    applyAllCanvasEffects(ctx, v, grid, GRID_W, GRID_H, bw, bh, 0, 0, fxAnimTime);
     ctx.restore();
   });
 
