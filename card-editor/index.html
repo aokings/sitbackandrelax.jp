@@ -60,6 +60,25 @@
     .preset-bar .preset-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); font-family: 'Outfit', sans-serif; letter-spacing: 0.06em; }
     .preset-bar .preset-hint { font-size: 0.65rem; color: var(--text-muted); }
 
+    /* Shared Assets */
+    .shared-section-title { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 1.2rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--card-border); }
+    .shared-group { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 0.7rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .shared-group-label { display: flex; align-items: center; gap: 6px; min-width: 90px; }
+    .shared-group-cards { font-size: 0.65rem; color: var(--text-muted); flex: 1; min-width: 100px; }
+    .shared-slots-row { display: flex; gap: 6px; }
+    .shared-slot { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; transition: all 0.15s; background: var(--off-white); }
+    .shared-slot:hover { border-color: var(--accent); background: #fdf8ef; transform: translateY(-1px); }
+    .shared-slot .slot-thumb { width: 32px; height: 32px; background: var(--warm-gray); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .shared-slot .slot-thumb canvas { image-rendering: pixelated; }
+    .shared-slot-label { font-size: 0.65rem; font-weight: 600; color: var(--text-secondary); }
+    .shared-slot .badge-done { font-size: 0.55rem; padding: 1px 4px; }
+    .shared-inline-group { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .shared-inline-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px; border: 1px solid var(--card-border); border-radius: 8px; cursor: pointer; transition: all 0.15s; background: var(--card-bg); min-width: 52px; }
+    .shared-inline-slot:hover { border-color: var(--accent); background: #fdf8ef; }
+    .shared-inline-slot .slot-thumb { width: 28px; height: 28px; background: var(--warm-gray); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .shared-inline-slot .slot-thumb canvas { image-rendering: pixelated; }
+    .shared-inline-label { font-size: 0.6rem; color: var(--text-muted); font-weight: 500; }
+
     /* Dashboard (View 2) */
     .dash-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }
     .dash-header .emoji { font-size: 2.5rem; }
@@ -416,6 +435,8 @@ const i18n = {
     'preset-label': 'Frame Style:', 'preset-classic': 'Classic', 'preset-ornate': 'Ornate', 'preset-gothic': 'Gothic',
     'preset-hint': '— loads frames, backs, icons & points',
     'toast-preset-loaded': 'Preset loaded! Frames, backs, icons & points ready.',
+    'shared-tier-title': 'Frames & Backs (by Tier)', 'shared-icons-title': 'Icons (by Category)', 'shared-points-title': 'Points Display',
+    'characters-title': 'Characters',
   },
   ja: {
     back: 'Home', subtitle: 'Wind & Gate カード用ピクセルアートエディタ',
@@ -452,6 +473,8 @@ const i18n = {
     'preset-label': 'フレームスタイル:', 'preset-classic': 'クラシック', 'preset-ornate': '装飾', 'preset-gothic': 'ゴシック',
     'preset-hint': '— 枠・裏面・アイコン・数字を一括セット',
     'toast-preset-loaded': 'プリセット適用！枠・裏面・アイコン・数字をセットしました。',
+    'shared-tier-title': '枠・裏面（ティア別）', 'shared-icons-title': 'アイコン（カテゴリ別）', 'shared-points-title': 'ポイント表示',
+    'characters-title': 'キャラクター',
   }
 };
 let lang = 'en';
@@ -730,6 +753,7 @@ let currentView = 'viewCardSelect';
 let selectedCardCode = null;
 let editingAssetKey = null; // currently editing asset ID
 let editingSlotType = null; // which slot type we're editing
+let editingFromShared = false; // editing shared asset directly from card list
 
 function showView(viewId) {
   ['viewCardSelect', 'viewDashboard', 'viewEditor'].forEach(v =>
@@ -745,27 +769,166 @@ function updateBackLink() {
   } else if (currentView === 'viewDashboard') {
     lbl.textContent = T('back-cards');
   } else if (currentView === 'viewEditor') {
-    lbl.textContent = T('back-dashboard');
+    lbl.textContent = editingFromShared ? T('back-cards') : T('back-dashboard');
   }
 }
 
 function navigateBack() {
   if (currentView === 'viewEditor') {
-    showView('viewDashboard');
-    initDashboard(selectedCardCode);
+    if (editingFromShared) {
+      editingFromShared = false;
+      showView('viewCardSelect');
+      buildCardGrid();
+    } else {
+      showView('viewDashboard');
+      initDashboard(selectedCardCode);
+    }
   } else if (currentView === 'viewDashboard') {
     showView('viewCardSelect');
     buildCardGrid();
   }
-  // viewCardSelect: back to sitbackandrelax.jp handled by link
 }
 
 // ═══════════════════════════════════════════════════════════════
 // SECTION 6: Card Selection View
 // ═══════════════════════════════════════════════════════════════
+function openSharedEditor(cardCode, slotType) {
+  selectedCardCode = cardCode;
+  editingFromShared = true;
+  openEditor(cardCode, slotType);
+}
+
+function buildSharedAssets(container) {
+  // Group data
+  const byTier = {}, byCat = {}, byPts = {};
+  Object.entries(CARD_DATA).forEach(([code, card]) => {
+    (byTier[card.tier] = byTier[card.tier] || []).push({ code, ...card });
+    (byCat[card.category] = byCat[card.category] || []).push({ code, ...card });
+    const pk = String(card.points);
+    (byPts[pk] = byPts[pk] || []).push({ code, ...card });
+  });
+
+  // Tier frames & backs
+  const tierTitle = document.createElement('div');
+  tierTitle.className = 'shared-section-title';
+  tierTitle.textContent = T('shared-tier-title');
+  container.appendChild(tierTitle);
+
+  ['mob', 'elite', 'legend'].forEach(tier => {
+    const cards = byTier[tier] || [];
+    const repCode = cards[0]?.code; if (!repCode) return;
+    const assign = getAssignments(repCode);
+
+    const group = document.createElement('div');
+    group.className = 'shared-group';
+
+    // Label
+    const label = document.createElement('div');
+    label.className = 'shared-group-label';
+    label.innerHTML = `<span class="tier-badge tier-${tier}">${tier.toUpperCase()}</span>`;
+    group.appendChild(label);
+
+    // Slots (frame + back)
+    const slotsRow = document.createElement('div');
+    slotsRow.className = 'shared-slots-row';
+    ['frame', 'back'].forEach(slotType => {
+      const spec = ASSET_TYPES[slotType];
+      const assetId = assign[slotType];
+      const asset = assetId ? store.assets[assetId] : null;
+      const slot = document.createElement('div');
+      slot.className = 'shared-slot';
+      slot.onclick = () => openSharedEditor(repCode, slotType);
+      const thumb = document.createElement('div');
+      thumb.className = 'slot-thumb';
+      if (asset) {
+        const cvs = document.createElement('canvas');
+        const s = Math.min(28 / spec.w, 28 / spec.h);
+        cvs.width = Math.round(spec.w * s); cvs.height = Math.round(spec.h * s);
+        renderAssetToCanvas(cvs, asset);
+        thumb.appendChild(cvs);
+      } else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:1rem;color:var(--text-muted)'; }
+      const lbl = document.createElement('span');
+      lbl.className = 'shared-slot-label';
+      lbl.textContent = T(spec.i18nKey);
+      slot.appendChild(thumb); slot.appendChild(lbl);
+      if (asset) { const b = document.createElement('span'); b.className = 'slot-badge badge-done'; b.textContent = '✓'; slot.appendChild(b); }
+      slotsRow.appendChild(slot);
+    });
+    group.appendChild(slotsRow);
+
+    // Card list
+    const cardsList = document.createElement('div');
+    cardsList.className = 'shared-group-cards';
+    cardsList.textContent = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
+    group.appendChild(cardsList);
+
+    container.appendChild(group);
+  });
+
+  // Category icons
+  const iconTitle = document.createElement('div');
+  iconTitle.className = 'shared-section-title';
+  iconTitle.textContent = T('shared-icons-title');
+  container.appendChild(iconTitle);
+  const iconRow = document.createElement('div');
+  iconRow.className = 'shared-inline-group';
+  ['mob', 'elite', 'legend', 'house', 'wind'].forEach(cat => {
+    const cards = byCat[cat] || [];
+    const repCode = cards[0]?.code; if (!repCode) return;
+    const assign = getAssignments(repCode);
+    const asset = assign.icon ? store.assets[assign.icon] : null;
+    const slot = document.createElement('div');
+    slot.className = 'shared-inline-slot';
+    slot.onclick = () => openSharedEditor(repCode, 'icon');
+    slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
+    const thumb = document.createElement('div');
+    thumb.className = 'slot-thumb';
+    if (asset) { const cvs = document.createElement('canvas'); cvs.width = 24; cvs.height = 24; renderAssetToCanvas(cvs, asset); thumb.appendChild(cvs); }
+    else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:0.9rem;color:var(--text-muted)'; }
+    const lbl = document.createElement('span');
+    lbl.className = 'shared-inline-label';
+    lbl.textContent = cat;
+    slot.appendChild(thumb); slot.appendChild(lbl);
+    iconRow.appendChild(slot);
+  });
+  container.appendChild(iconRow);
+
+  // Points displays
+  const ptsTitle = document.createElement('div');
+  ptsTitle.className = 'shared-section-title';
+  ptsTitle.textContent = T('shared-points-title');
+  container.appendChild(ptsTitle);
+  const ptsRow = document.createElement('div');
+  ptsRow.className = 'shared-inline-group';
+  const ptsValues = [...new Set(Object.values(CARD_DATA).map(c => c.points))].sort((a, b) => a - b);
+  ptsValues.forEach(pts => {
+    const cards = byPts[String(pts)] || [];
+    const repCode = cards[0]?.code; if (!repCode) return;
+    const assign = getAssignments(repCode);
+    const asset = assign.points ? store.assets[assign.points] : null;
+    const slot = document.createElement('div');
+    slot.className = 'shared-inline-slot';
+    slot.onclick = () => openSharedEditor(repCode, 'points');
+    slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
+    const thumb = document.createElement('div');
+    thumb.className = 'slot-thumb';
+    if (asset) { const cvs = document.createElement('canvas'); cvs.width = 24; cvs.height = 16; renderAssetToCanvas(cvs, asset); thumb.appendChild(cvs); }
+    else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:0.9rem;color:var(--text-muted)'; }
+    const lbl = document.createElement('span');
+    lbl.className = 'shared-inline-label';
+    lbl.textContent = pts + 'pt';
+    slot.appendChild(thumb); slot.appendChild(lbl);
+    ptsRow.appendChild(slot);
+  });
+  container.appendChild(ptsRow);
+}
+
 function buildCardGrid() {
   const container = document.getElementById('cardGridContainer');
   container.innerHTML = '';
+
+  // Shared assets section
+  buildSharedAssets(container);
 
   const groups = [
     { key: 'mob',     title: T('mob-title'),     cards: [] },
@@ -779,6 +942,13 @@ function buildCardGrid() {
               card.category === 'mob' ? 'mob' : card.category === 'elite' ? 'elite' : 'legend';
     groups.find(gr => gr.key === g).cards.push({ code, ...card });
   });
+
+  // Characters section header
+  const charHeader = document.createElement('div');
+  charHeader.className = 'shared-section-title';
+  charHeader.style.marginTop = '1.5rem';
+  charHeader.textContent = T('characters-title');
+  container.appendChild(charHeader);
 
   groups.forEach(group => {
     if (group.cards.length === 0) return;
@@ -1081,9 +1251,15 @@ function saveAsset() {
   saveStore();
   toast(T('toast-saved'));
 
-  // Go back to dashboard
-  showView('viewDashboard');
-  initDashboard(selectedCardCode);
+  // Go back
+  if (editingFromShared) {
+    editingFromShared = false;
+    showView('viewCardSelect');
+    buildCardGrid();
+  } else {
+    showView('viewDashboard');
+    initDashboard(selectedCardCode);
+  }
 }
 
 // ── Part types ──
