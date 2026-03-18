@@ -2694,7 +2694,7 @@ function renderGrid() {
   const sidebar = document.getElementById('editorSidebar');
   const hasSidebar = sidebar && sidebar.style.display !== 'none' && !isMobile;
   const availW = hasSidebar ? Math.max(250, window.innerWidth - 400) : window.innerWidth - (isMobile ? 40 : 80);
-  const maxW = Math.min(availW, GRID_W <= 12 ? 280 : isMobile ? Math.min(window.innerWidth - 40, 360) : hasSidebar ? 360 : 420);
+  const maxW = Math.min(availW, GRID_W <= 12 ? 280 : isMobile ? Math.min(window.innerWidth - 40, 360) : 600);
   const cellPx = Math.max(2, Math.floor(maxW / Math.max(GRID_W, GRID_H * 0.67)));
   const totalW = cellPx * GRID_W, totalH = cellPx * GRID_H;
   gridCanvas.width = totalW; gridCanvas.height = totalH;
