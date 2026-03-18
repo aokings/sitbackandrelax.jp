@@ -215,8 +215,9 @@
     .filter-slot { cursor: pointer; transition: all 0.15s; border-radius: 8px; position: relative; }
     .filter-slot:hover { background: rgba(139,105,20,0.06); }
     .filter-slot.filter-active { background: rgba(139,105,20,0.12); outline: 2px solid #8B6914; }
-    .filter-dimmed { opacity: 0.25; }
-    .card-tile { transition: opacity 0.2s; }
+    .filter-dimmed { display: none; }
+    .card-group-header.filter-dimmed { display: none; }
+    .card-grid.filter-empty { display: none; }
     .edit-btn { background: none; border: 1px solid var(--card-border); border-radius: 4px; cursor: pointer; font-size: 10px; opacity: 0.4; padding: 1px 4px; transition: all 0.15s; position: absolute; bottom: 2px; right: 2px; }
     .edit-btn:hover { opacity: 1; border-color: var(--accent); }
     .filter-reset-btn { display: none; margin-bottom: 8px; }
@@ -1232,11 +1233,20 @@ function setFilter(type, value) {
     const sel = document.querySelector(`[data-filter-type="${activeFilter.type}"][data-filter-value="${activeFilter.value}"]`);
     if (sel) sel.classList.add('filter-active');
   }
-  // Right column: dim non-matching cards
+  // Right column: hide non-matching cards, hide empty groups
   document.querySelectorAll('.card-tile').forEach(tile => {
     if (!activeFilter) { tile.classList.remove('filter-dimmed'); return; }
     const match = tile.dataset[activeFilter.type] === activeFilter.value;
     tile.classList.toggle('filter-dimmed', !match);
+  });
+  // Hide group headers + grids that have no visible cards
+  document.querySelectorAll('.card-grid').forEach(grid => {
+    const hasVisible = grid.querySelector('.card-tile:not(.filter-dimmed)');
+    grid.classList.toggle('filter-empty', activeFilter && !hasVisible);
+    const header = grid.previousElementSibling;
+    if (header && header.classList.contains('card-group-header')) {
+      header.classList.toggle('filter-dimmed', activeFilter && !hasVisible);
+    }
   });
   // Reset button visibility
   const resetBtn = document.getElementById('filterResetBtn');
