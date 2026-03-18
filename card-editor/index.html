@@ -1601,41 +1601,332 @@ function drawHiResBack(ctx, style, tier, x, y, w, h) {
 
 function drawHiResIcon(ctx, category, tier, x, y, size) {
   const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
-  const pattern = ICON_PATTERNS[category];
-  if (!pattern) return;
-  const cached = getHiResCached('icon', 'default', category + '_' + tier, size, size, (cx, cw, ch) => {
-    const rows = pattern.split('|');
-    const cellW = cw / 8, cellH = ch / 8;
+  const cached = getHiResCached('icon', 'v2', category + '_' + tier, size, size, (cx, cw, ch) => {
     const m = Math.min(cw, ch);
+    const midX = cw / 2, midY = ch / 2;
+    const rgb = hexToRgb(tc.accent);
+    const rgbBack = hexToRgb(tc.back);
 
-    // ── Background circle ──
-    cx.fillStyle = tc.back + 'CC';
-    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.45, 0, Math.PI*2); cx.fill();
-    cx.strokeStyle = tc.accent + '80';
-    cx.lineWidth = m * 0.03;
-    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.45, 0, Math.PI*2); cx.stroke();
-
-    // ── Icon shape with glow ──
-    cx.shadowColor = tc.accent;
-    cx.shadowBlur = m * 0.06;
-    cx.fillStyle = tc.accent;
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        if (rows[r] && rows[r][c] === '1') {
-          const px = c * cellW + cellW * 0.1;
-          const py = r * cellH + cellH * 0.1;
-          cx.beginPath();
-          cx.roundRect(px, py, cellW * 0.8, cellH * 0.8, cellW * 0.15);
-          cx.fill();
-        }
-      }
+    // ── Ornate background badge (octagonal shield) ──
+    const r = m * 0.46;
+    cx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a1 = (Math.PI * 2 * i / 8) - Math.PI / 8;
+      const a2 = (Math.PI * 2 * (i + 1) / 8) - Math.PI / 8;
+      const x1 = midX + r * Math.cos(a1), y1 = midY + r * Math.sin(a1);
+      const x2 = midX + r * Math.cos(a2), y2 = midY + r * Math.sin(a2);
+      if (i === 0) cx.moveTo(x1, y1);
+      // Slight inward curve on each edge
+      const mx = (x1 + x2) / 2 + (midX - (x1 + x2) / 2) * 0.08;
+      const my = (y1 + y2) / 2 + (midY - (y1 + y2) / 2) * 0.08;
+      cx.quadraticCurveTo(mx, my, x2, y2);
     }
-    cx.shadowBlur = 0;
-
-    // ── Thin outer ring ──
-    cx.strokeStyle = tc.accent + '40';
+    cx.closePath();
+    // Gradient fill
+    const bgGrad = cx.createRadialGradient(midX, midY * 0.7, 0, midX, midY, r);
+    bgGrad.addColorStop(0, `rgba(${rgbBack[0] + 30},${rgbBack[1] + 30},${rgbBack[2] + 30},0.95)`);
+    bgGrad.addColorStop(1, tc.back + 'F0');
+    cx.fillStyle = bgGrad;
+    cx.fill();
+    // Border
+    cx.strokeStyle = tc.accent + '60';
+    cx.lineWidth = m * 0.025;
+    cx.stroke();
+    // Inner border (slightly smaller)
+    cx.save();
+    cx.scale(0.88, 0.88);
+    cx.translate(midX * (1/0.88 - 1), midY * (1/0.88 - 1));
+    cx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a1 = (Math.PI * 2 * i / 8) - Math.PI / 8;
+      const a2 = (Math.PI * 2 * (i + 1) / 8) - Math.PI / 8;
+      const x1 = midX + r * Math.cos(a1), y1 = midY + r * Math.sin(a1);
+      const x2 = midX + r * Math.cos(a2), y2 = midY + r * Math.sin(a2);
+      if (i === 0) cx.moveTo(x1, y1);
+      const mx = (x1 + x2) / 2 + (midX - (x1 + x2) / 2) * 0.08;
+      const my = (y1 + y2) / 2 + (midY - (y1 + y2) / 2) * 0.08;
+      cx.quadraticCurveTo(mx, my, x2, y2);
+    }
+    cx.closePath();
+    cx.strokeStyle = tc.accent + '25';
     cx.lineWidth = m * 0.015;
-    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.49, 0, Math.PI*2); cx.stroke();
+    cx.stroke();
+    cx.restore();
+
+    // ── Draw vector icon by category ──
+    cx.save();
+    cx.shadowColor = tc.accent;
+    cx.shadowBlur = m * 0.08;
+
+    if (category === 'mob') {
+      // Sword icon
+      const s = m * 0.3;
+      cx.fillStyle = tc.accent;
+      cx.strokeStyle = tc.accent;
+      cx.lineWidth = m * 0.03;
+      cx.lineCap = 'round';
+      cx.lineJoin = 'round';
+      // Blade
+      cx.beginPath();
+      cx.moveTo(midX, midY - s * 1.1);
+      cx.lineTo(midX + s * 0.15, midY - s * 0.1);
+      cx.lineTo(midX, midY + s * 0.05);
+      cx.lineTo(midX - s * 0.15, midY - s * 0.1);
+      cx.closePath();
+      // Blade gradient
+      const bladeGrad = cx.createLinearGradient(midX - s * 0.15, 0, midX + s * 0.15, 0);
+      bladeGrad.addColorStop(0, tc.accent + 'AA');
+      bladeGrad.addColorStop(0.5, '#FFFFFF');
+      bladeGrad.addColorStop(1, tc.accent + 'AA');
+      cx.fillStyle = bladeGrad;
+      cx.fill();
+      cx.strokeStyle = tc.accent;
+      cx.lineWidth = m * 0.012;
+      cx.stroke();
+      // Cross guard
+      cx.fillStyle = tc.accent;
+      cx.beginPath();
+      cx.roundRect(midX - s * 0.45, midY - s * 0.05, s * 0.9, s * 0.12, m * 0.02);
+      cx.fill();
+      // Grip
+      cx.fillStyle = tc.accent + 'CC';
+      cx.beginPath();
+      cx.roundRect(midX - s * 0.08, midY + s * 0.1, s * 0.16, s * 0.55, m * 0.015);
+      cx.fill();
+      // Pommel
+      cx.fillStyle = tc.accent;
+      cx.beginPath();
+      cx.arc(midX, midY + s * 0.75, s * 0.12, 0, Math.PI * 2);
+      cx.fill();
+
+    } else if (category === 'elite') {
+      // Diamond / gem icon
+      const s = m * 0.32;
+      // Top facet (crown)
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX - s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX, midY - s * 0.7);
+      cx.lineTo(midX + s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX + s * 0.9, midY - s * 0.2);
+      cx.closePath();
+      const topGrad = cx.createLinearGradient(0, midY - s, 0, midY - s * 0.2);
+      topGrad.addColorStop(0, '#FFFFFF');
+      topGrad.addColorStop(1, tc.accent);
+      cx.fillStyle = topGrad;
+      cx.fill();
+      // Bottom facet (pavilion)
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX, midY + s * 1.0);
+      cx.lineTo(midX + s * 0.9, midY - s * 0.2);
+      cx.closePath();
+      const botGrad = cx.createLinearGradient(midX - s, 0, midX + s, 0);
+      botGrad.addColorStop(0, tc.accent + 'CC');
+      botGrad.addColorStop(0.5, tc.accent);
+      botGrad.addColorStop(1, tc.accent + '99');
+      cx.fillStyle = botGrad;
+      cx.fill();
+      // Left inner facet
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX, midY - s * 0.2);
+      cx.lineTo(midX, midY + s * 1.0);
+      cx.closePath();
+      cx.fillStyle = 'rgba(255,255,255,0.15)';
+      cx.fill();
+      // Dividing line
+      cx.strokeStyle = tc.accent + '80';
+      cx.lineWidth = m * 0.01;
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX + s * 0.9, midY - s * 0.2);
+      cx.stroke();
+      // Facet lines
+      cx.beginPath();
+      cx.moveTo(midX, midY - s * 0.7);
+      cx.lineTo(midX, midY - s * 0.2);
+      cx.moveTo(midX - s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX - s * 0.2, midY - s * 0.2);
+      cx.moveTo(midX + s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX + s * 0.2, midY - s * 0.2);
+      cx.stroke();
+      // Outline
+      cx.strokeStyle = tc.accent;
+      cx.lineWidth = m * 0.015;
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX - s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX, midY - s * 0.7);
+      cx.lineTo(midX + s * 0.5, midY - s * 0.9);
+      cx.lineTo(midX + s * 0.9, midY - s * 0.2);
+      cx.lineTo(midX, midY + s * 1.0);
+      cx.closePath();
+      cx.stroke();
+
+    } else if (category === 'legend') {
+      // Crown icon
+      const s = m * 0.32;
+      // Crown body
+      cx.beginPath();
+      cx.moveTo(midX - s * 0.9, midY + s * 0.5);
+      cx.lineTo(midX - s * 0.8, midY - s * 0.2);
+      cx.lineTo(midX - s * 0.45, midY + s * 0.15);
+      cx.lineTo(midX, midY - s * 0.7);
+      cx.lineTo(midX + s * 0.45, midY + s * 0.15);
+      cx.lineTo(midX + s * 0.8, midY - s * 0.2);
+      cx.lineTo(midX + s * 0.9, midY + s * 0.5);
+      cx.closePath();
+      const crownGrad = cx.createLinearGradient(0, midY - s * 0.7, 0, midY + s * 0.5);
+      crownGrad.addColorStop(0, '#FFFFFF');
+      crownGrad.addColorStop(0.3, tc.accent);
+      crownGrad.addColorStop(1, tc.accent + 'BB');
+      cx.fillStyle = crownGrad;
+      cx.fill();
+      cx.strokeStyle = tc.accent;
+      cx.lineWidth = m * 0.015;
+      cx.stroke();
+      // Crown base band
+      cx.fillStyle = tc.accent;
+      cx.beginPath();
+      cx.roundRect(midX - s * 0.9, midY + s * 0.35, s * 1.8, s * 0.22, m * 0.015);
+      cx.fill();
+      // Jewels on tips
+      const jewels = [
+        [midX - s * 0.8, midY - s * 0.2],
+        [midX, midY - s * 0.7],
+        [midX + s * 0.8, midY - s * 0.2]
+      ];
+      jewels.forEach(([jx, jy]) => {
+        cx.fillStyle = '#FFFFFF';
+        cx.beginPath();
+        cx.arc(jx, jy, m * 0.04, 0, Math.PI * 2);
+        cx.fill();
+        cx.fillStyle = tc.accent;
+        cx.beginPath();
+        cx.arc(jx, jy, m * 0.025, 0, Math.PI * 2);
+        cx.fill();
+      });
+      // Center jewel on band
+      cx.fillStyle = '#FFFFFF';
+      cx.beginPath();
+      cx.arc(midX, midY + s * 0.46, m * 0.035, 0, Math.PI * 2);
+      cx.fill();
+
+    } else if (category === 'house') {
+      // Castle / gate icon
+      const s = m * 0.28;
+      // Main tower
+      cx.fillStyle = tc.accent;
+      cx.beginPath();
+      cx.roundRect(midX - s * 0.5, midY - s * 0.6, s * 1.0, s * 1.3, m * 0.01);
+      cx.fill();
+      // Battlements (merlons)
+      const merlonW = s * 0.22, merlonH = s * 0.25, gap = s * 0.04;
+      const startX = midX - s * 0.55;
+      for (let i = 0; i < 4; i++) {
+        cx.beginPath();
+        cx.roundRect(startX + i * (merlonW + gap) + gap, midY - s * 0.85, merlonW, merlonH, m * 0.008);
+        cx.fill();
+      }
+      // Gate arch
+      const archR = s * 0.25;
+      cx.fillStyle = tc.back;
+      cx.beginPath();
+      cx.arc(midX, midY + s * 0.7 - archR, archR, Math.PI, 0);
+      cx.lineTo(midX + archR, midY + s * 0.7);
+      cx.lineTo(midX - archR, midY + s * 0.7);
+      cx.closePath();
+      cx.fill();
+      // Gate portcullis lines
+      cx.strokeStyle = tc.accent + '60';
+      cx.lineWidth = m * 0.01;
+      const gateTop = midY + s * 0.7 - archR * 2;
+      for (let i = -2; i <= 2; i++) {
+        const lx = midX + i * archR * 0.35;
+        cx.beginPath(); cx.moveTo(lx, midY + s * 0.12); cx.lineTo(lx, midY + s * 0.7); cx.stroke();
+      }
+      // Small windows
+      cx.fillStyle = tc.back;
+      cx.beginPath(); cx.arc(midX - s * 0.25, midY - s * 0.25, m * 0.035, 0, Math.PI * 2); cx.fill();
+      cx.beginPath(); cx.arc(midX + s * 0.25, midY - s * 0.25, m * 0.035, 0, Math.PI * 2); cx.fill();
+      // Side towers
+      cx.fillStyle = tc.accent + 'BB';
+      cx.beginPath(); cx.roundRect(midX - s * 0.85, midY - s * 0.3, s * 0.4, s * 1.0, m * 0.01); cx.fill();
+      cx.beginPath(); cx.roundRect(midX + s * 0.45, midY - s * 0.3, s * 0.4, s * 1.0, m * 0.01); cx.fill();
+      // Side battlements
+      for (let side = -1; side <= 1; side += 2) {
+        const sx = side < 0 ? midX - s * 0.85 : midX + s * 0.45;
+        cx.fillStyle = tc.accent + 'BB';
+        cx.beginPath(); cx.roundRect(sx, midY - s * 0.55, s * 0.18, s * 0.25, m * 0.006); cx.fill();
+        cx.beginPath(); cx.roundRect(sx + s * 0.22, midY - s * 0.55, s * 0.18, s * 0.25, m * 0.006); cx.fill();
+      }
+
+    } else if (category === 'wind') {
+      // Wind / air spiral icon
+      cx.strokeStyle = tc.accent;
+      cx.lineCap = 'round';
+      cx.lineWidth = m * 0.04;
+      cx.fillStyle = 'transparent';
+      // Main swirl
+      const drawSwirl = (ox, oy, scale, startA, endA, dir) => {
+        cx.beginPath();
+        const steps = 40;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const angle = startA + (endA - startA) * t;
+          const rad = scale * (0.15 + t * 0.85);
+          const px = ox + rad * Math.cos(angle * dir);
+          const py = oy + rad * Math.sin(angle * dir);
+          if (i === 0) cx.moveTo(px, py); else cx.lineTo(px, py);
+        }
+        cx.stroke();
+      };
+      // Three flowing wind lines
+      const windAlpha = ['FF', 'BB', '80'];
+      const offsets = [
+        { ox: midX + m * 0.05, oy: midY - m * 0.12, s: m * 0.22, sa: -0.3, ea: 2.8, d: 1 },
+        { ox: midX - m * 0.05, oy: midY + m * 0.05, s: m * 0.18, sa: 0.2, ea: 2.5, d: 1 },
+        { ox: midX + m * 0.02, oy: midY + m * 0.18, s: m * 0.14, sa: -0.5, ea: 2.2, d: 1 },
+      ];
+      offsets.forEach((w, i) => {
+        cx.strokeStyle = tc.accent + windAlpha[i];
+        cx.lineWidth = m * (0.04 - i * 0.008);
+        drawSwirl(w.ox, w.oy, w.s, w.sa, w.ea, w.d);
+      });
+      // Small dots/particles
+      cx.fillStyle = tc.accent + '80';
+      const particles = [
+        [midX - m * 0.22, midY - m * 0.08, m * 0.02],
+        [midX + m * 0.25, midY + m * 0.02, m * 0.015],
+        [midX - m * 0.1, midY + m * 0.25, m * 0.012],
+        [midX + m * 0.18, midY - m * 0.2, m * 0.018],
+      ];
+      particles.forEach(([px, py, pr]) => {
+        cx.beginPath(); cx.arc(px, py, pr, 0, Math.PI * 2); cx.fill();
+      });
+    }
+
+    cx.restore();
+
+    // ── Subtle top highlight ──
+    const hlGrad = cx.createLinearGradient(0, midY - r, 0, midY);
+    hlGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
+    hlGrad.addColorStop(1, 'rgba(255,255,255,0)');
+    cx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const a1 = (Math.PI * 2 * i / 8) - Math.PI / 8;
+      const a2 = (Math.PI * 2 * (i + 1) / 8) - Math.PI / 8;
+      const x1 = midX + r * Math.cos(a1), y1 = midY + r * Math.sin(a1);
+      const x2 = midX + r * Math.cos(a2), y2 = midY + r * Math.sin(a2);
+      if (i === 0) cx.moveTo(x1, y1);
+      const mx = (x1 + x2) / 2 + (midX - (x1 + x2) / 2) * 0.08;
+      const my = (y1 + y2) / 2 + (midY - (y1 + y2) / 2) * 0.08;
+      cx.quadraticCurveTo(mx, my, x2, y2);
+    }
+    cx.closePath();
+    cx.fillStyle = hlGrad;
+    cx.fill();
   });
   ctx.drawImage(cached, x, y, size, size);
 }
