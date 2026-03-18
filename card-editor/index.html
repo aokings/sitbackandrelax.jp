@@ -936,30 +936,29 @@ function buildSharedAssets(container) {
     label.innerHTML = `<span class="tier-badge tier-${tier}">${tier.toUpperCase()}</span>`;
     group.appendChild(label);
 
-    // Slots (frame + back)
+    // Slots (frame + back) — use hi-res programmatic thumbnails
     const slotsRow = document.createElement('div');
     slotsRow.className = 'shared-slots-row';
     ['frame', 'back'].forEach(slotType => {
       const spec = ASSET_TYPES[slotType];
-      const assetId = assign[slotType];
-      const asset = assetId ? store.assets[assetId] : null;
       const slot = document.createElement('div');
       slot.className = 'shared-slot';
       slot.onclick = () => openSharedEditor(repCode, slotType);
       const thumb = document.createElement('div');
       thumb.className = 'slot-thumb';
-      if (asset) {
-        const cvs = document.createElement('canvas');
-        const s = Math.min(28 / spec.w, 28 / spec.h);
-        cvs.width = Math.round(spec.w * s); cvs.height = Math.round(spec.h * s);
-        renderAssetToCanvas(cvs, asset);
-        thumb.appendChild(cvs);
-      } else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:1rem;color:var(--text-muted)'; }
+      const cvs = document.createElement('canvas');
+      const tw = 32, th = 44;
+      cvs.width = tw; cvs.height = th; cvs.style.width = tw+'px'; cvs.style.height = th+'px';
+      const tctx = cvs.getContext('2d');
+      const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
+      if (slotType === 'frame') drawHiResFrame(tctx, frameStyle, tier, 0, 0, tw, th);
+      else drawHiResBack(tctx, frameStyle, tier, 0, 0, tw, th);
+      thumb.appendChild(cvs);
       const lbl = document.createElement('span');
       lbl.className = 'shared-slot-label';
       lbl.textContent = T(spec.i18nKey);
       slot.appendChild(thumb); slot.appendChild(lbl);
-      if (asset) { const b = document.createElement('span'); b.className = 'slot-badge badge-done'; b.textContent = '✓'; slot.appendChild(b); }
+      const b = document.createElement('span'); b.className = 'slot-badge badge-done'; b.textContent = '✓'; slot.appendChild(b);
       slotsRow.appendChild(slot);
     });
     group.appendChild(slotsRow);
@@ -980,19 +979,20 @@ function buildSharedAssets(container) {
   container.appendChild(iconTitle);
   const iconRow = document.createElement('div');
   iconRow.className = 'shared-inline-group';
+  const catTierMap = {mob:'mob', elite:'elite', legend:'legend', house:'legend', wind:'legend'};
   ['mob', 'elite', 'legend', 'house', 'wind'].forEach(cat => {
     const cards = byCat[cat] || [];
     const repCode = cards[0]?.code; if (!repCode) return;
-    const assign = getAssignments(repCode);
-    const asset = assign.icon ? store.assets[assign.icon] : null;
     const slot = document.createElement('div');
     slot.className = 'shared-inline-slot';
     slot.onclick = () => openSharedEditor(repCode, 'icon');
     slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
-    if (asset) { const cvs = document.createElement('canvas'); cvs.width = 24; cvs.height = 24; renderAssetToCanvas(cvs, asset); thumb.appendChild(cvs); }
-    else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:0.9rem;color:var(--text-muted)'; }
+    const cvs = document.createElement('canvas');
+    cvs.width = 32; cvs.height = 32; cvs.style.width = '32px'; cvs.style.height = '32px';
+    drawHiResIcon(cvs.getContext('2d'), cat, catTierMap[cat], 0, 0, 32);
+    thumb.appendChild(cvs);
     const lbl = document.createElement('span');
     lbl.className = 'shared-inline-label';
     lbl.textContent = cat;
@@ -1012,16 +1012,17 @@ function buildSharedAssets(container) {
   ptsValues.forEach(pts => {
     const cards = byPts[String(pts)] || [];
     const repCode = cards[0]?.code; if (!repCode) return;
-    const assign = getAssignments(repCode);
-    const asset = assign.points ? store.assets[assign.points] : null;
+    const card = CARD_DATA[repCode];
     const slot = document.createElement('div');
     slot.className = 'shared-inline-slot';
     slot.onclick = () => openSharedEditor(repCode, 'points');
     slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
-    if (asset) { const cvs = document.createElement('canvas'); cvs.width = 24; cvs.height = 16; renderAssetToCanvas(cvs, asset); thumb.appendChild(cvs); }
-    else { thumb.textContent = '?'; thumb.style.cssText = 'font-size:0.9rem;color:var(--text-muted)'; }
+    const cvs = document.createElement('canvas');
+    cvs.width = 36; cvs.height = 24; cvs.style.width = '36px'; cvs.style.height = '24px';
+    drawHiResPoints(cvs.getContext('2d'), pts, card.tier, 0, 0, 36, 24);
+    thumb.appendChild(cvs);
     const lbl = document.createElement('span');
     lbl.className = 'shared-inline-label';
     lbl.textContent = pts + 'pt';
@@ -1184,20 +1185,41 @@ function initDashboard(cardCode) {
     const slot = document.createElement('div');
     slot.className = 'slot-card';
 
-    // Thumbnail
+    // Thumbnail — use hi-res programmatic drawing for non-character slots
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
-    if (done) {
-      const cvs = document.createElement('canvas');
-      const s = Math.min(56 / spec.w, 56 / spec.h);
-      cvs.width = Math.round(spec.w * s);
-      cvs.height = Math.round(spec.h * s);
-      renderAssetToCanvas(cvs, asset);
-      thumb.appendChild(cvs);
+    if (slotType === 'character') {
+      // Character: use pixel art rendering as before
+      if (done) {
+        const cvs = document.createElement('canvas');
+        const s = Math.min(56 / spec.w, 56 / spec.h);
+        cvs.width = Math.round(spec.w * s);
+        cvs.height = Math.round(spec.h * s);
+        renderAssetToCanvas(cvs, asset);
+        thumb.appendChild(cvs);
+      } else {
+        thumb.textContent = '?';
+        thumb.style.fontSize = '1.5rem';
+        thumb.style.color = 'var(--text-muted)';
+      }
     } else {
-      thumb.textContent = '?';
-      thumb.style.fontSize = '1.5rem';
-      thumb.style.color = 'var(--text-muted)';
+      // Frame/Back/Icon/Points: always draw hi-res programmatic thumbnail
+      const cvs = document.createElement('canvas');
+      const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
+      if (slotType === 'frame') {
+        cvs.width = 32; cvs.height = 44; cvs.style.width = '32px'; cvs.style.height = '44px';
+        drawHiResFrame(cvs.getContext('2d'), frameStyle, card.tier, 0, 0, 32, 44);
+      } else if (slotType === 'back') {
+        cvs.width = 32; cvs.height = 44; cvs.style.width = '32px'; cvs.style.height = '44px';
+        drawHiResBack(cvs.getContext('2d'), frameStyle, card.tier, 0, 0, 32, 44);
+      } else if (slotType === 'icon') {
+        cvs.width = 32; cvs.height = 32; cvs.style.width = '32px'; cvs.style.height = '32px';
+        drawHiResIcon(cvs.getContext('2d'), card.category, card.tier, 0, 0, 32);
+      } else if (slotType === 'points') {
+        cvs.width = 48; cvs.height = 28; cvs.style.width = '48px'; cvs.style.height = '28px';
+        drawHiResPoints(cvs.getContext('2d'), card.points, card.tier, 0, 0, 48, 28);
+      }
+      thumb.appendChild(cvs);
     }
 
     // Info
