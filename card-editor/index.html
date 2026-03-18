@@ -1365,77 +1365,104 @@ function clearHiResCache(prefix) {
   Object.keys(hiResCache).forEach(k => { if (!prefix || k.startsWith(prefix)) delete hiResCache[k]; });
 }
 
+// ── Helper: parse hex to RGB ──
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return {r,g,b};
+}
+function rgbStr(r,g,b,a) { return a !== undefined ? `rgba(${r},${g},${b},${a})` : `rgb(${r},${g},${b})`; }
+function lerpColor(c1, c2, t) {
+  const a = hexToRgb(c1), b = hexToRgb(c2);
+  return rgbStr(Math.round(a.r+(b.r-a.r)*t), Math.round(a.g+(b.g-a.g)*t), Math.round(a.b+(b.b-a.b)*t));
+}
+
 function drawHiResFrame(ctx, style, tier, x, y, w, h) {
   const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
   const cached = getHiResCached('frame', style, tier, w, h, (cx, cw, ch) => {
-    const bw = 3; // border width in pixels
-    // Background fill
-    cx.fillStyle = '#FFFFFF';
-    cx.beginPath();
-    cx.roundRect(0, 0, cw, ch, 4);
-    cx.fill();
+    const m = Math.min(cw, ch);
+    // ── Background ──
+    cx.fillStyle = '#F8F6F0';
+    cx.beginPath(); cx.roundRect(0, 0, cw, ch, m * 0.025); cx.fill();
 
-    // Tier gradient border
-    const grad = cx.createLinearGradient(0, 0, 0, ch);
-    grad.addColorStop(0, tc.accent);
-    grad.addColorStop(0.5, tc.back);
-    grad.addColorStop(1, tc.accent);
-    cx.strokeStyle = grad;
-    cx.lineWidth = bw * 2;
-    cx.beginPath();
-    cx.roundRect(bw, bw, cw - bw * 2, ch - bw * 2, 3);
-    cx.stroke();
-
-    // Outer border
+    // ── Outer border (double line) ──
     cx.strokeStyle = tc.back;
-    cx.lineWidth = 1.5;
-    cx.beginPath();
-    cx.roundRect(0.75, 0.75, cw - 1.5, ch - 1.5, 4);
-    cx.stroke();
+    cx.lineWidth = m * 0.02;
+    cx.beginPath(); cx.roundRect(m*0.01, m*0.01, cw-m*0.02, ch-m*0.02, m*0.02); cx.stroke();
+    cx.lineWidth = m * 0.005;
+    cx.beginPath(); cx.roundRect(m*0.035, m*0.035, cw-m*0.07, ch-m*0.07, m*0.015); cx.stroke();
 
-    // Inner border
-    cx.strokeStyle = tc.accent + '80';
-    cx.lineWidth = 0.5;
-    cx.beginPath();
-    cx.roundRect(bw * 2, bw * 2, cw - bw * 4, ch - bw * 4, 2);
-    cx.stroke();
+    // ── Inner decorative border ──
+    const inset = m * 0.05;
+    cx.strokeStyle = tc.accent;
+    cx.lineWidth = m * 0.008;
+    cx.beginPath(); cx.roundRect(inset, inset, cw - inset*2, ch - inset*2, m*0.01); cx.stroke();
 
-    // Title bar area (top)
-    const tbH = Math.round(ch * 0.14);
-    const tbGrad = cx.createLinearGradient(0, bw * 2, 0, bw * 2 + tbH);
-    tbGrad.addColorStop(0, tc.back + 'CC');
-    tbGrad.addColorStop(1, tc.back + '33');
-    cx.fillStyle = tbGrad;
-    cx.fillRect(bw * 2, bw * 2, cw - bw * 4, tbH);
-
-    // Bottom info bar
-    const bbH = Math.round(ch * 0.14);
-    const bbY = ch - bw * 2 - bbH;
-    const bbGrad = cx.createLinearGradient(0, bbY, 0, ch - bw * 2);
-    bbGrad.addColorStop(0, tc.back + '33');
-    bbGrad.addColorStop(1, tc.back + 'CC');
-    cx.fillStyle = bbGrad;
-    cx.fillRect(bw * 2, bbY, cw - bw * 4, bbH);
-
-    // Corner accents for elite/legend
-    if (tier === 'elite' || tier === 'legend') {
-      cx.fillStyle = tc.accent;
-      const cs = tier === 'legend' ? 5 : 3;
-      [[bw, bw], [cw - bw - cs, bw], [bw, ch - bw - cs], [cw - bw - cs, ch - bw - cs]].forEach(([cx2, cy2]) => {
-        cx.fillRect(cx2, cy2, cs, cs);
-      });
-    }
-
-    // Legend extra: subtle inner glow
-    if (tier === 'legend') {
-      cx.shadowColor = tc.accent;
-      cx.shadowBlur = 8;
-      cx.strokeStyle = tc.accent + '40';
-      cx.lineWidth = 1;
+    // ── Corner ornaments (fleur-de-lis inspired) ──
+    const cs = m * 0.06;
+    const corners = [[inset, inset], [cw-inset, inset], [inset, ch-inset], [cw-inset, ch-inset]];
+    cx.fillStyle = tc.accent;
+    corners.forEach(([ox, oy]) => {
+      cx.save(); cx.translate(ox, oy);
+      // Diamond
       cx.beginPath();
-      cx.roundRect(bw * 2 + 2, bw * 2 + 2, cw - bw * 4 - 4, ch - bw * 4 - 4, 2);
-      cx.stroke();
-      cx.shadowBlur = 0;
+      cx.moveTo(0, -cs); cx.lineTo(cs*0.5, 0); cx.lineTo(0, cs); cx.lineTo(-cs*0.5, 0);
+      cx.closePath(); cx.fill();
+      // Circle center
+      cx.beginPath(); cx.arc(0, 0, cs*0.2, 0, Math.PI*2); cx.fillStyle = tc.back; cx.fill();
+      cx.fillStyle = tc.accent;
+      cx.restore();
+    });
+
+    // ── Title bar (top) — subtle gradient band ──
+    const tbH = ch * 0.15;
+    const tbY = inset;
+    const tbGrad = cx.createLinearGradient(0, tbY, 0, tbY + tbH);
+    tbGrad.addColorStop(0, tc.back + 'BB');
+    tbGrad.addColorStop(0.5, tc.back + '66');
+    tbGrad.addColorStop(1, 'transparent');
+    cx.fillStyle = tbGrad;
+    cx.fillRect(inset, tbY, cw - inset*2, tbH);
+
+    // ── Bottom info bar ──
+    const bbH = ch * 0.16;
+    const bbY = ch - inset - bbH;
+    const bbGrad = cx.createLinearGradient(0, bbY, 0, bbY + bbH);
+    bbGrad.addColorStop(0, 'transparent');
+    bbGrad.addColorStop(0.5, tc.back + '44');
+    bbGrad.addColorStop(1, tc.back + 'AA');
+    cx.fillStyle = bbGrad;
+    cx.fillRect(inset, bbY, cw - inset*2, bbH);
+
+    // ── Tier-specific decorations ──
+    if (tier === 'elite' || tier === 'legend') {
+      // Thin gold/accent line halfway between borders
+      const mid = (inset + m*0.035) / 2;
+      cx.strokeStyle = tc.accent + '60';
+      cx.lineWidth = m * 0.003;
+      cx.setLineDash([m*0.02, m*0.015]);
+      cx.beginPath(); cx.roundRect(mid, mid, cw - mid*2, ch - mid*2, m*0.018); cx.stroke();
+      cx.setLineDash([]);
+    }
+    if (tier === 'legend') {
+      // Radial glow behind center area
+      const grad = cx.createRadialGradient(cw/2, ch*0.5, 0, cw/2, ch*0.5, m*0.4);
+      grad.addColorStop(0, tc.accent + '18');
+      grad.addColorStop(1, 'transparent');
+      cx.fillStyle = grad;
+      cx.fillRect(0, 0, cw, ch);
+      // Extra corner filigree
+      const fSize = m * 0.04;
+      corners.forEach(([ox, oy]) => {
+        cx.save(); cx.translate(ox, oy);
+        cx.strokeStyle = tc.accent + '80';
+        cx.lineWidth = m * 0.004;
+        for (let a = 0; a < 4; a++) {
+          cx.save(); cx.rotate(a * Math.PI / 2);
+          cx.beginPath(); cx.moveTo(fSize, 0); cx.quadraticCurveTo(fSize*1.5, fSize*0.5, fSize, fSize); cx.stroke();
+          cx.restore();
+        }
+        cx.restore();
+      });
     }
   });
   ctx.drawImage(cached, x, y, w, h);
@@ -1444,41 +1471,108 @@ function drawHiResFrame(ctx, style, tier, x, y, w, h) {
 function drawHiResBack(ctx, style, tier, x, y, w, h) {
   const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
   const cached = getHiResCached('back', style, tier, w, h, (cx, cw, ch) => {
-    // Base fill
-    cx.fillStyle = tc.back;
-    cx.beginPath();
-    cx.roundRect(0, 0, cw, ch, 4);
-    cx.fill();
+    const m = Math.min(cw, ch);
+    // ── Base fill with subtle texture gradient ──
+    const bg = cx.createLinearGradient(0, 0, 0, ch);
+    bg.addColorStop(0, tc.back);
+    bg.addColorStop(0.5, lerpColor(tc.back, tc.accent, 0.08));
+    bg.addColorStop(1, tc.back);
+    cx.fillStyle = bg;
+    cx.beginPath(); cx.roundRect(0, 0, cw, ch, m*0.025); cx.fill();
 
-    // Diamond pattern
-    cx.fillStyle = tc.accent + '30';
-    const step = 8;
-    for (let r = -ch; r < ch * 2; r += step) {
-      for (let c = -cw; c < cw * 2; c += step) {
-        cx.save();
-        cx.translate(c + step / 2, r + step / 2);
-        cx.rotate(Math.PI / 4);
-        cx.fillRect(-step / 4, -step / 4, step / 2, step / 2);
+    // ── Diamond lattice pattern (playing card style) ──
+    const step = m * 0.06;
+    cx.save();
+    cx.beginPath(); cx.roundRect(0, 0, cw, ch, m*0.025); cx.clip();
+    // First layer: small diamonds
+    cx.fillStyle = tc.accent + '15';
+    for (let ry = -step; ry < ch + step; ry += step) {
+      for (let rx = -step; rx < cw + step; rx += step) {
+        cx.save(); cx.translate(rx, ry); cx.rotate(Math.PI/4);
+        cx.fillRect(-step*0.25, -step*0.25, step*0.5, step*0.5);
         cx.restore();
       }
     }
+    // Second layer: offset grid of smaller diamonds
+    cx.fillStyle = tc.accent + '10';
+    for (let ry = -step; ry < ch + step; ry += step) {
+      for (let rx = -step; rx < cw + step; rx += step) {
+        cx.save(); cx.translate(rx + step/2, ry + step/2); cx.rotate(Math.PI/4);
+        cx.fillRect(-step*0.15, -step*0.15, step*0.3, step*0.3);
+        cx.restore();
+      }
+    }
+    // ── Cross-hatch fine lines ──
+    cx.strokeStyle = tc.accent + '12';
+    cx.lineWidth = 0.5;
+    const diagStep = m * 0.04;
+    for (let d = -cw - ch; d < cw + ch; d += diagStep) {
+      cx.beginPath(); cx.moveTo(d, 0); cx.lineTo(d + ch, ch); cx.stroke();
+      cx.beginPath(); cx.moveTo(d + cw, 0); cx.lineTo(d, ch); cx.stroke();
+    }
+    cx.restore();
 
-    // Center emblem
-    const cx2 = cw / 2, cy2 = ch / 2, embR = Math.min(cw, ch) * 0.18;
-    cx.beginPath();
-    cx.arc(cx2, cy2, embR, 0, Math.PI * 2);
-    cx.fillStyle = tc.accent + '40';
-    cx.fill();
-    cx.strokeStyle = tc.accent + '80';
-    cx.lineWidth = 1;
-    cx.stroke();
+    // ── Nested border frames ──
+    const borders = [
+      { inset: m*0.015, width: m*0.012, color: tc.accent },
+      { inset: m*0.04,  width: m*0.004, color: tc.accent + '80' },
+      { inset: m*0.06,  width: m*0.008, color: tc.accent + 'AA' },
+      { inset: m*0.085, width: m*0.003, color: tc.accent + '50' },
+    ];
+    borders.forEach(b => {
+      cx.strokeStyle = b.color; cx.lineWidth = b.width;
+      cx.beginPath(); cx.roundRect(b.inset, b.inset, cw-b.inset*2, ch-b.inset*2, m*0.015); cx.stroke();
+    });
 
-    // Border
-    cx.strokeStyle = tc.accent;
-    cx.lineWidth = 2;
+    // ── Central medallion ──
+    const mcx = cw/2, mcy = ch/2;
+    const outerR = m * 0.22, innerR = m * 0.16;
+    // Outer ring
+    cx.beginPath(); cx.arc(mcx, mcy, outerR, 0, Math.PI*2);
+    cx.strokeStyle = tc.accent + '50'; cx.lineWidth = m*0.005; cx.stroke();
+    // Radiating spokes
+    cx.strokeStyle = tc.accent + '25'; cx.lineWidth = m*0.003;
+    for (let a = 0; a < 12; a++) {
+      const angle = a * Math.PI / 6;
+      cx.beginPath();
+      cx.moveTo(mcx + Math.cos(angle)*innerR*0.3, mcy + Math.sin(angle)*innerR*0.3);
+      cx.lineTo(mcx + Math.cos(angle)*outerR, mcy + Math.sin(angle)*outerR);
+      cx.stroke();
+    }
+    // Inner circle with gradient
+    const mGrad = cx.createRadialGradient(mcx, mcy, 0, mcx, mcy, innerR);
+    mGrad.addColorStop(0, tc.accent + '30');
+    mGrad.addColorStop(0.7, tc.accent + '15');
+    mGrad.addColorStop(1, 'transparent');
+    cx.fillStyle = mGrad;
+    cx.beginPath(); cx.arc(mcx, mcy, innerR, 0, Math.PI*2); cx.fill();
+    cx.strokeStyle = tc.accent + '60'; cx.lineWidth = m*0.006;
+    cx.beginPath(); cx.arc(mcx, mcy, innerR, 0, Math.PI*2); cx.stroke();
+    // Central diamond
+    const ds = m * 0.06;
+    cx.fillStyle = tc.accent + '50';
     cx.beginPath();
-    cx.roundRect(1, 1, cw - 2, ch - 2, 4);
-    cx.stroke();
+    cx.moveTo(mcx, mcy-ds); cx.lineTo(mcx+ds*0.6, mcy); cx.lineTo(mcx, mcy+ds); cx.lineTo(mcx-ds*0.6, mcy);
+    cx.closePath(); cx.fill();
+
+    // ── Corner flourishes (4-fold symmetry) ──
+    const ci = m * 0.1;
+    cx.strokeStyle = tc.accent + '40'; cx.lineWidth = m * 0.004;
+    [[ci, ci, 0], [cw-ci, ci, Math.PI/2], [cw-ci, ch-ci, Math.PI], [ci, ch-ci, -Math.PI/2]].forEach(([ox, oy, rot]) => {
+      cx.save(); cx.translate(ox, oy); cx.rotate(rot);
+      const s = m * 0.05;
+      // Scroll curve
+      cx.beginPath();
+      cx.moveTo(0, -s*1.5); cx.quadraticCurveTo(s*1.2, -s*1.2, s*1.5, 0);
+      cx.stroke();
+      cx.beginPath();
+      cx.moveTo(0, -s); cx.quadraticCurveTo(s*0.8, -s*0.5, s, 0);
+      cx.stroke();
+      // Small dot
+      cx.fillStyle = tc.accent + '50';
+      cx.beginPath(); cx.arc(0, 0, m*0.008, 0, Math.PI*2); cx.fill();
+      cx.restore();
+    });
   });
   ctx.drawImage(cached, x, y, w, h);
 }
@@ -1490,19 +1584,36 @@ function drawHiResIcon(ctx, category, tier, x, y, size) {
   const cached = getHiResCached('icon', 'default', category + '_' + tier, size, size, (cx, cw, ch) => {
     const rows = pattern.split('|');
     const cellW = cw / 8, cellH = ch / 8;
-    const r2 = Math.min(cellW, cellH) * 0.35;
-    cx.fillStyle = tc.back;
+    const m = Math.min(cw, ch);
+
+    // ── Background circle ──
+    cx.fillStyle = tc.back + 'CC';
+    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.45, 0, Math.PI*2); cx.fill();
+    cx.strokeStyle = tc.accent + '80';
+    cx.lineWidth = m * 0.03;
+    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.45, 0, Math.PI*2); cx.stroke();
+
+    // ── Icon shape with glow ──
+    cx.shadowColor = tc.accent;
+    cx.shadowBlur = m * 0.06;
+    cx.fillStyle = tc.accent;
     for (let r = 0; r < 8; r++) {
       for (let c = 0; c < 8; c++) {
-        if (rows[r][c] === '1') {
-          const px = c * cellW + cellW / 2;
-          const py = r * cellH + cellH / 2;
+        if (rows[r] && rows[r][c] === '1') {
+          const px = c * cellW + cellW * 0.1;
+          const py = r * cellH + cellH * 0.1;
           cx.beginPath();
-          cx.arc(px, py, r2, 0, Math.PI * 2);
+          cx.roundRect(px, py, cellW * 0.8, cellH * 0.8, cellW * 0.15);
           cx.fill();
         }
       }
     }
+    cx.shadowBlur = 0;
+
+    // ── Thin outer ring ──
+    cx.strokeStyle = tc.accent + '40';
+    cx.lineWidth = m * 0.015;
+    cx.beginPath(); cx.arc(cw/2, ch/2, m*0.49, 0, Math.PI*2); cx.stroke();
   });
   ctx.drawImage(cached, x, y, size, size);
 }
@@ -1510,24 +1621,50 @@ function drawHiResIcon(ctx, category, tier, x, y, size) {
 function drawHiResPoints(ctx, points, tier, x, y, w, h) {
   const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
   const cached = getHiResCached('points', 'default', points + '_' + tier, w, h, (cx, cw, ch) => {
-    // Background pill
-    cx.fillStyle = tc.back + 'DD';
+    const m = Math.min(cw, ch);
+    // ── Shield / banner shape ──
+    cx.fillStyle = tc.back;
     cx.beginPath();
-    cx.roundRect(0, 0, cw, ch, ch / 3);
+    cx.moveTo(cw*0.1, 0);
+    cx.lineTo(cw*0.9, 0);
+    cx.quadraticCurveTo(cw, 0, cw, ch*0.15);
+    cx.lineTo(cw, ch*0.65);
+    cx.quadraticCurveTo(cw, ch*0.85, cw*0.5, ch);
+    cx.quadraticCurveTo(0, ch*0.85, 0, ch*0.65);
+    cx.lineTo(0, ch*0.15);
+    cx.quadraticCurveTo(0, 0, cw*0.1, 0);
+    cx.closePath();
     cx.fill();
-    cx.strokeStyle = tc.accent + '80';
-    cx.lineWidth = 0.5;
-    cx.beginPath();
-    cx.roundRect(0.5, 0.5, cw - 1, ch - 1, ch / 3);
+
+    // ── Border line ──
+    cx.strokeStyle = tc.accent;
+    cx.lineWidth = m * 0.04;
     cx.stroke();
 
-    // Text
-    const fontSize = Math.round(ch * 0.65);
+    // ── Inner highlight ──
+    const iGrad = cx.createLinearGradient(0, 0, 0, ch);
+    iGrad.addColorStop(0, tc.accent + '30');
+    iGrad.addColorStop(0.5, 'transparent');
+    iGrad.addColorStop(1, tc.accent + '20');
+    cx.fillStyle = iGrad;
+    cx.fill();
+
+    // ── Text with shadow ──
+    const fontSize = Math.round(ch * 0.55);
     cx.font = `bold ${fontSize}px Outfit, system-ui, sans-serif`;
     cx.textAlign = 'center';
     cx.textBaseline = 'middle';
+    // Shadow
+    cx.fillStyle = 'rgba(0,0,0,0.3)';
+    cx.fillText(`${points}`, cw/2 + 0.5, ch*0.42 + 0.5);
+    // Main text
     cx.fillStyle = '#FFFFFF';
-    cx.fillText(`${points}pt`, cw / 2, ch / 2 + 0.5);
+    cx.fillText(`${points}`, cw/2, ch*0.42);
+    // "pt" subscript
+    const subSize = Math.round(ch * 0.25);
+    cx.font = `600 ${subSize}px Outfit, system-ui, sans-serif`;
+    cx.fillStyle = tc.accent;
+    cx.fillText('pt', cw/2, ch*0.75);
   });
   ctx.drawImage(cached, x, y, w, h);
 }
