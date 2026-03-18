@@ -288,6 +288,15 @@
           <div class="editor-area">
             <div class="canvas-col">
               <span class="canvas-label" data-i18n="grid-label">EDITOR</span>
+              <!-- Hi-res preview for programmatic assets (back/frame/icon/points) -->
+              <div id="hiResPreviewWrap" style="display:none; text-align:center;">
+                <canvas id="hiResPreviewCanvas" style="border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.15);"></canvas>
+                <div style="margin-top:8px;">
+                  <button id="togglePixelEditBtn" class="btn btn-sm" style="font-size:12px; padding:4px 12px;" onclick="toggleHiResPixelEdit()">
+                    <span data-i18n="edit-pixels">ピクセル編集</span>
+                  </button>
+                </div>
+              </div>
               <div class="canvas-wrapper"><canvas id="gridCanvas"></canvas></div>
             </div>
           </div>
@@ -947,12 +956,13 @@ function buildSharedAssets(container) {
       const thumb = document.createElement('div');
       thumb.className = 'slot-thumb';
       const cvs = document.createElement('canvas');
+      const dpr = window.devicePixelRatio || 2;
       const tw = 32, th = 44;
-      cvs.width = tw; cvs.height = th; cvs.style.width = tw+'px'; cvs.style.height = th+'px';
+      cvs.width = tw * dpr; cvs.height = th * dpr; cvs.style.width = tw+'px'; cvs.style.height = th+'px';
       const tctx = cvs.getContext('2d');
       const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
-      if (slotType === 'frame') drawHiResFrame(tctx, frameStyle, tier, 0, 0, tw, th);
-      else drawHiResBack(tctx, frameStyle, tier, 0, 0, tw, th);
+      if (slotType === 'frame') drawHiResFrame(tctx, frameStyle, tier, 0, 0, tw * dpr, th * dpr);
+      else drawHiResBack(tctx, frameStyle, tier, 0, 0, tw * dpr, th * dpr);
       thumb.appendChild(cvs);
       const lbl = document.createElement('span');
       lbl.className = 'shared-slot-label';
@@ -990,8 +1000,9 @@ function buildSharedAssets(container) {
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
     const cvs = document.createElement('canvas');
-    cvs.width = 32; cvs.height = 32; cvs.style.width = '32px'; cvs.style.height = '32px';
-    drawHiResIcon(cvs.getContext('2d'), cat, catTierMap[cat], 0, 0, 32);
+    const dpr = window.devicePixelRatio || 2;
+    cvs.width = 32 * dpr; cvs.height = 32 * dpr; cvs.style.width = '32px'; cvs.style.height = '32px';
+    drawHiResIcon(cvs.getContext('2d'), cat, catTierMap[cat], 0, 0, 32 * dpr);
     thumb.appendChild(cvs);
     const lbl = document.createElement('span');
     lbl.className = 'shared-inline-label';
@@ -1020,8 +1031,9 @@ function buildSharedAssets(container) {
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
     const cvs = document.createElement('canvas');
-    cvs.width = 36; cvs.height = 24; cvs.style.width = '36px'; cvs.style.height = '24px';
-    drawHiResPoints(cvs.getContext('2d'), pts, card.tier, 0, 0, 36, 24);
+    const dprP = window.devicePixelRatio || 2;
+    cvs.width = 36 * dprP; cvs.height = 24 * dprP; cvs.style.width = '36px'; cvs.style.height = '24px';
+    drawHiResPoints(cvs.getContext('2d'), pts, card.tier, 0, 0, 36 * dprP, 24 * dprP);
     thumb.appendChild(cvs);
     const lbl = document.createElement('span');
     lbl.className = 'shared-inline-label';
@@ -2348,6 +2360,20 @@ function openEditor(cardCode, slotType) {
   // Show sidebar only for character editing (preview + effects)
   const sidebar = document.getElementById('editorSidebar');
   if (sidebar) sidebar.style.display = slotType === 'character' ? '' : 'none';
+
+  // Show hi-res preview for programmatic assets
+  const hiResWrap = document.getElementById('hiResPreviewWrap');
+  const gridWrapper = gridCanvas.parentElement;
+  const isProgrammatic = ['frame', 'back', 'icon', 'points'].includes(slotType);
+  if (isProgrammatic) {
+    hiResWrap.style.display = '';
+    gridWrapper.style.display = 'none';
+    renderHiResEditorPreview(cardCode, slotType);
+  } else {
+    hiResWrap.style.display = 'none';
+    gridWrapper.style.display = '';
+  }
+
   buildPalette();
   buildPartVisibility();
   buildAnimPartChips();
@@ -2524,6 +2550,57 @@ function openColorPicker(val) {
 function closeColorPicker() { document.getElementById('colorPickerOverlay').classList.remove('open'); colorPickerTarget = null; }
 
 // ── Grid rendering ──
+// ── Hi-res editor preview for programmatic assets ──
+function renderHiResEditorPreview(cardCode, slotType) {
+  const card = CARD_DATA[cardCode];
+  const cvs = document.getElementById('hiResPreviewCanvas');
+  const ctx = cvs.getContext('2d');
+  const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
+  const dpr = window.devicePixelRatio || 2;
+
+  let drawW, drawH;
+  if (slotType === 'frame' || slotType === 'back') {
+    drawW = 192; drawH = 288; // 32×48 * 6
+  } else if (slotType === 'icon') {
+    drawW = 192; drawH = 192; // 8×8 * 24
+  } else if (slotType === 'points') {
+    drawW = 216; drawH = 144; // 12×8 * 18
+  }
+
+  cvs.width = drawW * dpr; cvs.height = drawH * dpr;
+  cvs.style.width = drawW + 'px'; cvs.style.height = drawH + 'px';
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+  // Clear hi-res cache to force re-render at this size
+  clearHiResCache(slotType === 'frame' ? 'frame' : slotType === 'back' ? 'back' : slotType === 'icon' ? 'icon' : 'points');
+
+  if (slotType === 'frame') {
+    drawHiResFrame(ctx, frameStyle, card.tier, 0, 0, drawW * dpr, drawH * dpr);
+  } else if (slotType === 'back') {
+    drawHiResBack(ctx, frameStyle, card.tier, 0, 0, drawW * dpr, drawH * dpr);
+  } else if (slotType === 'icon') {
+    drawHiResIcon(ctx, card.category, card.tier, 0, 0, drawW * dpr);
+  } else if (slotType === 'points') {
+    drawHiResPoints(ctx, card.points, card.tier, 0, 0, drawW * dpr, drawH * dpr);
+  }
+}
+
+function toggleHiResPixelEdit() {
+  const hiResWrap = document.getElementById('hiResPreviewWrap');
+  const gridWrapper = document.getElementById('gridCanvas').parentElement;
+  const btn = document.getElementById('togglePixelEditBtn');
+  if (gridWrapper.style.display === 'none') {
+    gridWrapper.style.display = '';
+    hiResWrap.style.display = 'none';
+    btn.querySelector('span').textContent = lang === 'ja' ? 'プレビュー表示' : 'Show Preview';
+  } else {
+    gridWrapper.style.display = 'none';
+    hiResWrap.style.display = '';
+    btn.querySelector('span').textContent = lang === 'ja' ? 'ピクセル編集' : 'Edit Pixels';
+    renderHiResEditorPreview(selectedCardCode, editingSlotType);
+  }
+}
+
 const gridCanvas = document.getElementById('gridCanvas');
 const gridCtx = gridCanvas.getContext('2d');
 
