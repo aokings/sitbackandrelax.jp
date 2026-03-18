@@ -200,8 +200,31 @@
     .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-primary); color: #fff; padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.78rem; font-weight: 500; opacity: 0; transition: all 0.35s; z-index: 2000; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* 2-column card list layout */
+    .card-list-layout { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+    /* Header is non-sticky, so top:16px is safe for sidebar sticking */
+    .card-list-sidebar { width: 260px; flex-shrink: 0; position: sticky; top: 16px; align-self: flex-start; }
+    .card-list-main { flex: 1; min-width: 0; }
+    .filter-row { cursor: pointer; transition: background 0.15s; border-left: 3px solid transparent; padding: 0.5rem 0.6rem; border-radius: 0 8px 8px 0; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+    .filter-row:hover { background: rgba(139,105,20,0.06); }
+    .filter-row.filter-active { background: rgba(139,105,20,0.12); border-left-color: #8B6914; }
+    .filter-row-thumbs { display: flex; gap: 4px; }
+    .filter-row-thumbs .slot-thumb { cursor: pointer; border: 1px solid var(--card-border); border-radius: 6px; padding: 2px; background: var(--off-white); transition: all 0.15s; overflow: hidden; }
+    .filter-row-thumbs .slot-thumb:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .filter-row-thumbs .slot-thumb canvas { display: block; image-rendering: auto; }
+    .filter-slot { cursor: pointer; transition: all 0.15s; border-radius: 8px; position: relative; }
+    .filter-slot:hover { background: rgba(139,105,20,0.06); }
+    .filter-slot.filter-active { background: rgba(139,105,20,0.12); outline: 2px solid #8B6914; }
+    .filter-dimmed { opacity: 0.25; }
+    .card-tile { transition: opacity 0.2s; }
+    .edit-btn { background: none; border: 1px solid var(--card-border); border-radius: 4px; cursor: pointer; font-size: 10px; opacity: 0.4; padding: 1px 4px; transition: all 0.15s; position: absolute; bottom: 2px; right: 2px; }
+    .edit-btn:hover { opacity: 1; border-color: var(--accent); }
+    .filter-reset-btn { display: none; margin-bottom: 8px; }
+
     /* Responsive */
     @media (max-width: 700px) {
+      .card-list-layout { flex-direction: column; }
+      .card-list-sidebar { width: 100%; position: static; }
       .editor-layout { flex-direction: column; }
       .editor-sidebar { width: 100%; position: static; }
       .editor-area { flex-direction: column; align-items: center; }
@@ -925,7 +948,10 @@ function buildSharedAssets(container) {
     (byPts[pk] = byPts[pk] || []).push({ code, ...card });
   });
 
-  // Tier frames & backs
+  const dpr = window.devicePixelRatio || 2;
+  const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
+
+  // ── Tier frames & backs (filter-row: click row = filter, click thumbnail = editor) ──
   const tierTitle = document.createElement('div');
   tierTitle.className = 'shared-section-title';
   tierTitle.textContent = T('shared-tier-title');
@@ -934,55 +960,43 @@ function buildSharedAssets(container) {
   ['mob', 'elite', 'legend'].forEach(tier => {
     const cards = byTier[tier] || [];
     const repCode = cards[0]?.code; if (!repCode) return;
-    const assign = getAssignments(repCode);
 
-    const group = document.createElement('div');
-    group.className = 'shared-group';
+    const row = document.createElement('div');
+    row.className = 'filter-row';
+    row.dataset.filterType = 'tier';
+    row.dataset.filterValue = tier;
+    row.onclick = () => setFilter('tier', tier);
 
-    // Label
-    const label = document.createElement('div');
-    label.className = 'shared-group-label';
-    label.innerHTML = `<span class="tier-badge tier-${tier}">${tier.toUpperCase()}</span>`;
-    group.appendChild(label);
+    // Tier badge
+    const badge = document.createElement('span');
+    badge.className = 'tier-badge tier-' + tier;
+    badge.textContent = tier.toUpperCase();
+    badge.style.minWidth = '55px';
+    row.appendChild(badge);
 
-    // Slots (frame + back) — use hi-res programmatic thumbnails
-    const slotsRow = document.createElement('div');
-    slotsRow.className = 'shared-slots-row';
+    // Thumbnails (frame + back) — click opens editor, stopPropagation prevents filter
+    const thumbsDiv = document.createElement('div');
+    thumbsDiv.className = 'filter-row-thumbs';
     ['frame', 'back'].forEach(slotType => {
-      const spec = ASSET_TYPES[slotType];
-      const slot = document.createElement('div');
-      slot.className = 'shared-slot';
-      slot.onclick = () => openSharedEditor(repCode, slotType);
       const thumb = document.createElement('div');
       thumb.className = 'slot-thumb';
+      thumb.title = T(ASSET_TYPES[slotType].i18nKey);
+      thumb.onclick = (e) => { e.stopPropagation(); openSharedEditor(repCode, slotType); };
       const cvs = document.createElement('canvas');
-      const dpr = window.devicePixelRatio || 2;
-      const tw = 32, th = 44;
-      cvs.width = tw * dpr; cvs.height = th * dpr; cvs.style.width = tw+'px'; cvs.style.height = th+'px';
-      const tctx = cvs.getContext('2d');
-      const frameStyle = (store.settings && store.settings.frameStyle) || 'classic';
-      if (slotType === 'frame') drawHiResFrame(tctx, frameStyle, tier, 0, 0, tw * dpr, th * dpr);
-      else drawHiResBack(tctx, frameStyle, tier, 0, 0, tw * dpr, th * dpr);
+      const tw = 28, th = 40;
+      cvs.width = tw * dpr; cvs.height = th * dpr;
+      cvs.style.width = tw + 'px'; cvs.style.height = th + 'px';
+      if (slotType === 'frame') drawHiResFrame(cvs.getContext('2d'), frameStyle, tier, 0, 0, tw * dpr, th * dpr);
+      else drawHiResBack(cvs.getContext('2d'), frameStyle, tier, 0, 0, tw * dpr, th * dpr);
       thumb.appendChild(cvs);
-      const lbl = document.createElement('span');
-      lbl.className = 'shared-slot-label';
-      lbl.textContent = T(spec.i18nKey);
-      slot.appendChild(thumb); slot.appendChild(lbl);
-      const b = document.createElement('span'); b.className = 'slot-badge badge-done'; b.textContent = '✓'; slot.appendChild(b);
-      slotsRow.appendChild(slot);
+      thumbsDiv.appendChild(thumb);
     });
-    group.appendChild(slotsRow);
+    row.appendChild(thumbsDiv);
 
-    // Card list
-    const cardsList = document.createElement('div');
-    cardsList.className = 'shared-group-cards';
-    cardsList.textContent = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
-    group.appendChild(cardsList);
-
-    container.appendChild(group);
+    container.appendChild(row);
   });
 
-  // Category icons
+  // ── Category icons (filter-slot: click = filter, ✏ = editor) ──
   const iconTitle = document.createElement('div');
   iconTitle.className = 'shared-section-title';
   iconTitle.textContent = T('shared-icons-title');
@@ -994,13 +1008,14 @@ function buildSharedAssets(container) {
     const cards = byCat[cat] || [];
     const repCode = cards[0]?.code; if (!repCode) return;
     const slot = document.createElement('div');
-    slot.className = 'shared-inline-slot';
-    slot.onclick = () => openSharedEditor(repCode, 'icon');
+    slot.className = 'shared-inline-slot filter-slot';
+    slot.dataset.filterType = 'category';
+    slot.dataset.filterValue = cat;
+    slot.onclick = () => setFilter('category', cat);
     slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
     const cvs = document.createElement('canvas');
-    const dpr = window.devicePixelRatio || 2;
     cvs.width = 32 * dpr; cvs.height = 32 * dpr; cvs.style.width = '32px'; cvs.style.height = '32px';
     drawHiResIcon(cvs.getContext('2d'), cat, catTierMap[cat], 0, 0, 32 * dpr);
     thumb.appendChild(cvs);
@@ -1008,11 +1023,18 @@ function buildSharedAssets(container) {
     lbl.className = 'shared-inline-label';
     lbl.textContent = cat;
     slot.appendChild(thumb); slot.appendChild(lbl);
+    // Edit button (stopPropagation to not trigger filter)
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.textContent = '✏';
+    editBtn.title = 'Edit';
+    editBtn.onclick = (e) => { e.stopPropagation(); openSharedEditor(repCode, 'icon'); };
+    slot.appendChild(editBtn);
     iconRow.appendChild(slot);
   });
   container.appendChild(iconRow);
 
-  // Points displays
+  // ── Points displays (filter-slot: click = filter, ✏ = editor) ──
   const ptsTitle = document.createElement('div');
   ptsTitle.className = 'shared-section-title';
   ptsTitle.textContent = T('shared-points-title');
@@ -1025,20 +1047,28 @@ function buildSharedAssets(container) {
     const repCode = cards[0]?.code; if (!repCode) return;
     const card = CARD_DATA[repCode];
     const slot = document.createElement('div');
-    slot.className = 'shared-inline-slot';
-    slot.onclick = () => openSharedEditor(repCode, 'points');
+    slot.className = 'shared-inline-slot filter-slot';
+    slot.dataset.filterType = 'points';
+    slot.dataset.filterValue = String(pts);
+    slot.onclick = () => setFilter('points', String(pts));
     slot.title = cards.map(c => lang === 'ja' ? c.name : c.nameEn).join(', ');
     const thumb = document.createElement('div');
     thumb.className = 'slot-thumb';
     const cvs = document.createElement('canvas');
-    const dprP = window.devicePixelRatio || 2;
-    cvs.width = 36 * dprP; cvs.height = 24 * dprP; cvs.style.width = '36px'; cvs.style.height = '24px';
-    drawHiResPoints(cvs.getContext('2d'), pts, card.tier, 0, 0, 36 * dprP, 24 * dprP);
+    cvs.width = 36 * dpr; cvs.height = 24 * dpr; cvs.style.width = '36px'; cvs.style.height = '24px';
+    drawHiResPoints(cvs.getContext('2d'), pts, card.tier, 0, 0, 36 * dpr, 24 * dpr);
     thumb.appendChild(cvs);
     const lbl = document.createElement('span');
     lbl.className = 'shared-inline-label';
     lbl.textContent = pts + 'pt';
     slot.appendChild(thumb); slot.appendChild(lbl);
+    // Edit button
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.textContent = '✏';
+    editBtn.title = 'Edit';
+    editBtn.onclick = (e) => { e.stopPropagation(); openSharedEditor(repCode, 'points'); };
+    slot.appendChild(editBtn);
     ptsRow.appendChild(slot);
   });
   container.appendChild(ptsRow);
@@ -1090,13 +1120,37 @@ function updateEditorPreview() {
   renderCardComposite(ctx, selectedCardCode, scale, { hiResFrame: true });
 }
 
+let activeFilter = null;
+
 function buildCardGrid() {
+  activeFilter = null; // Reset filter on rebuild (language switch, save/load, etc.)
   const container = document.getElementById('cardGridContainer');
   container.innerHTML = '';
 
-  // Shared assets section
-  buildSharedAssets(container);
+  // ── 2-column layout ──
+  const layout = document.createElement('div');
+  layout.className = 'card-list-layout';
+  const sidebar = document.createElement('div');
+  sidebar.className = 'card-list-sidebar';
+  const main = document.createElement('div');
+  main.className = 'card-list-main';
 
+  // Reset filter button (top of main, outside grid, hidden by default)
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'btn btn-sm filter-reset-btn';
+  resetBtn.id = 'filterResetBtn';
+  resetBtn.textContent = T('filter-reset') || '全表示';
+  resetBtn.onclick = () => setFilter(null);
+  main.appendChild(resetBtn);
+
+  layout.appendChild(sidebar);
+  layout.appendChild(main);
+  container.appendChild(layout);
+
+  // Left column: shared assets (frames, backs, icons, points)
+  buildSharedAssets(sidebar);
+
+  // Right column: character cards
   const groups = [
     { key: 'mob',     title: T('mob-title'),     tier: 'mob',    cards: [] },
     { key: 'elite',   title: T('elite-title'),   tier: 'elite',  cards: [] },
@@ -1109,13 +1163,6 @@ function buildCardGrid() {
               card.category === 'mob' ? 'mob' : card.category === 'elite' ? 'elite' : 'legend';
     groups.find(gr => gr.key === g).cards.push({ code, ...card });
   });
-
-  // Characters section header
-  const charHeader = document.createElement('div');
-  charHeader.className = 'shared-section-title';
-  charHeader.style.marginTop = '1.5rem';
-  charHeader.textContent = T('characters-title');
-  container.appendChild(charHeader);
 
   groups.forEach(group => {
     if (group.cards.length === 0) return;
@@ -1138,13 +1185,17 @@ function buildCardGrid() {
       initDashboard(repCode);
     };
     headerDiv.appendChild(gearBtn);
-    container.appendChild(headerDiv);
+    main.appendChild(headerDiv);
 
     const grid = document.createElement('div');
     grid.className = 'card-grid';
     group.cards.forEach(card => {
       const tile = document.createElement('div');
       tile.className = 'card-tile';
+      // Data attributes for filtering
+      tile.dataset.tier = card.tier;
+      tile.dataset.category = card.category;
+      tile.dataset.points = String(card.points);
       // Direct to character editor (skip dashboard)
       tile.onclick = () => {
         selectedCardCode = card.code;
@@ -1164,8 +1215,32 @@ function buildCardGrid() {
 
       grid.appendChild(tile);
     });
-    container.appendChild(grid);
+    main.appendChild(grid);
   });
+}
+
+function setFilter(type, value) {
+  // Same filter re-click or type=null → clear
+  if (!type || (activeFilter && activeFilter.type === type && activeFilter.value === value)) {
+    activeFilter = null;
+  } else {
+    activeFilter = { type, value };
+  }
+  // Left column: toggle filter-active
+  document.querySelectorAll('.filter-row, .filter-slot').forEach(el => el.classList.remove('filter-active'));
+  if (activeFilter) {
+    const sel = document.querySelector(`[data-filter-type="${activeFilter.type}"][data-filter-value="${activeFilter.value}"]`);
+    if (sel) sel.classList.add('filter-active');
+  }
+  // Right column: dim non-matching cards
+  document.querySelectorAll('.card-tile').forEach(tile => {
+    if (!activeFilter) { tile.classList.remove('filter-dimmed'); return; }
+    const match = tile.dataset[activeFilter.type] === activeFilter.value;
+    tile.classList.toggle('filter-dimmed', !match);
+  });
+  // Reset button visibility
+  const resetBtn = document.getElementById('filterResetBtn');
+  if (resetBtn) resetBtn.style.display = activeFilter ? '' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════════
