@@ -41,15 +41,18 @@
 
     /* Card Grid (View 1) */
     .card-group-title { font-family: 'Outfit', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 1.2rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--card-border); }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-    .card-tile { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 0.7rem; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .card-tile { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 0.5rem; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .card-tile:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-    .card-tile .emoji { font-size: 2rem; }
+    .card-tile .tile-preview { width: 100%; aspect-ratio: 2/3; border-radius: 6px; image-rendering: pixelated; }
     .card-tile .cname { font-size: 0.78rem; font-weight: 700; }
     .card-tile .cinfo { font-size: 0.65rem; color: var(--text-muted); }
     .card-tile .progress { display: flex; gap: 3px; margin-top: 2px; }
     .card-tile .dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--card-border); }
     .card-tile .dot.filled { background: var(--accent); border-color: var(--accent); }
+    .card-group-header { display: flex; align-items: center; justify-content: space-between; }
+    .card-group-header .gear-btn { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; }
+    .card-group-header .gear-btn:hover { background: var(--card-border); color: var(--text-base); }
     .tier-badge { display: inline-block; font-size: 0.55rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; }
     .tier-mob { background: var(--mob-back); }
     .tier-elite { background: var(--elite-back); }
@@ -102,10 +105,17 @@
     .preview-section canvas { image-rendering: pixelated; border: 1px solid var(--card-border); border-radius: 6px; }
 
     /* Editor (View 3) */
+    .editor-layout { display: flex; gap: 16px; align-items: flex-start; }
+    .editor-main { flex: 1; min-width: 0; overflow: hidden; }
+    .editor-sidebar { width: 240px; position: sticky; top: 16px; align-self: flex-start; display: flex; flex-direction: column; gap: 12px; }
+    .editor-sidebar .sidebar-preview { background: var(--card-bg); border-radius: 10px; padding: 8px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); text-align: center; }
+    .editor-sidebar .sidebar-preview canvas { image-rendering: pixelated; max-width: 100%; }
+    .editor-sidebar .sidebar-preview .preview-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
     .editor-area { display: flex; gap: 1.2rem; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
     .canvas-col { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
     .canvas-label { font-family: 'Outfit', sans-serif; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-    .canvas-wrapper { background: var(--card-bg); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; }
+    .canvas-wrapper { background: var(--card-bg); border-radius: 12px; padding: 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; overflow: hidden; max-width: 100%; }
+    .canvas-wrapper canvas { max-width: 100%; height: auto; }
     canvas#gridCanvas { cursor: crosshair; display: block; image-rendering: pixelated; touch-action: none; }
     /* previewCanvas removed — effects render directly on editor grid */
 
@@ -192,10 +202,12 @@
 
     /* Responsive */
     @media (max-width: 700px) {
+      .editor-layout { flex-direction: column; }
+      .editor-sidebar { width: 100%; position: static; }
       .editor-area { flex-direction: column; align-items: center; }
       header { padding: 0.6rem 1rem; }
       .main-wrap { padding: 0 0.8rem 2rem; }
-      .card-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+      .card-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
     }
   </style>
 </head>
@@ -270,105 +282,118 @@
       <p class="subtitle" id="editorSubtitle"></p>
     </div>
     <div class="main-wrap">
-      <div class="editor-area">
-        <div class="canvas-col">
-          <span class="canvas-label" data-i18n="grid-label">EDITOR</span>
-          <div class="canvas-wrapper"><canvas id="gridCanvas"></canvas></div>
+      <div class="editor-layout">
+        <!-- Left column: editor + tools -->
+        <div class="editor-main">
+          <div class="editor-area">
+            <div class="canvas-col">
+              <span class="canvas-label" data-i18n="grid-label">EDITOR</span>
+              <div class="canvas-wrapper"><canvas id="gridCanvas"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Parts Palette -->
+          <div class="drawer">
+            <button class="drawer-toggle open" onclick="toggleDrawer(this)">
+              <span class="arrow">&#9654;</span> <span data-i18n="parts-title">Parts</span>
+            </button>
+            <div class="drawer-body open"><div class="drawer-inner">
+              <div id="palette"></div>
+              <div id="partVisibility"></div>
+            </div></div>
+          </div>
+
+          <!-- Tools -->
+          <div class="drawer">
+            <button class="drawer-toggle open" onclick="toggleDrawer(this)">
+              <span class="arrow">&#9654;</span> <span data-i18n="tools-title">Tools</span>
+            </button>
+            <div class="drawer-body open"><div class="drawer-inner">
+              <div class="tool-row">
+                <button class="tool-btn" onclick="undo()" data-i18n="undo">Undo</button>
+                <button class="tool-btn" onclick="redo()" data-i18n="redo">Redo</button>
+                <button class="tool-btn" onclick="clearGrid()" data-i18n="clear">Clear</button>
+                <button class="tool-btn" onclick="fillSelected()" data-i18n="fill">Fill</button>
+                <button class="tool-btn" onclick="clearPart()" data-i18n="clear-part">Clear Part</button>
+                <button class="tool-btn" onclick="decomposeGrid()" id="decomposeBtn" data-i18n="decompose">Decompose 2x</button>
+                <button class="tool-btn primary" onclick="saveAsset()" data-i18n="save">Save</button>
+              </div>
+            </div></div>
+          </div>
+
+          <!-- Animation -->
+          <div class="drawer" id="animDrawer">
+            <button class="drawer-toggle" onclick="toggleDrawer(this)">
+              <span class="arrow">&#9654;</span> <span data-i18n="anim-title">Animation</span>
+            </button>
+            <div class="drawer-body"><div class="drawer-inner">
+              <div id="animPartChips" class="anim-part-chips"></div>
+              <div id="animControls" class="anim-controls" style="display:none">
+                <div class="anim-row">
+                  <label data-i18n="anim-type">Type</label>
+                  <select id="animTypeSelect" onchange="onAnimTypeChange()">
+                    <option value="" data-i18n="anim-none">— None —</option>
+                    <option value="shake" data-i18n="anim-shake">Shake</option>
+                    <option value="move" data-i18n="anim-move">Move</option>
+                    <option value="fade" data-i18n="anim-fade">Fade</option>
+                    <option value="color" data-i18n="anim-color">Color Shift</option>
+                    <option value="rotate" data-i18n="anim-rotate">Rotate</option>
+                  </select>
+                </div>
+                <div id="animParams"></div>
+                <div class="anim-row">
+                  <label><input type="checkbox" id="animEnabled" checked onchange="onAnimEnabledChange()"> <span data-i18n="anim-enabled">Enabled</span></label>
+                </div>
+              </div>
+              <div class="anim-play-btns">
+                <button onclick="playPartAnim()" id="btnPlayPart" data-i18n="anim-play">▶ Play</button>
+                <button onclick="playAllAnims()" id="btnPlayAll" data-i18n="anim-play-all">▶ All</button>
+                <button onclick="stopAnims()" id="btnStop" data-i18n="anim-stop">■ Stop</button>
+              </div>
+            </div></div>
+          </div>
+
+          <!-- Image Import -->
+          <div class="drawer">
+            <button class="drawer-toggle" onclick="toggleDrawer(this)">
+              <span class="arrow">&#9654;</span> <span data-i18n="import-title">Image Import</span>
+            </button>
+            <div class="drawer-body"><div class="drawer-inner">
+              <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <p data-i18n="drop-hint">Drop image here or click to select</p>
+                <input type="file" id="fileInput" accept="image/*">
+              </div>
+              <div class="import-options">
+                <label data-i18n="map-mode">Mapping:</label>
+                <select id="mapMode">
+                  <option value="auto">Auto</option>
+                  <option value="brightness">Brightness</option>
+                </select>
+                <button class="tool-btn" onclick="applyImportedImage()" id="applyImportBtn" disabled data-i18n="apply-import">Apply</button>
+              </div>
+            </div></div>
+          </div>
         </div>
-      </div>
 
-      <!-- Parts Palette -->
-      <div class="drawer">
-        <button class="drawer-toggle open" onclick="toggleDrawer(this)">
-          <span class="arrow">&#9654;</span> <span data-i18n="parts-title">Parts</span>
-        </button>
-        <div class="drawer-body open"><div class="drawer-inner">
-          <div id="palette"></div>
-          <div id="partVisibility"></div>
-        </div></div>
-      </div>
-
-      <!-- Tools -->
-      <div class="drawer">
-        <button class="drawer-toggle open" onclick="toggleDrawer(this)">
-          <span class="arrow">&#9654;</span> <span data-i18n="tools-title">Tools</span>
-        </button>
-        <div class="drawer-body open"><div class="drawer-inner">
-          <div class="tool-row">
-            <button class="tool-btn" onclick="undo()" data-i18n="undo">Undo</button>
-            <button class="tool-btn" onclick="redo()" data-i18n="redo">Redo</button>
-            <button class="tool-btn" onclick="clearGrid()" data-i18n="clear">Clear</button>
-            <button class="tool-btn" onclick="fillSelected()" data-i18n="fill">Fill</button>
-            <button class="tool-btn" onclick="clearPart()" data-i18n="clear-part">Clear Part</button>
-            <button class="tool-btn" onclick="decomposeGrid()" id="decomposeBtn" data-i18n="decompose">Decompose 2x</button>
-            <button class="tool-btn primary" onclick="saveAsset()" data-i18n="save">Save</button>
+        <!-- Right column: card preview + effects -->
+        <div class="editor-sidebar" id="editorSidebar">
+          <div class="sidebar-preview">
+            <div class="preview-label" data-i18n="card-preview">CARD PREVIEW</div>
+            <canvas id="editorPreviewCanvas"></canvas>
           </div>
-        </div></div>
-      </div>
-
-      <!-- Animation -->
-      <div class="drawer" id="animDrawer">
-        <button class="drawer-toggle" onclick="toggleDrawer(this)">
-          <span class="arrow">&#9654;</span> <span data-i18n="anim-title">Animation</span>
-        </button>
-        <div class="drawer-body"><div class="drawer-inner">
-          <div id="animPartChips" class="anim-part-chips"></div>
-          <div id="animControls" class="anim-controls" style="display:none">
-            <div class="anim-row">
-              <label data-i18n="anim-type">Type</label>
-              <select id="animTypeSelect" onchange="onAnimTypeChange()">
-                <option value="" data-i18n="anim-none">— None —</option>
-                <option value="shake" data-i18n="anim-shake">Shake</option>
-                <option value="move" data-i18n="anim-move">Move</option>
-                <option value="fade" data-i18n="anim-fade">Fade</option>
-                <option value="color" data-i18n="anim-color">Color Shift</option>
-                <option value="rotate" data-i18n="anim-rotate">Rotate</option>
-              </select>
-            </div>
-            <div id="animParams"></div>
-            <div class="anim-row">
-              <label><input type="checkbox" id="animEnabled" checked onchange="onAnimEnabledChange()"> <span data-i18n="anim-enabled">Enabled</span></label>
-            </div>
+          <!-- FX Presets (always visible) -->
+          <div id="fxPresets" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+          <!-- FX Customize (collapsible) -->
+          <div class="drawer" id="fxDrawer">
+            <button class="drawer-toggle" onclick="toggleDrawer(this)">
+              <span class="arrow">&#9654;</span> <span data-i18n="fx-customize">Customize</span>
+            </button>
+            <div class="drawer-body"><div class="drawer-inner">
+              <div id="fxPartChips" class="anim-part-chips"></div>
+              <div id="fxControls" class="anim-controls" style="display:none"></div>
+            </div></div>
           </div>
-          <div class="anim-play-btns">
-            <button onclick="playPartAnim()" id="btnPlayPart" data-i18n="anim-play">▶ Play</button>
-            <button onclick="playAllAnims()" id="btnPlayAll" data-i18n="anim-play-all">▶ All</button>
-            <button onclick="stopAnims()" id="btnStop" data-i18n="anim-stop">■ Stop</button>
-          </div>
-        </div></div>
-      </div>
-
-      <!-- Effects -->
-      <div class="drawer" id="fxDrawer">
-        <button class="drawer-toggle" onclick="toggleDrawer(this)">
-          <span class="arrow">&#9654;</span> <span data-i18n="fx-title">Effects</span>
-        </button>
-        <div class="drawer-body"><div class="drawer-inner">
-          <div id="fxPresets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
-          <div id="fxPartChips" class="anim-part-chips"></div>
-          <div id="fxControls" class="anim-controls" style="display:none"></div>
-        </div></div>
-      </div>
-
-      <!-- Image Import -->
-      <div class="drawer">
-        <button class="drawer-toggle" onclick="toggleDrawer(this)">
-          <span class="arrow">&#9654;</span> <span data-i18n="import-title">Image Import</span>
-        </button>
-        <div class="drawer-body"><div class="drawer-inner">
-          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <p data-i18n="drop-hint">Drop image here or click to select</p>
-            <input type="file" id="fileInput" accept="image/*">
-          </div>
-          <div class="import-options">
-            <label data-i18n="map-mode">Mapping:</label>
-            <select id="mapMode">
-              <option value="auto">Auto</option>
-              <option value="brightness">Brightness</option>
-            </select>
-            <button class="tool-btn" onclick="applyImportedImage()" id="applyImportBtn" disabled data-i18n="apply-import">Apply</button>
-          </div>
-        </div></div>
+        </div>
       </div>
     </div>
   </section>
@@ -773,7 +798,7 @@ const STORAGE_KEY = 'frog_card_editor';
 const SCHEMA_VERSION = 1;
 
 function createEmptyStore() {
-  return { version: SCHEMA_VERSION, assets: {}, cardAssignments: {}, settings: { lang: 'en' } };
+  return { version: SCHEMA_VERSION, assets: {}, cardAssignments: {}, settings: { lang: 'en', frameStyle: 'classic' } };
 }
 
 let store = createEmptyStore();
@@ -787,6 +812,9 @@ function loadStore() {
     // Restore grids to Int8Array
     Object.values(data.assets).forEach(a => { a.grid = a.grid.map(r => Int8Array.from(r)); });
     store = data;
+    // Migration: ensure frameStyle setting exists
+    if (!store.settings) store.settings = {};
+    if (!store.settings.frameStyle) store.settings.frameStyle = 'classic';
   } catch (e) { store = createEmptyStore(); }
 }
 
@@ -854,20 +882,15 @@ function updateBackLink() {
   } else if (currentView === 'viewDashboard') {
     lbl.textContent = T('back-cards');
   } else if (currentView === 'viewEditor') {
-    lbl.textContent = editingFromShared ? T('back-cards') : T('back-dashboard');
+    lbl.textContent = T('back-cards');
   }
 }
 
 function navigateBack() {
   if (currentView === 'viewEditor') {
-    if (editingFromShared) {
-      editingFromShared = false;
-      showView('viewCardSelect');
-      buildCardGrid();
-    } else {
-      showView('viewDashboard');
-      initDashboard(selectedCardCode);
-    }
+    editingFromShared = false;
+    showView('viewCardSelect');
+    buildCardGrid();
   } else if (currentView === 'viewDashboard') {
     showView('viewCardSelect');
     buildCardGrid();
@@ -1008,6 +1031,52 @@ function buildSharedAssets(container) {
   container.appendChild(ptsRow);
 }
 
+function renderCardThumbnail(canvas, cardCode) {
+  const card = CARD_DATA[cardCode];
+  if (!card) return;
+  const scale = 3;
+  const W = 32, H = 48;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * scale * dpr;
+  canvas.height = H * scale * dpr;
+  canvas.style.width = (W * scale) + 'px';
+  canvas.style.height = (H * scale) + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  renderCardComposite(ctx, cardCode, scale, { hiResFrame: true });
+
+  // If no character data, overlay a "?" placeholder
+  const assign = getAssignments(cardCode);
+  const charAsset = assign.character ? store.assets[assign.character] : null;
+  if (!charAsset) {
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, W * scale, H * scale);
+    ctx.font = `bold ${scale * 10}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('?', W * scale / 2, H * scale / 2);
+  }
+}
+
+function updateEditorPreview() {
+  const canvas = document.getElementById('editorPreviewCanvas');
+  if (!canvas || !selectedCardCode) return;
+  // Only update if editor view is visible
+  if (currentView !== 'viewEditor') return;
+  const scale = 4;
+  const W = 32, H = 48;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * scale * dpr;
+  canvas.height = H * scale * dpr;
+  canvas.style.width = (W * scale) + 'px';
+  canvas.style.height = (H * scale) + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  renderCardComposite(ctx, selectedCardCode, scale, { hiResFrame: true });
+}
+
 function buildCardGrid() {
   const container = document.getElementById('cardGridContainer');
   container.innerHTML = '';
@@ -1016,10 +1085,10 @@ function buildCardGrid() {
   buildSharedAssets(container);
 
   const groups = [
-    { key: 'mob',     title: T('mob-title'),     cards: [] },
-    { key: 'elite',   title: T('elite-title'),   cards: [] },
-    { key: 'legend',  title: T('legend-title'),  cards: [] },
-    { key: 'special', title: T('special-title'), cards: [] },
+    { key: 'mob',     title: T('mob-title'),     tier: 'mob',    cards: [] },
+    { key: 'elite',   title: T('elite-title'),   tier: 'elite',  cards: [] },
+    { key: 'legend',  title: T('legend-title'),  tier: 'legend', cards: [] },
+    { key: 'special', title: T('special-title'), tier: 'legend', cards: [] },
   ];
 
   Object.entries(CARD_DATA).forEach(([code, card]) => {
@@ -1037,26 +1106,49 @@ function buildCardGrid() {
 
   groups.forEach(group => {
     if (group.cards.length === 0) return;
+    // Group header with gear button for dashboard access
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'card-group-header';
     const title = document.createElement('div');
     title.className = 'card-group-title';
+    title.style.margin = '0';
     title.textContent = group.title;
-    container.appendChild(title);
+    headerDiv.appendChild(title);
+    const gearBtn = document.createElement('button');
+    gearBtn.className = 'gear-btn';
+    gearBtn.title = T('dash-settings') || 'Settings';
+    gearBtn.textContent = '⚙';
+    gearBtn.onclick = () => {
+      const repCode = group.cards[0].code;
+      selectedCardCode = repCode;
+      showView('viewDashboard');
+      initDashboard(repCode);
+    };
+    headerDiv.appendChild(gearBtn);
+    container.appendChild(headerDiv);
 
     const grid = document.createElement('div');
     grid.className = 'card-grid';
     group.cards.forEach(card => {
       const tile = document.createElement('div');
       tile.className = 'card-tile';
-      tile.onclick = () => { selectedCardCode = card.code; showView('viewDashboard'); initDashboard(card.code); };
+      // Direct to character editor (skip dashboard)
+      tile.onclick = () => {
+        selectedCardCode = card.code;
+        openEditor(card.code, 'character');
+      };
 
-      const done = countDoneSlots(card.code);
-      tile.innerHTML = `
-        <span class="emoji">${card.emoji}</span>
-        <span class="cname">${lang === 'ja' ? card.name : card.nameEn}</span>
-        <span class="tier-badge tier-${card.tier}">${card.tier}</span>
-        <span class="cinfo">${card.points}pt</span>
-        <div class="progress">${SLOT_ORDER.map((_, i) => `<span class="dot${i < done ? ' filled' : ''}"></span>`).join('')}</div>
-      `;
+      // Canvas preview
+      const cvs = document.createElement('canvas');
+      cvs.className = 'tile-preview';
+      tile.appendChild(cvs);
+      renderCardThumbnail(cvs, card.code);
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'cname';
+      nameSpan.textContent = lang === 'ja' ? card.name : card.nameEn;
+      tile.appendChild(nameSpan);
+
       grid.appendChild(tile);
     });
     container.appendChild(grid);
@@ -1253,6 +1345,262 @@ function hitTestComposite(gx, gy, assign, offsets) {
   canvas.addEventListener('touchend', onEnd);
 })();
 
+// ── Hi-Res Frame / Back / Icon / Points Drawing ──
+// Canvas 2D programmatic drawing — replaces grid-based pixel art for non-character assets.
+// These are informational/decorative elements that benefit from high resolution.
+
+const hiResCache = {}; // key: "type_style_meta" → OffscreenCanvas
+function getHiResCached(type, style, meta, w, h, drawFn) {
+  const key = `${type}_${style}_${meta}`;
+  if (!hiResCache[key]) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const cx = c.getContext('2d');
+    drawFn(cx, w, h);
+    hiResCache[key] = c;
+  }
+  return hiResCache[key];
+}
+function clearHiResCache(prefix) {
+  Object.keys(hiResCache).forEach(k => { if (!prefix || k.startsWith(prefix)) delete hiResCache[k]; });
+}
+
+function drawHiResFrame(ctx, style, tier, x, y, w, h) {
+  const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
+  const cached = getHiResCached('frame', style, tier, w, h, (cx, cw, ch) => {
+    const bw = 3; // border width in pixels
+    // Background fill
+    cx.fillStyle = '#FFFFFF';
+    cx.beginPath();
+    cx.roundRect(0, 0, cw, ch, 4);
+    cx.fill();
+
+    // Tier gradient border
+    const grad = cx.createLinearGradient(0, 0, 0, ch);
+    grad.addColorStop(0, tc.accent);
+    grad.addColorStop(0.5, tc.back);
+    grad.addColorStop(1, tc.accent);
+    cx.strokeStyle = grad;
+    cx.lineWidth = bw * 2;
+    cx.beginPath();
+    cx.roundRect(bw, bw, cw - bw * 2, ch - bw * 2, 3);
+    cx.stroke();
+
+    // Outer border
+    cx.strokeStyle = tc.back;
+    cx.lineWidth = 1.5;
+    cx.beginPath();
+    cx.roundRect(0.75, 0.75, cw - 1.5, ch - 1.5, 4);
+    cx.stroke();
+
+    // Inner border
+    cx.strokeStyle = tc.accent + '80';
+    cx.lineWidth = 0.5;
+    cx.beginPath();
+    cx.roundRect(bw * 2, bw * 2, cw - bw * 4, ch - bw * 4, 2);
+    cx.stroke();
+
+    // Title bar area (top)
+    const tbH = Math.round(ch * 0.14);
+    const tbGrad = cx.createLinearGradient(0, bw * 2, 0, bw * 2 + tbH);
+    tbGrad.addColorStop(0, tc.back + 'CC');
+    tbGrad.addColorStop(1, tc.back + '33');
+    cx.fillStyle = tbGrad;
+    cx.fillRect(bw * 2, bw * 2, cw - bw * 4, tbH);
+
+    // Bottom info bar
+    const bbH = Math.round(ch * 0.14);
+    const bbY = ch - bw * 2 - bbH;
+    const bbGrad = cx.createLinearGradient(0, bbY, 0, ch - bw * 2);
+    bbGrad.addColorStop(0, tc.back + '33');
+    bbGrad.addColorStop(1, tc.back + 'CC');
+    cx.fillStyle = bbGrad;
+    cx.fillRect(bw * 2, bbY, cw - bw * 4, bbH);
+
+    // Corner accents for elite/legend
+    if (tier === 'elite' || tier === 'legend') {
+      cx.fillStyle = tc.accent;
+      const cs = tier === 'legend' ? 5 : 3;
+      [[bw, bw], [cw - bw - cs, bw], [bw, ch - bw - cs], [cw - bw - cs, ch - bw - cs]].forEach(([cx2, cy2]) => {
+        cx.fillRect(cx2, cy2, cs, cs);
+      });
+    }
+
+    // Legend extra: subtle inner glow
+    if (tier === 'legend') {
+      cx.shadowColor = tc.accent;
+      cx.shadowBlur = 8;
+      cx.strokeStyle = tc.accent + '40';
+      cx.lineWidth = 1;
+      cx.beginPath();
+      cx.roundRect(bw * 2 + 2, bw * 2 + 2, cw - bw * 4 - 4, ch - bw * 4 - 4, 2);
+      cx.stroke();
+      cx.shadowBlur = 0;
+    }
+  });
+  ctx.drawImage(cached, x, y, w, h);
+}
+
+function drawHiResBack(ctx, style, tier, x, y, w, h) {
+  const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
+  const cached = getHiResCached('back', style, tier, w, h, (cx, cw, ch) => {
+    // Base fill
+    cx.fillStyle = tc.back;
+    cx.beginPath();
+    cx.roundRect(0, 0, cw, ch, 4);
+    cx.fill();
+
+    // Diamond pattern
+    cx.fillStyle = tc.accent + '30';
+    const step = 8;
+    for (let r = -ch; r < ch * 2; r += step) {
+      for (let c = -cw; c < cw * 2; c += step) {
+        cx.save();
+        cx.translate(c + step / 2, r + step / 2);
+        cx.rotate(Math.PI / 4);
+        cx.fillRect(-step / 4, -step / 4, step / 2, step / 2);
+        cx.restore();
+      }
+    }
+
+    // Center emblem
+    const cx2 = cw / 2, cy2 = ch / 2, embR = Math.min(cw, ch) * 0.18;
+    cx.beginPath();
+    cx.arc(cx2, cy2, embR, 0, Math.PI * 2);
+    cx.fillStyle = tc.accent + '40';
+    cx.fill();
+    cx.strokeStyle = tc.accent + '80';
+    cx.lineWidth = 1;
+    cx.stroke();
+
+    // Border
+    cx.strokeStyle = tc.accent;
+    cx.lineWidth = 2;
+    cx.beginPath();
+    cx.roundRect(1, 1, cw - 2, ch - 2, 4);
+    cx.stroke();
+  });
+  ctx.drawImage(cached, x, y, w, h);
+}
+
+function drawHiResIcon(ctx, category, tier, x, y, size) {
+  const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
+  const pattern = ICON_PATTERNS[category];
+  if (!pattern) return;
+  const cached = getHiResCached('icon', 'default', category + '_' + tier, size, size, (cx, cw, ch) => {
+    const rows = pattern.split('|');
+    const cellW = cw / 8, cellH = ch / 8;
+    const r2 = Math.min(cellW, cellH) * 0.35;
+    cx.fillStyle = tc.back;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (rows[r][c] === '1') {
+          const px = c * cellW + cellW / 2;
+          const py = r * cellH + cellH / 2;
+          cx.beginPath();
+          cx.arc(px, py, r2, 0, Math.PI * 2);
+          cx.fill();
+        }
+      }
+    }
+  });
+  ctx.drawImage(cached, x, y, size, size);
+}
+
+function drawHiResPoints(ctx, points, tier, x, y, w, h) {
+  const tc = TIER_COLORS[tier] || TIER_COLORS.mob;
+  const cached = getHiResCached('points', 'default', points + '_' + tier, w, h, (cx, cw, ch) => {
+    // Background pill
+    cx.fillStyle = tc.back + 'DD';
+    cx.beginPath();
+    cx.roundRect(0, 0, cw, ch, ch / 3);
+    cx.fill();
+    cx.strokeStyle = tc.accent + '80';
+    cx.lineWidth = 0.5;
+    cx.beginPath();
+    cx.roundRect(0.5, 0.5, cw - 1, ch - 1, ch / 3);
+    cx.stroke();
+
+    // Text
+    const fontSize = Math.round(ch * 0.65);
+    cx.font = `bold ${fontSize}px Outfit, system-ui, sans-serif`;
+    cx.textAlign = 'center';
+    cx.textBaseline = 'middle';
+    cx.fillStyle = '#FFFFFF';
+    cx.fillText(`${points}pt`, cw / 2, ch / 2 + 0.5);
+  });
+  ctx.drawImage(cached, x, y, w, h);
+}
+
+// Re-render points after fonts load
+document.fonts.ready.then(() => {
+  clearHiResCache('points');
+});
+
+// ── Unified card composite renderer ──
+// Single entry point for all card rendering: dashboard preview, card list thumbnails,
+// editor sidebar preview, and PNG export. Ensures visual consistency everywhere.
+function renderCardComposite(ctx, cardCode, scale, options) {
+  const opts = Object.assign({ checkerboard: false, hiResFrame: true, time: 0 }, options || {});
+  const card = CARD_DATA[cardCode];
+  const assign = getAssignments(cardCode);
+  const offsets = assign.offsets || {};
+  const W = 32, H = 48;
+
+  // Background
+  if (opts.checkerboard) {
+    for (let r = 0; r < H; r++) {
+      for (let c = 0; c < W; c++) {
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#eee' : '#ddd';
+        ctx.fillRect(c * scale, r * scale, scale, scale);
+      }
+    }
+  }
+
+  // Helper: draw a grid-based asset layer
+  const drawLayer = (lt, asset) => {
+    if (!asset) return;
+    const pos = getLayerPos(lt, asset, offsets);
+    drawAssetLayer(ctx, asset, pos.x, pos.y, scale);
+  };
+
+  // Layer 1: frame
+  if (opts.hiResFrame && card) {
+    const off = offsets.frame || { dx: 0, dy: 0 };
+    const style = (store.settings && store.settings.frameStyle) || 'classic';
+    drawHiResFrame(ctx, style, card.tier, off.dx * scale, off.dy * scale, W * scale, H * scale);
+  } else {
+    const frame = assign.frame ? store.assets[assign.frame] : null;
+    drawLayer('frame', frame);
+  }
+
+  // Layer 2: character (always grid-based with effects)
+  const char = assign.character ? store.assets[assign.character] : null;
+  drawLayer('character', char);
+
+  // Layer 3: points
+  if (opts.hiResFrame && card) {
+    const ptsOff = offsets.points || { dx: 0, dy: 0 };
+    const defX = 32 - 12 - 1, defY = 2; // default position for 12×8 points
+    const px = (defX + ptsOff.dx) * scale, py = (defY + ptsOff.dy) * scale;
+    drawHiResPoints(ctx, card.points, card.tier, px, py, 12 * scale, 8 * scale);
+  } else {
+    const pts = assign.points ? store.assets[assign.points] : null;
+    drawLayer('points', pts);
+  }
+
+  // Layer 4: icon
+  if (opts.hiResFrame && card) {
+    const icnOff = offsets.icon || { dx: 0, dy: 0 };
+    const defX = 1, defY = 40; // default position for 8×8 icon
+    const ix = (defX + icnOff.dx) * scale, iy = (defY + icnOff.dy) * scale;
+    drawHiResIcon(ctx, card.category, card.tier, ix, iy, 8 * scale);
+  } else {
+    const icon = assign.icon ? store.assets[assign.icon] : null;
+    drawLayer('icon', icon);
+  }
+}
+
 function updateCompositePreview(cardCode) {
   const assign = getAssignments(cardCode);
   const hasRequired = assign.character && store.assets[assign.character] && assign.frame && store.assets[assign.frame];
@@ -1266,21 +1614,16 @@ function updateCompositePreview(cardCode) {
   canvas.width = 32 * scale; canvas.height = 48 * scale;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Checkerboard background for transparency
-  for (let r = 0; r < 48; r++) {
-    for (let c = 0; c < 32; c++) {
-      ctx.fillStyle = (r + c) % 2 === 0 ? '#eee' : '#ddd';
-      ctx.fillRect(c * scale, r * scale, scale, scale);
-    }
-  }
+  renderCardComposite(ctx, cardCode, scale, { checkerboard: true });
 
-  const offsets = assign.offsets || {};
-  const drawLayer = (lt, asset) => {
-    if (!asset) return;
-    const pos = getLayerPos(lt, asset, offsets);
-    drawAssetLayer(ctx, asset, pos.x, pos.y, scale);
-    // In adjust mode: draw outline around layer
-    if (posAdjustMode) {
+  // Position adjust overlays (dashboard-only, not part of generic composite)
+  if (posAdjustMode) {
+    const offsets = assign.offsets || {};
+    ['frame', 'character', 'points', 'icon'].forEach(lt => {
+      const assetId = assign[lt];
+      const asset = assetId ? store.assets[assetId] : null;
+      if (!asset) return;
+      const pos = getLayerPos(lt, asset, offsets);
       const base = getAssetBaseSize(asset);
       const w = Math.min(asset.width, base.w), h = Math.min(asset.height, base.h);
       const colors = { frame: '#888', character: '#e63946', points: '#457b9d', icon: '#2a9d8f' };
@@ -1289,28 +1632,11 @@ function updateCompositePreview(cardCode) {
       ctx.setLineDash(lt === posDragLayer ? [] : [4, 3]);
       ctx.strokeRect(pos.x * scale + 0.5, pos.y * scale + 0.5, w * scale - 1, h * scale - 1);
       ctx.setLineDash([]);
-      // Label
       ctx.font = '10px Outfit, sans-serif';
       ctx.fillStyle = colors[lt] || '#888';
       ctx.fillText(lt, pos.x * scale + 2, pos.y * scale - 2);
-    }
-  };
-
-  // Layer 1: frame
-  const frame = assign.frame ? store.assets[assign.frame] : null;
-  drawLayer('frame', frame);
-
-  // Layer 2: character
-  const char = assign.character ? store.assets[assign.character] : null;
-  drawLayer('character', char);
-
-  // Layer 3: points
-  const pts = assign.points ? store.assets[assign.points] : null;
-  drawLayer('points', pts);
-
-  // Layer 4: icon
-  const icon = assign.icon ? store.assets[assign.icon] : null;
-  drawLayer('icon', icon);
+    });
+  }
 }
 
 function getAssetBaseSize(asset) {
@@ -1569,6 +1895,9 @@ function openEditor(cardCode, slotType) {
   document.getElementById('editorSubtitle').textContent = `${cardName} \u2014 ${spec.w}\u00D7${spec.h}px`;
 
   showView('viewEditor');
+  // Show sidebar only for character editing (preview + effects)
+  const sidebar = document.getElementById('editorSidebar');
+  if (sidebar) sidebar.style.display = slotType === 'character' ? '' : 'none';
   buildPalette();
   buildPartVisibility();
   buildAnimPartChips();
@@ -1750,7 +2079,10 @@ const gridCtx = gridCanvas.getContext('2d');
 
 function renderGrid() {
   const isMobile = window.innerWidth <= 700;
-  const maxW = Math.min(window.innerWidth - (isMobile ? 40 : 80), GRID_W <= 12 ? 280 : isMobile ? Math.min(window.innerWidth - 40, 360) : 420);
+  const sidebar = document.getElementById('editorSidebar');
+  const hasSidebar = sidebar && sidebar.style.display !== 'none' && !isMobile;
+  const availW = hasSidebar ? Math.max(250, window.innerWidth - 400) : window.innerWidth - (isMobile ? 40 : 80);
+  const maxW = Math.min(availW, GRID_W <= 12 ? 280 : isMobile ? Math.min(window.innerWidth - 40, 360) : hasSidebar ? 360 : 420);
   const cellPx = Math.max(2, Math.floor(maxW / Math.max(GRID_W, GRID_H * 0.67)));
   const totalW = cellPx * GRID_W, totalH = cellPx * GRID_H;
   gridCanvas.width = totalW; gridCanvas.height = totalH;
@@ -1783,21 +2115,25 @@ function renderGrid() {
     if (pt.value === 0) return;
     applyAllCanvasEffects(gridCtx, pt.value, grid, GRID_W, GRID_H, cellPx, cellPx, 0, 0, fxAnimTime);
   });
-  gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
-  for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
-  for (let i = 0; i <= GRID_H; i++) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
-  if (GRID_W >= 16) {
-    // Show base pixel boundaries when decomposed
-    const guideW = baseResW || 8, guideH = baseResH || 8;
-    const stepX = GRID_W / guideW, stepY = GRID_H / guideH;
-    if (stepX >= 2) {
-      gridCtx.strokeStyle = 'rgba(139,105,20,0.25)'; gridCtx.lineWidth = 1;
-      for (let i = 0; i <= GRID_W; i += stepX) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
-      for (let i = 0; i <= GRID_H; i += stepY) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
-    } else {
-      gridCtx.strokeStyle = 'rgba(0,0,0,0.18)'; gridCtx.lineWidth = 1;
-      for (let i = 0; i <= GRID_W; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
-      for (let i = 0; i <= GRID_H; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+  // Skip guide lines during animation/effect playback to avoid artifacts
+  const isAnimating = animFrameId || (typeof fxAnimId !== 'undefined' && fxAnimId);
+  if (!isAnimating) {
+    gridCtx.strokeStyle = 'rgba(0,0,0,0.08)'; gridCtx.lineWidth = 0.5;
+    for (let i = 0; i <= GRID_W; i++) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
+    for (let i = 0; i <= GRID_H; i++) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+    if (GRID_W >= 16) {
+      // Show base pixel boundaries when decomposed
+      const guideW = baseResW || 8, guideH = baseResH || 8;
+      const stepX = GRID_W / guideW, stepY = GRID_H / guideH;
+      if (stepX >= 2) {
+        gridCtx.strokeStyle = 'rgba(139,105,20,0.25)'; gridCtx.lineWidth = 1;
+        for (let i = 0; i <= GRID_W; i += stepX) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
+        for (let i = 0; i <= GRID_H; i += stepY) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+      } else {
+        gridCtx.strokeStyle = 'rgba(0,0,0,0.18)'; gridCtx.lineWidth = 1;
+        for (let i = 0; i <= GRID_W; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(i*cellPx,0); gridCtx.lineTo(i*cellPx,totalH); gridCtx.stroke(); }
+        for (let i = 0; i <= GRID_H; i += 8) { gridCtx.beginPath(); gridCtx.moveTo(0,i*cellPx); gridCtx.lineTo(totalW,i*cellPx); gridCtx.stroke(); }
+      }
     }
   }
 }
@@ -1860,7 +2196,9 @@ function buildFxPresets() {
   Object.keys(FX_PRESETS).forEach(key => {
     const btn = document.createElement('button');
     btn.textContent = T('fx-preset-' + key);
-    btn.style.cssText = 'cursor:pointer;padding:3px 10px;border-radius:12px;border:1px solid #bbb;background:#f0f0f0;font-size:12px;';
+    btn.style.cssText = 'cursor:pointer;padding:4px 12px;border-radius:14px;border:1px solid var(--card-border);background:var(--card-bg);font-size:12px;font-weight:500;transition:all 0.15s;';
+    btn.onmouseenter = () => { btn.style.background = 'var(--accent)'; btn.style.color = '#fff'; btn.style.borderColor = 'var(--accent)'; };
+    btn.onmouseleave = () => { btn.style.background = 'var(--card-bg)'; btn.style.color = ''; btn.style.borderColor = 'var(--card-border)'; };
     btn.onclick = () => applyFxPreset(key);
     container.appendChild(btn);
   });
@@ -3536,7 +3874,7 @@ function stopFxAnimLoop() {
   fxAnimTime = 0;
 }
 
-function render() { renderGrid(); }
+function render() { renderGrid(); updateEditorPreview(); }
 
 // ── Grid interaction ──
 function getPointerXY(e) {
@@ -3940,16 +4278,10 @@ function exportCompositePNG() {
   if (!assign.character || !store.assets[assign.character] || !assign.frame || !store.assets[assign.frame]) {
     toast(T('toast-export-block')); return;
   }
-  const scale = 8;
+  const scale = 8; // DPR=1 fixed for game asset export
   const cvs = document.createElement('canvas'); cvs.width = 32*scale; cvs.height = 48*scale;
   const ctx = cvs.getContext('2d');
-  // Render composite with offsets
-  const offsets = assign.offsets || {};
-  const drawEx = (lt, asset) => { if (!asset) return; const p = getLayerPos(lt, asset, offsets); drawAssetLayer(ctx, asset, p.x, p.y, scale); };
-  drawEx('frame', store.assets[assign.frame]);
-  drawEx('character', store.assets[assign.character]);
-  if (assign.points) drawEx('points', store.assets[assign.points]);
-  if (assign.icon) drawEx('icon', store.assets[assign.icon]);
+  renderCardComposite(ctx, selectedCardCode, scale);
 
   const link = document.createElement('a');
   link.download = `card-${selectedCardCode}.png`;
