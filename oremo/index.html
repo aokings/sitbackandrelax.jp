@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>オレモスキー</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: #f8f6f3;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 28px;
+      color: #c45a2d;
+      letter-spacing: 2px;
+      cursor: pointer;
+    }
+
+    header p {
+      font-size: 13px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .tagline {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #999;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* --- 店舗選択画面 --- */
+    .store-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .store-btn {
+      background: #fff;
+      border: 2px solid #e0dcd7;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex: 1 1 calc(50% - 5px);
+      min-width: 140px;
+      text-align: left;
+    }
+
+    .store-btn:hover {
+      border-color: #c45a2d;
+    }
+
+    .store-btn.selected {
+      background: #c45a2d;
+      border-color: #c45a2d;
+      color: #fff;
+    }
+
+    .store-btn .store-name {
+      font-weight: 600;
+      display: block;
+    }
+
+    .store-btn .store-area {
+      font-size: 12px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    .store-btn.selected .store-area {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .selected-count {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .search-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: #c45a2d;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      letter-spacing: 1px;
+    }
+
+    .search-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .search-btn:not(:disabled):hover {
+      opacity: 0.85;
+    }
+
+    /* --- 結果画面 --- */
+    .result-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .result-header .match-msg {
+      font-size: 15px;
+      color: #c45a2d;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .result-header .match-sub {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .result-list {
+      list-style: none;
+      margin-bottom: 28px;
+    }
+
+    .result-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #c45a2d;
+    }
+
+    .result-item .info .name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .result-item .info .area {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .result-item .score {
+      background: #fef0e8;
+      color: #c45a2d;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .no-result {
+      text-align: center;
+      color: #999;
+      padding: 40px 0;
+      font-size: 14px;
+    }
+
+    .back-btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #fff;
+      color: #c45a2d;
+      border: 2px solid #c45a2d;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .back-btn:hover {
+      background: #fef0e8;
+    }
+
+    /* --- データ管理画面 --- */
+    .data-section {
+      margin-bottom: 24px;
+    }
+
+    .data-section h3 {
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone {
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 32px 16px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #c45a2d;
+      background: #fef0e8;
+      color: #c45a2d;
+    }
+
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+
+    .import-status {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 8px;
+    }
+
+    .import-status .success { color: #2d8c45; }
+    .import-status .error { color: #c42d2d; }
+
+    .reviewer-list {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .reviewer-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .reviewer-item .r-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .reviewer-item .r-count {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .reviewer-item .r-source {
+      font-size: 11px;
+      color: #fff;
+      background: #999;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .reviewer-item .r-source.google { background: #4285f4; }
+    .reviewer-item .r-source.swarm { background: #f94877; }
+    .reviewer-item .r-source.manual { background: #999; }
+
+    .data-stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-card .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: #c45a2d;
+    }
+
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .nav-link {
+      display: inline-block;
+      font-size: 13px;
+      color: #c45a2d;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .nav-link:hover {
+      text-decoration: underline;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 id="home-link">オレモスキー</h1>
+      <p>好きな店から、好きな店を見つける</p>
+    </header>
+
+    <!-- 店舗選択画面 -->
+    <div id="screen-select" class="screen active">
+      <div class="tagline">
+        あなたが好きな店を好きな人が好きな店は、<br>きっとあなたも好きな店だ。
+      </div>
+      <div class="section-label">好きな店を選んでください（1〜3店）</div>
+      <div id="store-grid" class="store-grid"></div>
+      <div id="selected-count" class="selected-count"></div>
+      <button id="search-btn" class="search-btn" disabled>オレモスキーを探す</button>
+      <div style="text-align: center; margin-top: 16px;">
+        <span class="nav-link" id="to-data">データ管理</span>
+      </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="screen-result" class="screen">
+      <div class="result-header">
+        <div id="match-msg" class="match-msg"></div>
+        <div id="match-sub" class="match-sub"></div>
+      </div>
+      <ul id="result-list" class="result-list"></ul>
+      <button id="back-btn" class="back-btn">別の店で探す</button>
+    </div>
+
+    <!-- データ管理画面 -->
+    <div id="screen-data" class="screen">
+      <span class="nav-link" id="data-back">&larr; 戻る</span>
+
+      <div class="data-stats" id="data-stats">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-stores">0</div>
+          <div class="stat-label">店舗</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-reviewers">0</div>
+          <div class="stat-label">評価者</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-bookmarks">0</div>
+          <div class="stat-label">ブックマーク</div>
+        </div>
+      </div>
+
+      <div class="data-section">
+        <h3>Google 口コミをインポート</h3>
+        <div class="drop-zone" id="drop-google">
+          <div>Google Takeout の<br><strong>クチコミ.json</strong> をドロップ<br>またはクリックして選択</div>
+          <div style="margin-top: 8px; font-size: 12px;">★4以上をブックマークとして取り込みます</div>
+          <input type="file" id="file-google" accept=".json">
+        </div>
+        <div id="status-google" class="import-status" style="display:none;"></div>
+      </div>
+
+      <div class="data-section">
+        <h3>Swarm（Foursquare）をインポート</h3>
+        <div class="drop-zone" id="drop-swarm">
+          <div>Swarm エクスポートの<br><strong>JSONファイル</strong> をドロップ<br>またはクリックして選択</div>
+          <div style="margin-top: 8px; font-size: 12px;">チェックイン店舗をブックマークとして取り込みます</div>
+          <input type="file" id="file-swarm" accept=".json">
+        </div>
+        <div id="status-swarm" class="import-status" style="display:none;"></div>
+      </div>
+
+      <div class="data-section">
+        <h3>登録済みの評価者</h3>
+        <ul id="reviewer-list" class="reviewer-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =====================
+    // データストア
+    // =====================
+    let stores = [];
+    let reviewers = [];
+    let storeMap = {};
+    let nextStoreId = 1;
+    let nextReviewerId = 1;
+
+    function rebuildStoreMap() {
+      storeMap = Object.fromEntries(stores.map(s => [s.id, s]));
+    }
+
+    // 店名で既存店舗を探す（なければ新規追加）
+    function findOrCreateStore(name, area, genre) {
+      const existing = stores.find(s => s.name === name);
+      if (existing) return existing.id;
+      const id = "s" + String(nextStoreId++).padStart(4, "0");
+      stores.push({ id, name, genre: genre || "", area: area || "" });
+      rebuildStoreMap();
+      return id;
+    }
+
+    // 住所からエリアを抽出（市区町村レベル）
+    function extractArea(address) {
+      if (!address) return "";
+      // 「東京都豊島区」「埼玉県三郷市」「福岡県福岡市中央区」等を抽出
+      const m = address.match(/[都道府県](.+?[市区町村])/);
+      if (m) return m[1].replace(/[市区町村]$/, "");
+      return "";
+    }
+
+    // =====================
+    // Google 口コミ インポート
+    // =====================
+    function importGoogle(json, reviewerName) {
+      if (!json.type || json.type !== "FeatureCollection" || !json.features) {
+        return { ok: false, msg: "Google Takeout のクチコミ.json ではないようです" };
+      }
+
+      const bookmarkIds = [];
+      let skipped = 0;
+
+      for (const f of json.features) {
+        const p = f.properties;
+        if (!p.location) { skipped++; continue; }
+
+        const star = p.five_star_rating_published || 0;
+        if (star < 4) { skipped++; continue; }
+
+        const name = p.location.name;
+        const address = p.location.address || "";
+        const area = extractArea(address);
+
+        const storeId = findOrCreateStore(name, area, "");
+        if (!bookmarkIds.includes(storeId)) {
+          bookmarkIds.push(storeId);
+        }
+      }
+
+      if (bookmarkIds.length === 0) {
+        return { ok: false, msg: "★4以上の口コミが見つかりませんでした" };
+      }
+
+      // 既存の同名評価者がいたら上書き
+      const existing = reviewers.findIndex(r => r.name === reviewerName && r.source === "google");
+      if (existing >= 0) {
+        reviewers[existing].bookmarks = bookmarkIds;
+      } else {
+        const id = "r" + String(nextReviewerId++).padStart(4, "0");
+        reviewers.push({ id, name: reviewerName, bookmarks: bookmarkIds, source: "google" });
+      }
+
+      return {
+        ok: true,
+        msg: `${reviewerName} のデータを取り込みました：${bookmarkIds.length}店舗をブックマーク（${skipped}件スキップ）`
+      };
+    }
+
+    // =====================
+    // Swarm インポート（暫定：届いたら調整）
+    // =====================
+    function importSwarm(json, reviewerName) {
+      // Swarm export: checkins array with venue info
+      let checkins = null;
+
+      if (Array.isArray(json)) {
+        checkins = json;
+      } else if (json.checkins) {
+        checkins = json.checkins;
+      } else if (json.items) {
+        checkins = json.items;
+      } else {
+        return { ok: false, msg: "Swarm のエクスポートデータではないようです" };
+      }
+
+      const bookmarkIds = [];
+
+      for (const c of checkins) {
+        const venue = c.venue || c;
+        const name = venue.name;
+        if (!name) continue;
+
+        const loc = venue.location || {};
+        const area = loc.city || loc.state || "";
+
+        const storeId = findOrCreateStore(name, area, venue.categories?.[0]?.name || "");
+        if (!bookmarkIds.includes(storeId)) {
+          bookmarkIds.push(storeId);
+        }
+      }
+
+      if (bookmarkIds.length === 0) {
+        return { ok: false, msg: "チェックインデータが見つかりませんでした" };
+      }
+
+      const existing = reviewers.findIndex(r => r.name === reviewerName && r.source === "swarm");
+      if (existing >= 0) {
+        reviewers[existing].bookmarks = bookmarkIds;
+      } else {
+        const id = "r" + String(nextReviewerId++).padStart(4, "0");
+        reviewers.push({ id, name: reviewerName, bookmarks: bookmarkIds, source: "swarm" });
+      }
+
+      return {
+        ok: true,
+        msg: `${reviewerName} のデータを取り込みました：${bookmarkIds.length}店舗をブックマーク`
+      };
+    }
+
+    // =====================
+    // ファイル読み込みハンドラ
+    // =====================
+    function setupDropZone(dropId, fileId, statusId, importFn) {
+      const drop = document.getElementById(dropId);
+      const fileInput = document.getElementById(fileId);
+      const statusEl = document.getElementById(statusId);
+
+      drop.addEventListener("click", () => fileInput.click());
+
+      drop.addEventListener("dragover", e => {
+        e.preventDefault();
+        drop.classList.add("dragover");
+      });
+
+      drop.addEventListener("dragleave", () => {
+        drop.classList.remove("dragover");
+      });
+
+      drop.addEventListener("drop", e => {
+        e.preventDefault();
+        drop.classList.remove("dragover");
+        const file = e.dataTransfer.files[0];
+        if (file) processFile(file, statusEl, importFn);
+      });
+
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (file) processFile(file, statusEl, importFn);
+        fileInput.value = "";
+      });
+    }
+
+    function processFile(file, statusEl, importFn) {
+      const reviewerName = prompt("この口コミの評価者名を入力してください（例：Masaru）");
+      if (!reviewerName) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const json = JSON.parse(reader.result);
+          const result = importFn(json, reviewerName.trim());
+          statusEl.style.display = "block";
+          statusEl.innerHTML = result.ok
+            ? `<span class="success">${result.msg}</span>`
+            : `<span class="error">${result.msg}</span>`;
+          if (result.ok) {
+            renderDataScreen();
+          }
+        } catch (e) {
+          statusEl.style.display = "block";
+          statusEl.innerHTML = `<span class="error">JSONの読み込みに失敗しました：${e.message}</span>`;
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // =====================
+    // データ管理画面の描画
+    // =====================
+    function renderDataScreen() {
+      // 統計
+      const totalBookmarks = reviewers.reduce((sum, r) => sum + r.bookmarks.length, 0);
+      document.getElementById("stat-stores").textContent = stores.length;
+      document.getElementById("stat-reviewers").textContent = reviewers.length;
+      document.getElementById("stat-bookmarks").textContent = totalBookmarks;
+
+      // 評価者リスト
+      const list = document.getElementById("reviewer-list");
+      list.innerHTML = "";
+      if (reviewers.length === 0) {
+        list.innerHTML = '<li style="color:#999; font-size:13px; padding:12px;">まだ評価者がいません。口コミデータをインポートしてください。</li>';
+        return;
+      }
+      for (const r of reviewers) {
+        const li = document.createElement("li");
+        li.className = "reviewer-item";
+        const sourceClass = r.source || "manual";
+        const sourceLabel = r.source === "google" ? "Google" : r.source === "swarm" ? "Swarm" : "手動";
+        li.innerHTML = `
+          <div>
+            <span class="r-name">${r.name}</span>
+            <span class="r-count">${r.bookmarks.length}店ブックマーク</span>
+          </div>
+          <span class="r-source ${sourceClass}">${sourceLabel}</span>
+        `;
+        list.appendChild(li);
+      }
+    }
+
+    // =====================
+    // 状態
+    // =====================
+    const selected = new Set();
+
+    // =====================
+    // 店舗選択画面の描画
+    // =====================
+    const grid = document.getElementById("store-grid");
+    const countEl = document.getElementById("selected-count");
+    const searchBtn = document.getElementById("search-btn");
+
+    function renderGrid() {
+      grid.innerHTML = "";
+      if (stores.length === 0) {
+        grid.innerHTML = '<div style="color:#999; font-size:13px; padding:20px; text-align:center; width:100%;">店舗データがありません。<br>「データ管理」から口コミをインポートしてください。</div>';
+        updateCount();
+        return;
+      }
+      stores.forEach(store => {
+        const btn = document.createElement("button");
+        btn.className = "store-btn" + (selected.has(store.id) ? " selected" : "");
+        btn.innerHTML = `<span class="store-name">${store.name}</span><span class="store-area">${store.area}</span>`;
+        btn.addEventListener("click", () => toggleStore(store.id));
+        grid.appendChild(btn);
+      });
+      updateCount();
+    }
+
+    function toggleStore(id) {
+      if (selected.has(id)) {
+        selected.delete(id);
+      } else if (selected.size < 3) {
+        selected.add(id);
+      }
+      renderGrid();
+    }
+
+    function updateCount() {
+      const n = selected.size;
+      countEl.textContent = n > 0 ? `${n}店 選択中` : "";
+      searchBtn.disabled = n === 0;
+    }
+
+    // =====================
+    // CFコアロジック
+    // =====================
+    function recommend(selectedIds) {
+      // Step 2: 共通評価者の特定＋重み計算
+      const weightedReviewers = [];
+      for (const r of reviewers) {
+        const overlap = selectedIds.filter(id => r.bookmarks.includes(id));
+        if (overlap.length > 0) {
+          weightedReviewers.push({ reviewer: r, weight: overlap.length });
+        }
+      }
+
+      // Step 3: 候補店舗のスコアリング
+      const scoreMap = {};
+      for (const { reviewer, weight } of weightedReviewers) {
+        for (const sid of reviewer.bookmarks) {
+          if (selectedIds.includes(sid)) continue;
+          if (!scoreMap[sid]) scoreMap[sid] = 0;
+          scoreMap[sid] += weight;
+        }
+      }
+
+      // スコア順にソート
+      const results = Object.entries(scoreMap)
+        .map(([id, score]) => ({ store: storeMap[id], score }))
+        .filter(r => r.store)
+        .sort((a, b) => b.score - a.score);
+
+      return { results, reviewerCount: weightedReviewers.length };
+    }
+
+    // =====================
+    // 結果画面の描画
+    // =====================
+    function showResults() {
+      const selectedIds = [...selected];
+      const { results, reviewerCount } = recommend(selectedIds);
+
+      document.getElementById("match-msg").textContent =
+        `あなたと趣味が近い ${reviewerCount}人 が選んでいます`;
+      document.getElementById("match-sub").textContent =
+        `選択した店：${selectedIds.map(id => storeMap[id].name).join("、")}`;
+
+      const list = document.getElementById("result-list");
+      list.innerHTML = "";
+
+      if (results.length === 0) {
+        list.innerHTML = '<li class="no-result">おすすめ店舗が見つかりませんでした</li>';
+      } else {
+        for (const { store, score } of results) {
+          const li = document.createElement("li");
+          li.className = "result-item";
+          li.innerHTML = `
+            <div class="info">
+              <div class="name">${store.name}</div>
+              <div class="area">${store.area}</div>
+            </div>
+            <div class="score">スコア ${score}</div>
+          `;
+          list.appendChild(li);
+        }
+      }
+
+      switchScreen("screen-result");
+    }
+
+    // =====================
+    // 画面切替
+    // =====================
+    function switchScreen(id) {
+      document.querySelectorAll(".screen").forEach(el => el.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      if (id === "screen-data") renderDataScreen();
+      if (id === "screen-select") {
+        selected.clear();
+        renderGrid();
+      }
+    }
+
+    // =====================
+    // イベント
+    // =====================
+    searchBtn.addEventListener("click", showResults);
+
+    document.getElementById("back-btn").addEventListener("click", () => {
+      switchScreen("screen-select");
+    });
+
+    document.getElementById("to-data").addEventListener("click", () => {
+      switchScreen("screen-data");
+    });
+
+    document.getElementById("data-back").addEventListener("click", () => {
+      switchScreen("screen-select");
+    });
+
+    document.getElementById("home-link").addEventListener("click", () => {
+      switchScreen("screen-select");
+    });
+
+    // ドロップゾーンのセットアップ
+    setupDropZone("drop-google", "file-google", "status-google", importGoogle);
+    setupDropZone("drop-swarm", "file-swarm", "status-swarm", importSwarm);
+
+    // 初期描画
+    renderGrid();
+  </script>
+</body>
+</html>
