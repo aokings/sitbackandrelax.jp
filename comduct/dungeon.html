@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comduct · dungeon（簡易トルネコ）</title>
+    <style>
+      #party {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      #party .pc {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      #party .pc.down {
+        opacity: 0.45;
+        text-decoration: line-through;
+      }
+      #party .g {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        color: #0c0d10;
+        font-weight: 700;
+        font-size: 12px;
+      }
+      #party .ord {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--accent);
+        opacity: 0.85;
+      }
+      #party .hpn {
+        margin-left: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        min-width: 48px;
+        text-align: right;
+      }
+      #log {
+        flex: 1;
+        overflow-y: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      #cmdform {
+        display: flex;
+        gap: 8px;
+      }
+      #cmdinput {
+        flex: 1;
+        background: #0f1115;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: var(--text);
+        padding: 9px 12px;
+        font-size: 13px;
+      }
+      #cmdinput:focus {
+        outline: none;
+        border-color: #3a4a48;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.7;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 11px;
+      }
+      .hint b {
+        color: var(--text);
+      }
+      /* スマホ対応：盤を画面幅に収め、操作は画面パッドで */
+      #board {
+        max-width: 100%;
+        height: auto;
+      }
+      #pad {
+        display: none;
+        grid-template-columns: repeat(3, 56px);
+        grid-auto-rows: 56px;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      #pad .pb {
+        font-size: 20px;
+        padding: 0;
+        border-radius: 8px;
+        line-height: 1;
+      }
+      #pad #pad-center {
+        font-size: 13px;
+      }
+      #padopts {
+        display: none;
+        margin-top: 6px;
+      }
+      /* 表示モード（PC ⇄ モバイル を手動切替・起動時は自動判定）。 */
+      body.mode-mobile #app { flex-direction: column; }
+      body.mode-mobile #right { width: 100%; height: auto; }
+      body.mode-mobile #log { max-height: 28vh; }
+      body.mode-mobile #pad { display: grid; }
+      body.mode-mobile #padopts { display: block; }
+    </style>
+    <script type="module" crossorigin src="./assets/dungeon-IAIpJ7_p.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/style-CfgLRWOo.js">
+    <link rel="stylesheet" crossorigin href="./assets/style-CUDl0B5M.css">
+  </head>
+  <body>
+    <header id="topbar">
+      <span class="brand">comduct</span>
+      <span class="sub">dungeon — 簡易トルネコ（Phase 2 step1：命令チャネル）。本体 <a href="/" style="color: #6ec8ff">/</a></span>
+    </header>
+    <main id="app">
+      <section id="left">
+        <canvas id="board" width="748" height="440"></canvas>
+        <div id="status">…</div>
+        <div id="controls">
+          <button id="descend" type="button">降りる（&gt;）</button>
+          <button id="reset" type="button">もう一度</button>
+          <button id="layoutmode" type="button">🖥 PC</button>
+        </div>
+        <div id="pad" aria-label="移動パッド">
+          <button class="pb" type="button" data-dx="-1" data-dy="-1">↖</button>
+          <button class="pb" type="button" data-dx="0" data-dy="-1">↑</button>
+          <button class="pb" type="button" data-dx="1" data-dy="-1">↗</button>
+          <button class="pb" type="button" data-dx="-1" data-dy="0">←</button>
+          <button class="pb" id="pad-center" type="button" data-dx="0" data-dy="0">待つ</button>
+          <button class="pb" type="button" data-dx="1" data-dy="0">→</button>
+          <button class="pb" type="button" data-dx="-1" data-dy="1">↙</button>
+          <button class="pb" type="button" data-dx="0" data-dy="1">↓</button>
+          <button class="pb" type="button" data-dx="1" data-dy="1">↘</button>
+        </div>
+        <div id="padopts">
+          <button id="turnmode" type="button">🧭 向きモード: OFF</button>
+        </div>
+        <div class="hint">
+          <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
+          <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>（そこへ向かう）。同じ仲間をもう一度クリックで<b>追従に戻す</b>。テキストでも：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません（lockstep は主人公の手で進む）。<br />
+          <span style="opacity: 0.7">アイテム◆を踏むと装備／罠×は斥候リンが発見／空腹は右パネル「腹NN」。依頼・絆は次段。</span>
+        </div>
+      </section>
+      <aside id="right">
+        <section id="party"></section>
+        <section id="log"></section>
+        <form id="cmdform" autocomplete="off">
+          <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" />
+          <button type="submit">送る</button>
+        </form>
+      </aside>
+    </main>
+  </body>
+</html>
