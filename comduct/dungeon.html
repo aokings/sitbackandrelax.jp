@@ -57,6 +57,22 @@
         min-width: 48px;
         text-align: right;
       }
+      #bag {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      #bag .baghd { color: var(--text); }
+      #bag .bagrow { display: flex; align-items: center; gap: 8px; }
+      #bag .bagn { flex: 1; }
+      #bag .bagbtn { font-size: 11px; padding: 3px 9px; }
+      #bag .eqd { font-size: 11px; color: var(--accent); opacity: 0.8; }
       #log {
         flex: 1;
         overflow-y: auto;
@@ -131,7 +147,7 @@
       body.mode-mobile #pad { display: grid; }
       body.mode-mobile #padopts { display: block; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-CQaGDzsJ.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-DfmltEbK.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/style-CfgLRWOo.js">
     <link rel="stylesheet" crossorigin href="./assets/style-CUDl0B5M.css">
   </head>
@@ -172,6 +188,7 @@
       </section>
       <aside id="right">
         <section id="party"></section>
+        <section id="bag"></section>
         <section id="log"></section>
         <form id="cmdform" autocomplete="off">
           <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" />
