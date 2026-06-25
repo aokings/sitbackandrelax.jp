@@ -1,3 +1,53 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta http-equiv="refresh" content="0; url=dungeon.html" /><title>comduct</title></head>
-<body style="background:#0c0d10;color:#e8eaf0;font-family:system-ui,sans-serif;padding:24px"><p><a href="dungeon.html" style="color:#6ec8ff">comduct dungeon を開く →</a></p></body></html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comduct · 指揮（手と声）</title>
+    <script type="module" crossorigin src="./assets/main--ITxWQIo.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/style-CfgLRWOo.js">
+    <link rel="modulepreload" crossorigin href="./assets/ui-Da9UgHCR.js">
+    <link rel="stylesheet" crossorigin href="./assets/style-CUDl0B5M.css">
+  </head>
+  <body>
+    <header id="topbar">
+      <span class="brand">comduct</span>
+      <span class="sub">指揮 — 手（近接高絆へ直接）と声（隊長越し）・チャーム・指揮崩壊と立て直し</span>
+    </header>
+    <main id="app">
+      <section id="left">
+        <canvas id="board" width="580" height="412"></canvas>
+        <div id="status">…</div>
+        <div id="controls">
+          <button id="step" type="button">▶ 進める</button>
+          <button id="build" type="button">築モード: OFF</button>
+          <button id="export" type="button">turn-log v3 書き出し</button>
+          <label id="scalewrap">規模:
+            <select id="scale">
+              <option value="raid">raid（潜行・狭く速い）</option>
+              <option value="skirmish">skirmish（合戦・広盤＋烏合の衆）</option>
+            </select>
+          </label>
+          <label id="modewrap">解釈:
+            <select id="mode">
+              <option value="dummy">ダミー（決定的・即時）</option>
+              <option value="anthropic">LLM: Opus 4.8（Anthropic 直）</option>
+              <option value="openrouter">LLM: OpenRouter（安価・Gemini等）</option>
+            </select>
+          </label>
+          <label id="modelwrap" hidden>モデル:
+            <input id="model" list="ormodels" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+      </section>
+      <aside id="right">
+        <section id="timeline"></section>
+        <section id="chatlog"></section>
+        <form id="chatform" autocomplete="off">
+          <input id="chatinput" placeholder="相談:左どうする？ ／ 戦術:/突撃 ／ 声:@隊長ガロ 退け ／ 全軍:@全体 攻めろ ／ 手:@近衛 攻めろ" />
+          <button type="submit">送る</button>
+        </form>
+      </aside>
+    </main>
+  </body>
+</html>
