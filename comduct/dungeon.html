@@ -2,9 +2,18 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>comduct · dungeon（簡易トルネコ）</title>
     <style>
+      /* 連打/ダブルタップでの誤ズームを防ぐ（パッド操作対策）。スクロールは生かす。 */
+      html,
+      body {
+        touch-action: manipulation;
+        overscroll-behavior: none;
+      }
+      button {
+        touch-action: manipulation;
+      }
       #party {
         display: flex;
         flex-direction: column;
