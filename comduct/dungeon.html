@@ -156,8 +156,20 @@
       body.mode-mobile #log { max-height: 28vh; }
       body.mode-mobile #pad { display: grid; }
       body.mode-mobile #padopts { display: block; }
+      /* 装備オーバーレイ（街でもダンジョンでも同じ画面） */
+      #equip { display: none; position: fixed; inset: 0; background: rgba(8, 9, 12, 0.72); z-index: 50; align-items: center; justify-content: center; }
+      #equippanel { width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+      #equiphd { display: flex; align-items: center; justify-content: space-between; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+      #equiphd button { font-size: 12px; padding: 5px 10px; }
+      .eqmembers { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+      .eqm { font-size: 12px; padding: 5px 9px; border-radius: 6px; background: #0f1115; border: 1px solid var(--line); color: var(--muted); }
+      .eqm.on { border-color: var(--accent); color: var(--text); }
+      .eqstats { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+      .eqslots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+      .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
+      .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-C1PGAhHn.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-C5d3QAgf.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -171,6 +183,7 @@
         <div id="status">…</div>
         <div id="controls">
           <button id="descend" type="button">降りる（&gt;）</button>
+          <button id="equipbtn" type="button">🛡 装備（i）</button>
           <button id="reset" type="button">もう一度</button>
           <button id="composemode" type="button">🧑 編成</button>
           <button id="layoutmode" type="button">🖥 PC</button>
@@ -207,5 +220,11 @@
         </form>
       </aside>
     </main>
+    <div id="equip">
+      <div id="equippanel">
+        <div id="equiphd"><span id="modaltitle">装備を整える</span><button id="equipclose" data-eqclose type="button">閉じる（Esc）</button></div>
+        <div id="equipbody"></div>
+      </div>
+    </div>
   </body>
 </html>
