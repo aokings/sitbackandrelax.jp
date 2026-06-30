@@ -171,7 +171,7 @@
       .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
       .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-DSzSbj74.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CZe1oppa.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -190,6 +190,7 @@
           <button id="composemode" type="button">🧑 編成</button>
           <button id="layoutmode" type="button">🖥 PC</button>
           <button id="mapmode" type="button">🗺 地図: ON</button>
+          <button id="voxmode" type="button">🧊 3D: OFF</button>
           <button id="aimmode" type="button">🏹 狙う: OFF</button>
         </div>
         <div id="pad" aria-label="移動パッド">
@@ -209,7 +210,8 @@
         <div class="hint">
           <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
           <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>（そこへ向かう）。同じ仲間をもう一度クリックで<b>追従に戻す</b>。テキストでも：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません（lockstep は主人公の手で進む）。<br />
-          <span style="opacity: 0.7">アイテム◆を踏むと装備／罠×は斥候リンが発見／空腹は右パネル「腹NN」。依頼・絆は次段。</span>
+          <span style="opacity: 0.7">アイテム◆を踏むと装備／罠×は斥候リンが発見／空腹は右パネル「腹NN」。依頼・絆は次段。</span><br />
+          <span style="opacity: 0.7"><b>🧊3D</b> の時＝<b>↑前進／↓後退／←→ その場で回転</b>（カメラが背後へ回り込む）・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。仲間クリックは同じ。</span>
         </div>
       </section>
       <aside id="right">
