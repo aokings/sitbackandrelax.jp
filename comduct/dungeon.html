@@ -131,6 +131,10 @@
         position: absolute; left: 0; top: 0; z-index: 5; display: none;
         pointer-events: none; /* 全面に重ねるが透明＝プレイ画面が透ける（床だけ半透明青） */
       }
+      /* 深い階へ直行（高低差の確認用） */
+      .depthjump { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; }
+      .depthjump input { width: 42px; background: #0f1115; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 5px; font-size: 12px; }
+      .depthjump button { background: #1b2230; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font-size: 12px; cursor: pointer; }
       /* スマホ対応：盤を画面幅に収め、操作は画面パッドで */
       #board {
         max-width: min(100%, 600px); /* 追従窓の canvas を引き伸ばし過ぎない（巨大化/ぼやけ防止）。中央寄せ。 */
@@ -177,7 +181,7 @@
       .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
       .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-Dhd6MWKl.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-qXmg1NKi.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -199,6 +203,7 @@
           <button id="mapmode" type="button">🗺 地図: ON</button>
           <button id="voxmode" type="button">🧊 3D: OFF</button>
           <button id="aimmode" type="button">🏹 狙う: OFF</button>
+          <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" />階へ<button id="godepth" type="button">直行</button></span>
         </div>
         <div id="pad" aria-label="移動パッド">
           <button class="pb" type="button" data-dx="-1" data-dy="-1">↖</button>
