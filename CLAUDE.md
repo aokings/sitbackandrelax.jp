@@ -1,5 +1,7 @@
 # sitbackandrelax.jp — Operational CLAUDE
 
+> **横断参照**: 別プロジェクトの話題が出たら `~/Developer/tree-top.md` (全プロジェクト関係マップ、~/work/ 系も含む) と `~/.claude/projects/-Users-masaru/memory/MEMORY.md` (auto-memory カタログ、名称変遷史含む) で当たり先を探す。
+
 ## 概要
 Masaruのポートフォリオサイト。ボードゲームとデジタルツールを紹介する。
 - URL: https://sitbackandrelax.jp

@@ -5,183 +5,208 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>comduct · dungeon（簡易トルネコ）</title>
     <style>
-      /* 連打/ダブルタップでの誤ズームを防ぐ（パッド操作対策）。スクロールは生かす。 */
+      /* ============================================================
+         潜行 UI 文法（docs/DESIGN-companions.md）
+         ・ゲーム画面を全画面／潜行中に見たい情報は半透明オーバレイ
+         ・設定切り替え系は ☰ に格納＝普段は引っ込めて最大化
+         ・白テーマ・文字大きめ・タッチ余白確保
+         ============================================================ */
+      :root {
+        --bg: #eef2f8;
+        --panel: #ffffff;
+        --line: #dce3ec;
+        --text: #1b2532;
+        --muted: #5b6472;
+        --accent: #2e74f0;
+        --tint: #e7f0ff;
+        --hp: #31b36b;
+        --mp: #3b82f6;
+        --danger: #e5484d;
+        --track: #e5eaf1;
+      }
       html,
       body {
         touch-action: manipulation;
         overscroll-behavior: none;
+        background: var(--bg);
+        color: var(--text);
       }
-      button {
-        touch-action: manipulation;
+      #topbar { display: none; } /* 全画面化のため通常のヘッダは畳む */
+
+      /* 全画面ステージ */
+      #app { position: fixed; inset: 0; padding: 0; margin: 0; display: block; }
+      #left {
+        position: absolute;
+        inset: 0;
+        display: block;
+        background: linear-gradient(180deg, #e9eff7 0%, #d5e0ec 100%);
+        overflow: hidden;
       }
-      #party {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 10px;
-      }
-      #party .pc {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-      }
-      #party .pc.down {
-        opacity: 0.45;
-        text-decoration: line-through;
-      }
-      #party .g {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        color: #0c0d10;
-        font-weight: 700;
-        font-size: 12px;
-      }
-      #party .ord {
-        margin-left: auto;
-        font-size: 11px;
-        color: var(--accent);
-        opacity: 0.85;
-      }
-      #party .hpn {
-        margin-left: 10px;
-        color: var(--muted);
-        font-size: 12px;
-        min-width: 48px;
-        text-align: right;
-      }
-      #party .pc {
-        flex-wrap: wrap;
-      }
-      #party .st {
-        flex-basis: 100%;
-        font-size: 10px;
-        color: var(--muted);
-        opacity: 0.72;
-        letter-spacing: 0.02em;
-      }
-      #bag {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 10px;
-        font-size: 12px;
-        color: var(--muted);
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      #bag .baghd { color: var(--text); }
-      #bag .bagrow { display: flex; align-items: center; gap: 8px; }
-      #bag .bagn { flex: 1; }
-      #bag .bagbtn { font-size: 11px; padding: 3px 9px; }
-      #bag .eqd { font-size: 11px; color: var(--accent); opacity: 0.8; }
-      #log {
-        flex: 1;
-        overflow-y: auto;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 10px;
-        font-size: 12px;
-        color: var(--muted);
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      #cmdform {
-        display: flex;
-        gap: 8px;
-      }
-      #cmdinput {
-        flex: 1;
+      /* ゲーム画面（2D 追従窓）＝中央・アスペクト維持で最大化。3D 時は隠され voxel が重なる */
+      #board {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(100vw, calc((100vh - 12px) * 748 / 440));
+        height: auto;
         background: #0f1115;
         border: 1px solid var(--line);
-        border-radius: 6px;
-        color: var(--text);
-        padding: 9px 12px;
-        font-size: 13px;
+        border-radius: 10px;
+        box-shadow: 0 8px 30px rgba(27, 37, 50, 0.14);
       }
-      #cmdinput:focus {
-        outline: none;
-        border-color: #3a4a48;
-      }
-      .hint {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.7;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 11px;
-      }
-      .hint b {
-        color: var(--text);
-      }
-      /* #left を基準に、3D時はトルネコ式オーバレイ地図（主人公中央・半透明）を主ビューに重ねる＝2層視界 */
-      #left { position: relative; }
+      /* トルネコ式オーバレイ地図（主人公中央・半透明・床だけ・透ける）＝2層視界 */
       #minimap {
         position: absolute; left: 0; top: 0; z-index: 5; display: none;
-        pointer-events: none; /* 全面に重ねるが透明＝プレイ画面が透ける（床だけ半透明青） */
+        pointer-events: none;
       }
-      /* 深い階へ直行（高低差の確認用） */
-      .depthjump { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; }
-      .depthjump input { width: 42px; background: #0f1115; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 5px; font-size: 12px; }
-      .depthjump button { background: #1b2230; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font-size: 12px; cursor: pointer; }
-      /* スマホ対応：盤を画面幅に収め、操作は画面パッドで */
-      #board {
-        max-width: min(100%, 600px); /* 追従窓の canvas を引き伸ばし過ぎない（巨大化/ぼやけ防止）。中央寄せ。 */
-        height: auto;
-        display: block;
-        margin: 0 auto;
+
+      /* オーバレイ共通パネル（半透明・影・角丸） */
+      .ov {
+        position: absolute;
+        z-index: 8;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 14px;
+        box-shadow: 0 6px 22px rgba(27, 37, 50, 0.15);
+        backdrop-filter: blur(6px);
       }
+
+      /* 左上：文脈チップ＋実況フィード */
+      #ctxbar {
+        left: 14px; top: 14px; max-width: min(46vw, 420px);
+        padding: 9px 14px; font-size: 15px; font-weight: 600; color: var(--text);
+      }
+      #status { color: var(--text); }
+      #log {
+        left: 14px; top: 60px; width: min(46vw, 380px); max-height: 40vh; overflow-y: auto;
+        padding: 9px 12px; display: flex; flex-direction: column; gap: 3px;
+        font-size: 13px; color: var(--muted); line-height: 1.5;
+      }
+      #log div { }
+      #log div:first-child { color: var(--text); font-weight: 600; } /* 直近イベントを強調 */
+
+      /* 右上：頻用トグル 🗺🧊 ＋ ☰ メニュー */
+      #topright { position: absolute; right: 14px; top: 14px; z-index: 12; display: flex; gap: 8px; align-items: center; background: none; box-shadow: none; border: none; }
+      #topright button {
+        width: 48px; height: 44px; padding: 0; font-size: 18px; border-radius: 12px;
+        background: rgba(255, 255, 255, 0.9); color: var(--muted); border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 4px 16px rgba(27, 37, 50, 0.12); backdrop-filter: blur(6px);
+      }
+      #topright button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+      /* ☰ メニュー（設定系をまとめて格納・普段は非表示） */
+      #menupanel {
+        right: 14px; top: 66px; width: min(90vw, 340px); max-height: 78vh; overflow-y: auto; z-index: 13;
+        padding: 12px; display: flex; flex-direction: column; gap: 8px;
+      }
+      #menupanel[hidden] { display: none; }
+      #menupanel .mgroup { display: flex; flex-wrap: wrap; gap: 6px; }
+      #menupanel button { font-size: 13px; padding: 8px 12px; }
+      .depthjump { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; }
+      .depthjump input { width: 46px; background: #fff; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 6px 6px; font-size: 13px; }
+
+      /* ボタン（明るく・大きめ） */
+      button {
+        background: #fff; color: var(--text); border: 1px solid var(--line);
+        border-radius: 10px; padding: 9px 14px; font-size: 14px; cursor: pointer;
+      }
+      button:hover { border-color: #c4d0de; background: #f5f8fc; }
+
+      /* 下：パーティ HUD（各員：顔＋Lv＋状態＋HP/MP バー・危険は赤枠） */
+      #party {
+        left: 14px; right: 14px; bottom: 14px; z-index: 9;
+        display: flex; gap: 10px; align-items: stretch;
+        padding: 10px; overflow-x: auto;
+      }
+      #party .pc {
+        flex: 1 1 0; min-width: 150px;
+        display: flex; flex-direction: column; gap: 6px;
+        background: #fff; border: 1px solid var(--line); border-radius: 12px;
+        padding: 9px 11px;
+        box-shadow: 0 3px 12px rgba(27, 37, 50, 0.08);
+      }
+      #party .pc.down { opacity: 0.5; }
+      #party .pc.danger { border: 2px solid var(--danger); }
+      #party .pc-top { display: flex; align-items: center; gap: 8px; }
+      #party .g {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 13px;
+        border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(27,37,50,0.08);
+      }
+      #party .pc-nm { font-weight: 800; font-size: 14px; color: var(--text); }
+      #party .pc-lv { font-size: 11px; color: var(--muted); }
+      #party .pc-ord { margin-left: auto; font-size: 11px; }
+      #party .pc-badge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 7px; background: var(--tint); color: var(--accent); }
+      #party .pc-badge.wait { background: #eef1f6; color: var(--muted); }
+      #party .pc-badge.goto { background: #e7f0ff; color: var(--accent); }
+      #party .pc-badge.req { background: #ffe6f0; color: #d63384; }
+      #party .pc-badge.dead { background: #f1f3f6; color: var(--muted); }
+      #party .bar { height: 7px; border-radius: 4px; background: var(--track); overflow: hidden; }
+      #party .bar.mp { height: 5px; }
+      #party .bar i { display: block; height: 100%; border-radius: 4px; }
+      #party .bar.hp i { background: var(--hp); }
+      #party .bar.mp i { background: var(--mp); }
+      #party .pc-nums { font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+      #party .pc-nums b { color: var(--text); font-weight: 700; }
+
+      /* 装備・持ち物・呪文（☰ 内） */
+      #bag {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 8px 10px; font-size: 12px; color: var(--muted);
+        display: flex; flex-direction: column; gap: 4px;
+      }
+      #bag .baghd { color: var(--text); font-weight: 700; }
+      #bag .bagrow { display: flex; align-items: center; gap: 8px; }
+      #bag .bagn { flex: 1; }
+      #bag .bagbtn { font-size: 11px; padding: 4px 10px; }
+      #bag .eqd { font-size: 11px; color: var(--accent); opacity: 0.85; }
+      #cmdform { display: flex; gap: 8px; }
+      #cmdinput {
+        flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 8px;
+        color: var(--text); padding: 9px 12px; font-size: 13px;
+      }
+      #cmdinput:focus { outline: none; border-color: var(--accent); }
+      .hint {
+        font-size: 12px; color: var(--muted); line-height: 1.65;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px;
+      }
+      .hint b { color: var(--text); }
+
+      /* 移動パッド（下・半透明・モバイルで表示） */
       #pad {
-        display: none;
-        grid-template-columns: repeat(3, 56px);
-        grid-auto-rows: 56px;
-        gap: 6px;
-        margin-top: 10px;
+        display: none; position: absolute; z-index: 10;
+        left: 50%; bottom: 128px; transform: translateX(-50%);
+        grid-template-columns: repeat(3, 58px); grid-auto-rows: 58px; gap: 7px;
       }
       #pad .pb {
-        font-size: 20px;
-        padding: 0;
-        border-radius: 8px;
-        line-height: 1;
+        font-size: 22px; padding: 0; border-radius: 14px; line-height: 1;
+        background: rgba(255, 255, 255, 0.9); border: 1px solid rgba(255,255,255,0.7);
+        box-shadow: 0 3px 12px rgba(27, 37, 50, 0.14); backdrop-filter: blur(6px);
       }
-      #pad #pad-center {
-        font-size: 13px;
-      }
-      #padopts {
-        display: none;
-        margin-top: 6px;
-      }
-      /* 表示モード（PC ⇄ モバイル を手動切替・起動時は自動判定）。 */
-      body.mode-mobile #app { flex-direction: column; }
-      body.mode-mobile #right { width: 100%; height: auto; }
-      body.mode-mobile #log { max-height: 28vh; }
-      body.mode-mobile #pad { display: grid; }
-      body.mode-mobile #padopts { display: block; }
+      #pad #pad-center { font-size: 14px; background: rgba(238,241,246,0.92); color: var(--muted); }
+      #padopts { display: none; }
+
+      /* 表示モード（PC ⇄ モバイル手動切替・起動時は自動判定） */
+      body.mode-mobile #pad { display: grid; bottom: 14px; } /* パッドは最下部・親指位置 */
+      body.mode-mobile #party { bottom: 214px; } /* パッドの上にパーティ HUD を退避（重なり防止） */
+      body.mode-mobile #ctxbar { max-width: 60vw; font-size: 14px; }
+      body.mode-mobile #log { width: 62vw; top: 56px; max-height: 24vh; }
+
       /* 装備オーバーレイ（街でもダンジョンでも同じ画面） */
-      #equip { display: none; position: fixed; inset: 0; background: rgba(8, 9, 12, 0.72); z-index: 50; align-items: center; justify-content: center; }
-      #equippanel { width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
-      #equiphd { display: flex; align-items: center; justify-content: space-between; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-      #equiphd button { font-size: 12px; padding: 5px 10px; }
+      #equip { display: none; position: fixed; inset: 0; background: rgba(27, 37, 50, 0.42); z-index: 50; align-items: center; justify-content: center; }
+      #equippanel { width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: 0 20px 60px rgba(27,37,50,0.3); }
+      #equiphd { display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+      #equiphd button { font-size: 12px; padding: 6px 12px; }
       .eqmembers { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-      .eqm { font-size: 12px; padding: 5px 9px; border-radius: 6px; background: #0f1115; border: 1px solid var(--line); color: var(--muted); }
+      .eqm { font-size: 12px; padding: 6px 10px; border-radius: 8px; background: #f5f8fc; border: 1px solid var(--line); color: var(--muted); }
       .eqm.on { border-color: var(--accent); color: var(--text); }
       .eqstats { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
       .eqslots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
       .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
       .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-DSDJFwrD.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CdcXaqti.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -193,18 +218,49 @@
       <section id="left">
         <canvas id="board" width="748" height="440"></canvas>
         <canvas id="minimap" width="208" height="126"></canvas>
-        <div id="status">…</div>
-        <div id="controls">
-          <button id="descend" type="button">降りる（&gt;）</button>
-          <button id="equipbtn" type="button">🛡 装備（i）</button>
-          <button id="reset" type="button">もう一度</button>
-          <button id="composemode" type="button">🧑 編成</button>
-          <button id="layoutmode" type="button">🖥 PC</button>
-          <button id="mapmode" type="button">🗺 地図: ON</button>
-          <button id="voxmode" type="button">🧊 3D: OFF</button>
-          <button id="aimmode" type="button">🏹 狙う: OFF</button>
-          <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" />階へ<button id="godepth" type="button">直行</button></span>
+
+        <!-- 左上：文脈チップ＋実況フィード -->
+        <div id="ctxbar" class="ov"><span id="status">…</span></div>
+        <section id="log" class="ov"></section>
+
+        <!-- 右上：頻用トグル＋☰ -->
+        <div id="topright">
+          <button id="mapmode" type="button" title="地図">🗺</button>
+          <button id="voxmode" type="button" title="3D">🧊</button>
+          <button id="menubtn" type="button" title="メニュー">☰</button>
         </div>
+
+        <!-- ☰ メニュー（設定系を格納・普段は非表示） -->
+        <div id="menupanel" class="ov" hidden>
+          <div class="mgroup">
+            <button id="descend" type="button">降りる（&gt;）</button>
+            <button id="equipbtn" type="button">🛡 装備（i）</button>
+            <button id="composemode" type="button">🧑 編成</button>
+            <button id="aimmode" type="button">🏹 狙う: OFF</button>
+          </div>
+          <div class="mgroup">
+            <button id="layoutmode" type="button">🖥 PC</button>
+            <button id="turnmode" type="button">🧭 向きモード: OFF</button>
+            <button id="reset" type="button">もう一度</button>
+            <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" />階へ<button id="godepth" type="button">直行</button></span>
+          </div>
+          <section id="bag"></section>
+          <form id="cmdform" autocomplete="off">
+            <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" />
+            <button type="submit">送る</button>
+          </form>
+          <div class="hint">
+            <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
+            <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>。同じ仲間をもう一度クリックで<b>追従に戻す</b>。テキスト：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません。<br />
+            <span style="opacity: 0.7"><b>🧊3D</b>＝<b>↑前進／↓後退／←→ 回転</b>・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。</span>
+          </div>
+        </div>
+        <div id="padopts"></div>
+
+        <!-- 下：パーティ HUD -->
+        <section id="party" class="ov"></section>
+
+        <!-- 移動パッド（モバイル） -->
         <div id="pad" aria-label="移動パッド">
           <button class="pb" type="button" data-dx="-1" data-dy="-1">↖</button>
           <button class="pb" type="button" data-dx="0" data-dy="-1">↑</button>
@@ -216,25 +272,7 @@
           <button class="pb" type="button" data-dx="0" data-dy="1">↓</button>
           <button class="pb" type="button" data-dx="1" data-dy="1">↘</button>
         </div>
-        <div id="padopts">
-          <button id="turnmode" type="button">🧭 向きモード: OFF</button>
-        </div>
-        <div class="hint">
-          <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
-          <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>（そこへ向かう）。同じ仲間をもう一度クリックで<b>追従に戻す</b>。テキストでも：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません（lockstep は主人公の手で進む）。<br />
-          <span style="opacity: 0.7">アイテム◆を踏むと装備／罠×は斥候リンが発見／空腹は右パネル「腹NN」。依頼・絆は次段。</span><br />
-          <span style="opacity: 0.7"><b>🧊3D</b> の時＝<b>↑前進／↓後退／←→ その場で回転</b>（カメラが背後へ回り込む）・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。仲間クリックは同じ。</span>
-        </div>
       </section>
-      <aside id="right">
-        <section id="party"></section>
-        <section id="bag"></section>
-        <section id="log"></section>
-        <form id="cmdform" autocomplete="off">
-          <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" />
-          <button type="submit">送る</button>
-        </form>
-      </aside>
     </main>
     <div id="equip">
       <div id="equippanel">
