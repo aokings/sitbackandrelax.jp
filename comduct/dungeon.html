@@ -55,6 +55,12 @@
         border-radius: 10px;
         box-shadow: 0 8px 30px rgba(27, 37, 50, 0.14);
       }
+      /* §11-B 大型の登場演出＝画面端の警告フラッシュ（一瞬・非モーダル・入力を遮らない） */
+      #introfx { position: fixed; inset: 0; pointer-events: none; z-index: 55; opacity: 0;
+        box-shadow: inset 0 0 110px 26px rgba(255, 92, 58, 0.4), inset 0 0 14px 3px rgba(255, 150, 80, 0.22); }
+      #introfx.go { animation: introfx 0.9s ease-out; }
+      @keyframes introfx { 0% { opacity: 0; } 16% { opacity: 1; } 100% { opacity: 0; } }
+
       /* トルネコ式オーバレイ地図（主人公中央・半透明・床だけ・透ける）＝2層視界 */
       #minimap {
         position: absolute; left: 0; top: 0; z-index: 5; display: none;
@@ -245,7 +251,7 @@
       .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
       .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-CprC3Qnz.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CsfNXsoz.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
