@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comduct · voxel カタログ（開発ツール）</title>
+    <style>
+      /* ============================================================
+         §15 voxel モデル・カタログ（DESIGN-tactical-depth §15）
+         ・render-voxel.ts のモデル構築コードを import して描く＝ゲームとドリフトしない
+         ・左＝カテゴリ別グリッド（サムネ＋名前＋「どこを編集すれば変わるか」）
+         ・右＝拡大ビュー（orbit／アニメ再生／着せ替え／背景・ライト切替）
+         ============================================================ */
+      :root {
+        --bg: #12161f;
+        --panel: #1a2130;
+        --line: #2b3547;
+        --text: #e8edf5;
+        --muted: #8b96a8;
+        --accent: #5b9bff;
+        --tint: #223048;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif; }
+      #app { display: flex; height: 100vh; }
+
+      /* ── 左：一覧 ─────────────────────────── */
+      #list { width: 460px; min-width: 320px; overflow-y: auto; border-right: 1px solid var(--line); padding: 12px; }
+      #list h1 { font-size: 16px; margin: 2px 0 2px; }
+      #list .sub { color: var(--muted); font-size: 11px; margin-bottom: 10px; }
+      #list h2 { font-size: 13px; color: var(--accent); margin: 14px 0 6px; border-bottom: 1px solid var(--line); padding-bottom: 3px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+      .cell { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 5px; cursor: pointer; text-align: center; }
+      .cell:hover { border-color: var(--accent); }
+      .cell.sel { border-color: var(--accent); background: var(--tint); }
+      .cell img { width: 100%; aspect-ratio: 1; border-radius: 5px; background: #0d1017; display: block; }
+      .cell .nm { font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* ── 右：拡大ビュー ────────────────────── */
+      #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+      #stage { flex: 1; position: relative; min-height: 0; }
+      #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+      #stage canvas:active { cursor: grabbing; }
+      #ctl { border-top: 1px solid var(--line); background: var(--panel); padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+      .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .row .lbl { color: var(--muted); font-size: 11px; min-width: 4.5em; }
+      button, select { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+      button:hover { border-color: var(--accent); }
+      button.on { background: var(--accent); color: #0d1017; border-color: var(--accent); }
+      label.chk { font-size: 12px; display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
+      #title { font-size: 15px; font-weight: 700; }
+      #hint { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #9fd17f; background: #131a12; border: 1px solid #2b3a26; border-radius: 6px; padding: 5px 8px; overflow-x: auto; white-space: nowrap; }
+      #hint b { color: #ffd75e; font-weight: 600; }
+      #dressrow[hidden] { display: none; }
+      @media (max-width: 860px) { #app { flex-direction: column; } #list { width: 100%; height: 42vh; } }
+    </style>
+    <script type="module" crossorigin src="./assets/catalog-D5BMhr3D.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-CnipNk4f.js">
+    <link rel="modulepreload" crossorigin href="./assets/render-voxel-0eGhsnWD.js">
+  </head>
+  <body>
+    <div id="app">
+      <div id="list">
+        <h1>voxel カタログ（開発ツール）</h1>
+        <div class="sub">render-voxel.ts のモデル構築を import して描く＝ゲームとドリフトしない（§15）。クリックで拡大・ドラッグで回す。</div>
+        <div id="cats"></div>
+      </div>
+      <div id="main">
+        <div id="stage"></div>
+        <div id="ctl">
+          <div class="row"><span id="title">—</span></div>
+          <div class="row"><span class="lbl">編集の当たり</span><span id="hint">—</span></div>
+          <div class="row" id="animrow">
+            <span class="lbl">アニメ</span>
+            <button data-anim="melee">踏み込み⚔</button>
+            <button data-anim="shoot">射撃🏹</button>
+            <button data-anim="cast">詠唱✦</button>
+            <button data-anim="windup">予告</button>
+            <button data-anim="exhale">息</button>
+            <button data-anim="heal">回復</button>
+            <button data-anim="hit">被弾</button>
+            <button data-anim="death">死</button>
+            <button id="spin">自動回転</button>
+          </div>
+          <div class="row" id="dressrow">
+            <span class="lbl">着せ替え</span>
+            <select id="drace"></select>
+            <select id="dweapon"></select>
+            <select id="darmor"></select>
+            <select id="dacc"></select>
+            <label class="chk"><input type="checkbox" id="dpie" />聖印(pie≥10)</label>
+            <label class="chk"><input type="checkbox" id="dhero" />主人公(冠)</label>
+          </div>
+          <div class="row">
+            <span class="lbl">環境</span>
+            <select id="theme">
+              <option value="plain">素の石窟</option>
+              <option value="fire">火の穴</option>
+              <option value="ice">氷の穴</option>
+              <option value="earth">土の穴</option>
+              <option value="holy">聖の穴</option>
+              <option value="town">街</option>
+            </select>
+            <button id="light" class="on">実機</button>
+            <span class="lbl" style="min-width:0">（実機＝ゲームの光／明所＝素の色／暗所＝emissive 点検）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
