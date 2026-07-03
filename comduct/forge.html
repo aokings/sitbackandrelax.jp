@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comduct · 鍛冶場（構造エディタ P2・開発ツール）</title>
+    <style>
+      /* ============================================================
+         §18 クリエイター P2（DESIGN-creator §8）
+         ・第一要件＝迷わず描ける：現在筆が常に見える・ドラッグ塗り・右クリック消し・
+           矩形/塗りつぶし・undo/redo・hover ヒント・カメラ操作の明示・空グリッド誘導
+         ・描画＝render-voxel（buildPrefabPreview/buildSample/buildActorBody）＝
+           サムネも盤もゲームと同一実体（ドリフト無し）
+         ・左＝パレット＋メタ＋solvability／中＝3D 編集面／右＝ライブラリ（truth/future）
+         ============================================================ */
+      :root {
+        --bg: #12161f; --panel: #1a2130; --line: #2b3547;
+        --text: #e8edf5; --muted: #8b96a8; --accent: #5b9bff; --tint: #223048;
+        --ok: #7fd17f; --warn: #ffd166; --err: #ff7a6e; --erase: #e06a5a;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif; }
+      #app { display: flex; height: 100vh; }
+      #side { width: 300px; min-width: 260px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
+      #side > * { flex: 0 0 auto; } /* overflow 付きの子（モンスター一覧）が flex-shrink で潰れない */
+      #side h1 { font-size: 15px; }
+      .sub { color: var(--muted); font-size: 11px; }
+      #side h2, #loop h2 { font-size: 12px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 3px; margin-top: 3px; }
+      button, select, input[type="text"], input[type="number"] { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+      input[type="text"], input[type="number"] { cursor: text; }
+      button:hover { border-color: var(--accent); }
+      button.on { background: var(--accent); color: #0d1017; border-color: var(--accent); font-weight: 700; }
+      button.big { background: var(--tint); border-color: var(--accent); padding: 8px 10px; font-weight: 700; }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      /* パレット＝サムネ付きの筆グリッド。選択中は青枠＋名前が主張＝「いま何の筆か」を常時可視化 */
+      .pal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+      .pal .swatch { position: relative; border: 2px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; padding: 0 0 2px; text-align: center; }
+      .pal .swatch:hover { border-color: #4a648f; }
+      .pal .swatch.on { border-color: var(--accent); background: var(--tint); box-shadow: 0 0 0 1px var(--accent); }
+      .pal .swatch img { width: 100%; aspect-ratio: 1; display: block; border-radius: 6px 6px 0 0; background: #0d1117; }
+      .pal .swatch .nm { font-size: 10px; line-height: 1.25; padding: 1px 2px 0; }
+      .pal .swatch .kbd { position: absolute; top: 2px; left: 4px; font-size: 9px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; background: rgba(13,17,23,0.7); border-radius: 3px; padding: 0 3px; }
+      .pal .swatch .glyph { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; background: #0d1117; border-radius: 6px 6px 0 0; }
+      .pal.mons { max-height: 168px; overflow-y: auto; }
+      #palopts { display: none; gap: 5px; align-items: center; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 11px; }
+      #palopts.show { display: flex; }
+      #palopts .chip { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+      #palopts .chip.on { border-color: #fff; box-shadow: 0 0 0 1px var(--accent); }
+      .kv { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+      .kv .lbl { color: var(--muted); font-size: 11px; min-width: 3.2em; }
+      .kv input[type="text"] { flex: 1; min-width: 0; }
+      .kv input.num { width: 3.6em; }
+      /* solvability 判定パネル */
+      #solv { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+      #solv .s-ok { color: var(--ok); } #solv .s-warn { color: var(--warn); } #solv .s-err { color: var(--err); }
+      /* 中央＝ステージ */
+      #stagewrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+      #topbar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+      #nowtool { display: flex; align-items: center; gap: 7px; background: var(--tint); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 10px 3px 4px; font-size: 12px; }
+      #nowtool img { width: 26px; height: 26px; border-radius: 5px; background: #0d1117; }
+      #nowtool b { color: #cfe3ff; }
+      .tgroup { display: flex; gap: 4px; align-items: center; }
+      .tgroup .cap { color: var(--muted); font-size: 10px; margin-right: 2px; }
+      #stage { flex: 1; position: relative; min-height: 0; }
+      #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      /* 空グリッドの誘導（最初の1筆で消える） */
+      #guide { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); background: rgba(18,22,31,0.88); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 18px; font-size: 13px; line-height: 1.9; pointer-events: none; z-index: 5; box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
+      #guide b { color: #cfe3ff; }
+      #foot { border-top: 1px solid var(--line); background: var(--panel); padding: 7px 12px; font-size: 12px; color: var(--muted); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+      #hoverhint { color: #cfe3ff; min-width: 16em; }
+      #msg { color: var(--ok); }
+      #legend { margin-left: auto; font-size: 11px; }
+      #legend b { color: var(--text); font-weight: 600; }
+      /* 右＝ライブラリ */
+      #loop { width: 310px; min-width: 260px; border-left: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
+      .card.sel { border-color: var(--accent); }
+      .card .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted); }
+      .card .who { font-size: 10px; color: var(--warn); }
+      .card .row { display: flex; gap: 6px; flex-wrap: wrap; }
+      .card img.pv { width: 64px; height: 64px; border-radius: 6px; background: #0d1117; float: right; }
+      .card .head { display: flex; gap: 8px; align-items: flex-start; }
+      .card .head .info { flex: 1; min-width: 0; }
+      .live { font-size: 11px; color: var(--muted); }
+      .live b { color: var(--ok); }
+      details.hist summary { cursor: pointer; font-size: 11px; color: var(--muted); }
+    </style>
+    <script type="module" crossorigin src="./assets/forge-7dZw_z8z.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-D9kSEzlJ.js">
+    <link rel="modulepreload" crossorigin href="./assets/render-voxel-CdJJpymj.js">
+  </head>
+  <body>
+    <div id="app">
+      <div id="side">
+        <h1>鍛冶場 <span class="sub">構造エディタ P2</span></h1>
+        <div class="sub">描く→<b>提案（future）</b>を保存→<b>⭐promote</b> で truth へ→生成がスタンプ→実機で歩ける。盤もサムネもゲームと同一実体で描画。</div>
+        <h2>地形の筆</h2>
+        <div class="pal" id="palTerrain"></div>
+        <div id="palopts"></div>
+        <h2>置物の筆</h2>
+        <div class="pal" id="palProps"></div>
+        <h2>接続口・消しゴム</h2>
+        <div class="pal" id="palMisc"></div>
+        <h2>モンスター <span class="sub">（生成が読むのは P3・データは保存される）</span></h2>
+        <div class="pal mons" id="palSpawns"></div>
+        <h2>プレハブ</h2>
+        <div class="kv"><span class="lbl">id</span><input type="text" id="pid" /></div>
+        <div class="kv"><span class="lbl">名前</span><input type="text" id="pname" /></div>
+        <div class="kv"><span class="lbl">大きさ</span>
+          <input type="number" id="pw" class="num" min="2" max="18" /> ×
+          <input type="number" id="pd" class="num" min="2" max="14" />
+          <button id="applySize">寸法を変える</button>
+        </div>
+        <div class="kv"><span class="lbl">深度</span><input type="text" id="pdepth" style="width:5em" />
+          <span class="lbl">重み</span><input type="number" id="pweight" class="num" min="1" max="9" /></div>
+        <div class="kv"><span class="lbl">tags</span><input type="text" id="ptags" placeholder="room arena shrine …" /></div>
+        <div class="kv sub"><label><input type="checkbox" id="cPorts" /> port 相互到達を生成に要求</label></div>
+        <div class="kv sub"><label><input type="checkbox" id="cHaz" /> hazard は迂回可能（宣言）</label></div>
+        <h2>solvability（promote 前の判定）</h2>
+        <div id="solv"></div>
+        <button class="big" id="save">🔨 提案として保存（future）</button>
+        <div class="sub" id="savenote">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</div>
+      </div>
+      <div id="stagewrap">
+        <div id="topbar">
+          <div id="nowtool"><img id="nowimg" alt="" /><span>いまの筆：<b id="nowname">床</b><span class="sub" id="nowshape">（筆）</span></span></div>
+          <div class="tgroup"><span class="cap">かたち</span>
+            <button id="shBrush" class="on" title="1マスずつ塗る（ドラッグ可）">筆 <span class="sub">B</span></button>
+            <button id="shRect" title="対角にドラッグして長方形に敷く">矩形 <span class="sub">R</span></button>
+            <button id="shFill" title="同じ素材の続く範囲をまとめて塗る">塗りつぶし <span class="sub">F</span></button>
+          </div>
+          <div class="tgroup"><span class="cap">やり直し</span>
+            <button id="undo" title="⌘Z / Ctrl+Z">↶ 戻す</button>
+            <button id="redo" title="⌘⇧Z / Ctrl+Y">↷ 進む</button>
+          </div>
+          <div class="tgroup"><span class="cap">カメラ</span>
+            <button id="camL" title="左へ回す（←）">⟲</button>
+            <button id="camR" title="右へ回す（→）">⟳</button>
+            <button id="camIn" title="寄る（ホイール↑）">＋</button>
+            <button id="camOut" title="引く（ホイール↓）">−</button>
+          </div>
+          <div class="tgroup">
+            <button id="newpf" title="いまの寸法で空のプレハブから">新規</button>
+            <button id="help" title="操作の説明をもう一度出す">？</button>
+          </div>
+        </div>
+        <div id="stage">
+          <div id="guide">
+            <b>① 左のパレットで筆を選ぶ</b>（いまの筆は左上に常時表示）<br />
+            <b>② 盤を左クリック/ドラッグ</b>＝塗る　<b>右クリック</b>＝消す<br />
+            <b>③ 背景をドラッグ</b>＝回す　<b>ホイール</b>＝寄る<br />
+            描けたら左下の <b>🔨 保存</b> → 右の一覧で <b>⭐promote</b> → 実機に出る
+          </div>
+        </div>
+        <div id="foot">
+          <span id="hoverhint">—</span>
+          <span id="msg"></span>
+          <span id="legend"><b>左ドラッグ</b>=塗る｜<b>右クリック</b>=消す｜<b>背景ドラッグ/Space+ドラッグ</b>=回す｜<b>ホイール</b>=寄る｜<b>⌘Z</b>=戻す</span>
+        </div>
+      </div>
+      <div id="loop">
+        <h2>提案（future）<span class="live" id="live">·</span></h2>
+        <div id="proposals"></div>
+        <h2>truth ライブラリ（data/prefabs/）</h2>
+        <div id="truth"></div>
+        <div class="sub">ファイル変更は watch（150ms debounce＋内容署名 dedupe）で自動反映＝AI がファイルで future を書いてもここに現れる。編集中の盤は reload されない（状態保持）。</div>
+      </div>
+    </div>
+  </body>
+</html>
