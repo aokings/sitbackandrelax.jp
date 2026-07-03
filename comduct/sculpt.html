@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>comduct · 彫房（素材 voxel エディタ P4・開発ツール）</title>
+    <style>
+      /* ============================================================
+         §18 クリエイター P4（DESIGN-creator §12-A）
+         ・第一要件（P2 の教訓）＝迷わず彫れる：現在の筆/色が常時見える・ドラッグ彫り・
+           右クリック消し・undo/redo・hover ヒント・層の見せ方・鏡映・空グリッド誘導
+         ・描画＝render-voxel（buildVoxBody/geomFromVoxDef）＝3D プレビューも
+           サムネもゲームと同一実体（ドリフト無し）
+         ・左＝パレット＋モデル素性／中＝層スライス（2D 彫刻面）／右＝3D＋ライブラリ
+         ============================================================ */
+      :root {
+        --bg: #12161f; --panel: #1a2130; --line: #2b3547;
+        --text: #e8edf5; --muted: #8b96a8; --accent: #5b9bff; --tint: #223048;
+        --ok: #7fd17f; --warn: #ffd166; --err: #ff7a6e; --erase: #e06a5a;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif; }
+      #app { display: flex; height: 100vh; }
+      #side { width: 280px; min-width: 240px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
+      #side > * { flex: 0 0 auto; }
+      #side h1 { font-size: 15px; }
+      .sub { color: var(--muted); font-size: 11px; }
+      #side h2, #loop h2 { font-size: 12px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 3px; margin-top: 3px; }
+      button, select, input[type="text"], input[type="number"] { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
+      input[type="text"], input[type="number"] { cursor: text; }
+      button:hover { border-color: var(--accent); }
+      button.on { background: var(--accent); color: #0d1017; border-color: var(--accent); font-weight: 700; }
+      button.big { background: var(--tint); border-color: var(--accent); padding: 8px 10px; font-weight: 700; }
+      button:disabled { opacity: 0.45; cursor: not-allowed; }
+      /* パレット＝色チップ。選択中は白枠＝「いまの色」を常時可視化 */
+      #pal { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip { position: relative; width: 44px; height: 44px; border-radius: 8px; border: 2px solid var(--line); cursor: pointer; }
+      .chip:hover { border-color: #4a648f; }
+      .chip.on { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+      .chip .ch { position: absolute; top: 1px; left: 4px; font-size: 10px; font-family: ui-monospace, Menlo, monospace; color: rgba(255,255,255,0.85); text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+      .chip .n { position: absolute; bottom: 0; right: 3px; font-size: 9px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+      .chip .glow { position: absolute; top: -1px; right: 1px; font-size: 11px; color: #ffe9a8; text-shadow: 0 0 4px #ffb; }
+      .chip.erase { background: repeating-linear-gradient(45deg, #232c3e, #232c3e 6px, #2e3950 6px, #2e3950 12px); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+      #palopts { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; font-size: 11px; }
+      #palopts input[type="color"] { width: 34px; height: 26px; padding: 0 2px; background: #232c3e; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+      .kv { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+      .kv .lbl { color: var(--muted); font-size: 11px; min-width: 3.2em; }
+      .kv input[type="text"] { flex: 1; min-width: 0; }
+      .kv input.num { width: 3.6em; }
+      #lint { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
+      #lint .s-ok { color: var(--ok); } #lint .s-warn { color: var(--warn); } #lint .s-err { color: var(--err); }
+      /* 中央＝スライス彫刻面 */
+      #stagewrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+      #topbar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+      #nowtool { display: flex; align-items: center; gap: 7px; background: var(--tint); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 10px; font-size: 12px; }
+      #nowswatch { width: 22px; height: 22px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.4); }
+      #nowtool b { color: #cfe3ff; }
+      .tgroup { display: flex; gap: 4px; align-items: center; }
+      .tgroup .cap { color: var(--muted); font-size: 10px; margin-right: 2px; }
+      #layerlbl { font-size: 12px; min-width: 5.5em; text-align: center; background: var(--tint); border-radius: 6px; padding: 4px 6px; border: 1px solid var(--line); }
+      #stage { flex: 1; position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      #slice { background: #0d1117; border: 1px solid var(--line); border-radius: 8px; cursor: crosshair; touch-action: none; }
+      #guide { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); background: rgba(18,22,31,0.9); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 18px; font-size: 13px; line-height: 1.9; pointer-events: none; z-index: 5; box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
+      #guide b { color: #cfe3ff; }
+      #axes { position: absolute; left: 12px; bottom: 10px; font-size: 11px; color: var(--muted); z-index: 2; }
+      #foot { border-top: 1px solid var(--line); background: var(--panel); padding: 7px 12px; font-size: 12px; color: var(--muted); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+      #hoverhint { color: #cfe3ff; min-width: 15em; }
+      #msg { color: var(--ok); }
+      #legend { margin-left: auto; font-size: 11px; }
+      #legend b { color: var(--text); font-weight: 600; }
+      /* 右＝3D プレビュー＋ライブラリ */
+      #loop { width: 330px; min-width: 280px; border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+      #view3d { position: relative; height: 300px; min-height: 220px; border-bottom: 1px solid var(--line); background: #10141d; }
+      #view3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      #view3dbar { position: absolute; top: 6px; left: 8px; right: 8px; display: flex; gap: 5px; z-index: 2; align-items: center; }
+      #view3dbar .sub { margin-left: auto; text-shadow: 0 1px 3px #000; }
+      #libwrap { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
+      .card.sel { border-color: var(--accent); }
+      .card .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted); }
+      .card .who { font-size: 10px; color: var(--warn); }
+      .card .row { display: flex; gap: 6px; flex-wrap: wrap; }
+      .card img.pv { width: 56px; height: 56px; border-radius: 6px; background: #0d1117; float: right; }
+      .card .head { display: flex; gap: 8px; align-items: flex-start; }
+      .card .head .info { flex: 1; min-width: 0; }
+      .live { font-size: 11px; color: var(--muted); }
+      .live b { color: var(--ok); }
+      details.hist summary { cursor: pointer; font-size: 11px; color: var(--muted); }
+      label.tog { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); cursor: pointer; }
+    </style>
+    <script type="module" crossorigin src="./assets/sculpt-CNk4li1A.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-D2NAnull.js">
+    <link rel="modulepreload" crossorigin href="./assets/render-voxel-CJ-Kf_cB.js">
+    <link rel="modulepreload" crossorigin href="./assets/forge-edit-BP4y9fcc.js">
+  </head>
+  <body>
+    <div id="app">
+      <div id="side">
+        <h1>彫房 <span class="sub">素材 voxel エディタ P4</span></h1>
+        <div class="sub">彫る→<b>提案（future）</b>を保存→<b>⭐promote</b> で truth へ→カタログ＆実機の<b>姿が変わる</b>（ゲーム結果は不変＝見た目のみ）。</div>
+        <h2>色パレット <span class="sub">クリック=筆にする</span></h2>
+        <div id="pal"></div>
+        <div id="palopts"></div>
+        <h2>モデル <span class="sub">（id=種キー。同じ種の姿を上書き）</span></h2>
+        <div class="kv"><span class="lbl">種 id</span><input type="text" id="mid" list="typelist" /><datalist id="typelist"></datalist></div>
+        <div class="kv"><span class="lbl">名前</span><input type="text" id="mname" /></div>
+        <div class="kv"><span class="lbl">voxel寸</span><input type="number" id="ms" class="num" min="0.02" max="0.3" step="0.005" />
+          <span class="sub">world/1voxel（小=高精細）</span></div>
+        <div class="kv"><span class="lbl">大きさ</span>
+          <input type="number" id="mw" class="num" min="1" max="64" title="幅（x）" /> ×
+          <input type="number" id="md" class="num" min="1" max="64" title="奥行（z）" /> ×
+          <input type="number" id="mh" class="num" min="1" max="64" title="高さ（層）" />
+          <button id="applySize">変える</button>
+        </div>
+        <h2>検査（保存前の lint）</h2>
+        <div id="lint"></div>
+        <button class="big" id="save">🗿 提案として保存（future）</button>
+        <div class="sub" id="savenote">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</div>
+      </div>
+      <div id="stagewrap">
+        <div id="topbar">
+          <div id="nowtool"><span id="nowswatch"></span><span>いまの筆：<b id="nowname">—</b><span class="sub" id="nowshape">（筆）</span></span></div>
+          <div class="tgroup"><span class="cap">かたち</span>
+            <button id="shBrush" class="on" title="1 voxel ずつ彫る（ドラッグ可）">筆 <span class="sub">B</span></button>
+            <button id="shFill" title="同じ色の続く範囲をまとめて塗る">塗りつぶし <span class="sub">F</span></button>
+          </div>
+          <div class="tgroup"><span class="cap">層（下→上）</span>
+            <button id="layDn" title="下の層へ（[）">▼</button>
+            <span id="layerlbl">層 1/12</span>
+            <button id="layUp" title="上の層へ（]）">▲</button>
+          </div>
+          <div class="tgroup">
+            <label class="tog"><input type="checkbox" id="mirror" /> 鏡映 <span class="sub">M</span></label>
+            <label class="tog"><input type="checkbox" id="onion" checked /> 下の層を透かす <span class="sub">O</span></label>
+          </div>
+          <div class="tgroup"><span class="cap">やり直し</span>
+            <button id="undo" title="⌘Z / Ctrl+Z">↶ 戻す</button>
+            <button id="redo" title="⌘⇧Z / Ctrl+Y">↷ 進む</button>
+          </div>
+          <div class="tgroup">
+            <button id="newm" title="空のグリッドから">新規</button>
+            <button id="help" title="操作の説明をもう一度出す">？</button>
+          </div>
+        </div>
+        <div id="stage">
+          <canvas id="slice"></canvas>
+          <div id="guide">
+            <b>① 左のパレットで色を選ぶ</b>（いまの筆は左上に常時表示）<br />
+            <b>② 方眼を左クリック/ドラッグ</b>＝彫る　<b>右クリック</b>＝消す<br />
+            <b>③ ▼▲（または [ ]）で層を上下</b>＝下から積み上げる（右上に 3D が常時映る）<br />
+            彫れたら左下の <b>🗿 保存</b> → 右の一覧で <b>⭐promote</b> → カタログ＆実機の姿が変わる
+          </div>
+          <div id="axes">上＝奥（背中側）・下＝手前（顔側・facing=南 +z）・左右＝x</div>
+        </div>
+        <div id="foot">
+          <span id="hoverhint">—</span>
+          <span id="msg"></span>
+          <span id="legend"><b>左ドラッグ</b>=彫る｜<b>右クリック</b>=消す｜<b>[ ]</b>=層｜<b>M</b>=鏡映｜<b>⌘Z</b>=戻す｜<b>3D はドラッグで回す</b></span>
+        </div>
+      </div>
+      <div id="loop">
+        <div id="view3d">
+          <div id="view3dbar">
+            <button id="spin" title="自動で回す">回</button>
+            <button id="light" class="on" title="実機→明所→暗所（カタログと同じ物差し）">実機</button>
+            <span class="sub">3D＝ゲームと同一実体（1 draw/体）</span>
+          </div>
+        </div>
+        <div id="libwrap">
+          <h2>提案（future）<span class="live" id="live">·</span></h2>
+          <div id="proposals"></div>
+          <h2>truth ライブラリ（data/models/）</h2>
+          <div id="truth"></div>
+          <h2>コード定義（MON_VOX）から取り込む</h2>
+          <div id="codelib"></div>
+          <div class="sub">ファイル変更は watch（150ms debounce＋内容署名 dedupe）で自動反映＝AI がファイルで future を書いてもここに現れる。編集中の盤は reload されない（状態保持）。GB 大型（ドラゴン等）はコードのまま（当面）。</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
