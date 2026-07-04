@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>comduct · 工房（能力/実体/敵エディタ P7＋R1・開発ツール）</title>
+    <title data-i18n="tool.smith.title">comduct · 工房（能力/実体/敵エディタ P7＋R1・開発ツール）</title>
     <style>
       /* ============================================================
          P7 能力＋実体エディタ（DESIGN-abilities.md・forge/sculpt の隣）
          ・左＝種別タブ＋フォーム（数値/enum＋効果プリミティブの合成）
          ・中＝プレビュー（対象範囲の幾何＋溜めゲージの手番シミュ）＋バリデーション
          ・右＝協働ループ（truth／future・⭐promote は人間ゲート）
+         ・§tool-i18n：UI 文字列は data-i18n / t()（tool.* キー・6言語）。ja は原文と同文。
          ============================================================ */
       :root {
         --bg: #12161f; --panel: #1a2130; --line: #2b3547;
@@ -17,8 +18,10 @@
         --ok: #7fd17f; --warn: #ffd166; --err: #ff7a6e;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif; }
+      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
       #app { display: flex; height: 100vh; }
+      /* §tool-i18n：狭幅（スマホ）ではデスクトップ・レイアウトのまま横パン＝崩さない（full-touch 化は別パス） */
+      @media (max-width: 900px) { body { overflow-x: auto; } #app { min-width: 900px; } }
       #side { width: 360px; min-width: 320px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
       #side h1 { font-size: 15px; }
       .sub { color: var(--muted); font-size: 11px; }
@@ -55,23 +58,29 @@
       .live { color: var(--muted); font-size: 11px; }
       details.hist summary { cursor: pointer; color: var(--muted); font-size: 11px; }
       .tag { display: inline-block; background: #232c3e; border-radius: 5px; padding: 0 6px; font-size: 10px; color: var(--muted); margin-right: 4px; }
+      /* §tool-i18n：6言語ピッカー（ゲームの ☰ と同じ #langmode 流儀） */
+      .langpick { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+      #langmode { max-width: 12em; }
     </style>
-    <script type="module" crossorigin src="./assets/smith-CCrqI1wF.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/monster-B71lwl6j.js">
+    <script type="module" crossorigin src="./assets/smith-BCf9ce5r.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-DldJphbq.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BJG3qwwL.js">
+    <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
   </head>
   <body>
     <div id="app">
       <div id="side">
-        <h1>🔨 工房 — 能力/実体/敵エディタ <span class="sub">P7＋R1</span></h1>
-        <div class="sub">数値と enum の合成だけ＝決定論の語彙。保存は future（truth 不変）・採用は ⭐（人間ゲート）。<a href="./forge.html" style="color:#8fb7ff">鍛冶場</a>・<a href="./sculpt.html" style="color:#8fb7ff">彫房</a>・<a href="./dungeon.html" style="color:#8fb7ff">実機</a></div>
+        <h1><span data-i18n="tool.smith.h1">🔨 工房 — 能力/実体/敵エディタ</span> <span class="sub">P7＋R1</span></h1>
+        <div class="sub"><span data-i18n="tool.smith.intro">数値と enum の合成だけ＝決定論の語彙。保存は future（truth 不変）・採用は ⭐（人間ゲート）。</span><a href="./forge.html" style="color:#8fb7ff" data-i18n="tool.smith.linkForge">鍛冶場</a>・<a href="./sculpt.html" style="color:#8fb7ff" data-i18n="tool.smith.linkSculpt">彫房</a>・<a href="./dungeon.html" style="color:#8fb7ff" data-i18n="tool.smith.linkGame">実機</a></div>
+        <div class="kv"><span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span></div>
         <div class="kv" id="tabs">
-          <button id="tab-tech" class="on" type="button">⚡ 特技</button>
-          <button id="tab-spell" type="button">✦ 呪文</button>
-          <button id="tab-item" type="button">🗡 実体</button>
-          <button id="tab-mon" type="button">👹 敵</button>
+          <button id="tab-tech" class="on" type="button" data-i18n="tool.smith.tab.tech">⚡ 特技</button>
+          <button id="tab-spell" type="button" data-i18n="tool.smith.tab.spell">✦ 呪文</button>
+          <button id="tab-item" type="button" data-i18n="tool.smith.tab.item">🗡 実体</button>
+          <button id="tab-mon" type="button" data-i18n="tool.smith.tab.mon">👹 敵</button>
         </div>
         <div id="form"></div>
-        <button class="big" id="save" type="button">💾 提案として保存（future）</button>
+        <button class="big" id="save" type="button" data-i18n="tool.smith.save">💾 提案として保存（future）</button>
       </div>
       <div id="mid">
         <div id="stage">
@@ -82,25 +91,25 @@
               <canvas id="pvgrid" width="220" height="220"></canvas>
             </div>
             <div id="gauge">
-              <div class="sub">溜めゲージ（手番シミュ・Lv/熟練で速く）</div>
+              <div class="sub" data-i18n="tool.smith.gaugeHead">溜めゲージ（手番シミュ・Lv/熟練で速く）</div>
               <div id="gaugebar"><i></i></div>
               <div class="kv">
-                <button id="g-step" type="button">＋1手</button>
-                <button id="g-reset" type="button">リセット</button>
+                <button id="g-step" type="button" data-i18n="tool.smith.gStep">＋1手</button>
+                <button id="g-reset" type="button" data-i18n="tool.smith.gReset">リセット</button>
                 <span class="lbl">Lv</span><input class="num" id="g-lv" type="number" value="1" min="1" max="30" />
-                <span class="lbl">使用回数</span><input class="num" id="g-use" type="number" value="0" min="0" max="40" />
+                <span class="lbl" data-i18n="tool.smith.gUse">使用回数</span><input class="num" id="g-use" type="number" value="0" min="0" max="40" />
               </div>
               <div class="sub" id="gaugetext"></div>
               <div class="sub" id="summary"></div>
             </div>
           </div>
         </div>
-        <div id="foot"><span id="hint">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</span><span id="msg"></span></div>
+        <div id="foot"><span id="hint" data-i18n="tool.common.savenote">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</span><span id="msg"></span></div>
       </div>
       <div id="loop">
-        <h2>⭐ 提案（future）</h2>
+        <h2 data-i18n="tool.smith.futureHead">⭐ 提案（future）</h2>
         <div id="proposals"></div>
-        <h2>📜 truth（採用済み）</h2>
+        <h2 data-i18n="tool.smith.truthHead">📜 truth（採用済み）</h2>
         <div id="truth"></div>
       </div>
     </div>
