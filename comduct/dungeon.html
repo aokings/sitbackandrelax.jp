@@ -279,6 +279,36 @@
         font-size: 13px; font-weight: 800; padding: 10px 12px; border-radius: 10px; cursor: pointer;
         background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
       }
+      /* §i18n Phase 3：6言語ピッカー（☰）＝ネイティブ select（スマホで使いやすい） */
+      .langpick { display: inline-flex; align-items: center; gap: 5px; color: var(--text-hi); font-size: 13px; }
+      #langmode {
+        font-size: 13px; font-weight: 800; padding: 9px 8px; border-radius: 10px; cursor: pointer; max-width: 46vw;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
+      }
+      #langmode option { background: #1b2030; color: #eef2ff; }
+      /* §i18n Phase 3：翻訳報告シート（🚩→ /api/i18n/report＝proposal 化・truth は書かない） */
+      #reportsheet .rfield { margin-bottom: 8px; }
+      #reportsheet label { display: block; font-size: 11.5px; font-weight: 800; color: var(--text-dim); margin-bottom: 4px; }
+      #reportsheet input, #reportsheet textarea {
+        width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line);
+        border-radius: 8px; color: var(--text-hi); padding: 9px 12px; font-size: 13px; font-family: inherit;
+      }
+      #reportsheet textarea { min-height: 56px; resize: vertical; }
+      #rp-list { max-height: 26vh; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+      #rp-list button {
+        text-align: left; font-size: 12px; font-weight: 600; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+        background: rgba(255, 255, 255, 0.04); border: 1px solid transparent; color: var(--text-mid);
+        overflow-wrap: anywhere;
+      }
+      #rp-list button.sel { border-color: var(--accent); color: var(--text-hi); background: rgba(79, 146, 255, 0.15); }
+      #rp-send { font-size: 13px; font-weight: 800; padding: 10px 14px; border-radius: 10px; cursor: pointer; background: rgba(79, 146, 255, 0.25); border: 1px solid var(--accent); color: var(--text-hi); }
+      #rp-status { font-size: 12px; font-weight: 700; color: var(--text-dim); margin-top: 6px; overflow-wrap: anywhere; }
+      /* §i18n Phase 3：th（分かち書き無し・上下に伸びるスクリプト）と vi（多重ダイアクリティカル）の行組みハードニング。
+         行高を持ち上げ、タイ語は語中の強制分断を避けて自然な語境界で折る（overflow 最終手段は各要素の anywhere が既に持つ）。 */
+      html[lang='th'] body, html[lang='vi'] body { line-height: 1.65; }
+      html[lang='th'] #log, html[lang='vi'] #log { line-height: 1.75; }
+      html[lang='th'] .hint, html[lang='vi'] .hint { line-height: 1.95; }
+      html[lang='th'] body { word-break: normal; line-break: normal; }
       .depthjump { display: inline-flex; align-items: center; gap: 4px; color: var(--text-dim); font-size: 12px; font-weight: 700; }
       .depthjump input { width: 46px; background: rgba(255, 255, 255, 0.08); color: var(--text-hi); border: 1px solid var(--glass-line); border-radius: 8px; padding: 6px 6px; font-size: 13px; }
       .depthjump button { font-size: 12px !important; padding: 8px 10px !important; }
@@ -400,8 +430,8 @@
       .slot .lb { letter-spacing: 0; }
     </style>
     <script type="module" crossorigin src="./assets/monster-B71lwl6j.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-DBBmYvNK.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
+    <script type="module" crossorigin src="./assets/dungeon-CkWABrMz.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
     <header id="topbar">
@@ -505,7 +535,8 @@
         <button id="aimmode" type="button">🏹 狙う: OFF</button>
       </div>
       <div class="mgroup">
-        <button id="langmode" type="button">🌐 日本語</button>
+        <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
+        <button id="reportbtn" type="button">🚩 <span data-i18n="ui.html.reportBtn">翻訳を報告</span></button>
         <button id="layoutmode" type="button">🖥 PC</button>
         <button id="turnmode" type="button">🧭 向きモード: OFF</button>
         <button id="reset" type="button" data-i18n="ui.html.retryBtn">もう一度</button>
@@ -524,6 +555,27 @@
         テーマ凡例：🔥火＝火の魔物・❄氷＝水と氷・⛰土＝岩と瓦礫・✨聖＝亡者と祈り。<br />
         <span style="opacity: 0.7"><b>視点(3D)</b>＝<b>↑前進／↓後退／←→ 回転</b>・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。乗った対象は中央のボタンで操作。</span>
       </div>
+    </div>
+
+    <!-- 🚩 翻訳報告シート（§i18n Phase 3）：文字列を選んで提案訳を送る＝creator の proposal になる（truth は書かない） -->
+    <div class="sheet" id="reportsheet">
+      <div class="grab"></div>
+      <h3><span data-i18n="ui.html.reportTitle">🚩 翻訳の間違いを報告</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="rfield">
+        <label data-i18n="ui.report.findLabel">おかしい文を探す（今の言語の文で検索）</label>
+        <input id="rp-find" type="text" data-i18n-ph="ui.report.findPh" placeholder="文の一部を入力…" />
+        <div id="rp-list"></div>
+      </div>
+      <div class="rfield">
+        <label data-i18n="ui.report.proposeLabel">正しい訳の提案</label>
+        <textarea id="rp-propose"></textarea>
+      </div>
+      <div class="rfield">
+        <label data-i18n="ui.report.noteLabel">補足（任意）</label>
+        <input id="rp-note" type="text" />
+      </div>
+      <button id="rp-send" type="button" data-i18n="ui.report.sendBtn">送る</button>
+      <div id="rp-status"></div>
     </div>
 
     <div id="equip">
