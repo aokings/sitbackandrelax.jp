@@ -384,9 +384,23 @@
         .iconbtn { width: 34px; height: 33px; font-size: 14px; }
         #topline { gap: 4px; }
       }
+
+      /* ── §i18n 可変長ハードニング：en の長い訳でも崩れない（省略/折返し/最小幅） ── */
+      #topline { min-width: 0; }
+      .chip { min-width: 0; max-width: 40vw; }
+      #chip-floor, #stancename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 34vw; vertical-align: bottom; }
+      #stancechip { min-width: 0; }
+      .pmini .st { max-width: 62%; overflow: hidden; text-overflow: ellipsis; } /* バッジ（Follow/⚑Guard the front…）は帯内で省略 */
+      #contextbar { max-width: 92vw; }
+      #contextbar .ctxbtn { white-space: normal; text-align: center; max-width: 88vw; line-height: 1.3; } /* 長い文脈ラベルは折返す */
+      .pdet .stb { max-width: 46%; overflow: hidden; text-overflow: ellipsis; }
+      .strow .snm { overflow-wrap: anywhere; }
+      #ctxbar { overflow-wrap: anywhere; }
+      #feed .fl { overflow-wrap: anywhere; }
+      .slot .lb { letter-spacing: 0; }
     </style>
     <script type="module" crossorigin src="./assets/ability-C4TqW-bP.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-CkOxrRQk.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-B7ONGAoV.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -404,10 +418,10 @@
           <span class="chip" id="chip-floor">…</span>
           <span class="chip" id="chip-gold">💰 0</span>
           <span class="chip" id="chip-party">👥 -</span>
-          <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
+          <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）" data-i18n-title="ui.html.stancechipTitle"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
           <span class="spacer"></span>
-          <button class="iconbtn" id="mapmode" type="button" title="地図">🗺</button>
-          <button class="iconbtn" id="menubtn" type="button" title="メニュー">☰</button>
+          <button class="iconbtn" id="mapmode" type="button" title="地図" data-i18n-title="ui.html.mapBtnTitle">🗺</button>
+          <button class="iconbtn" id="menubtn" type="button" title="メニュー" data-i18n-title="ui.html.menuBtnTitle">☰</button>
         </div>
 
         <!-- ガイダンス/フラッシュ（選択中の案内・無効手の理由）＝一時表示 -->
@@ -418,7 +432,7 @@
 
         <!-- §13 持ち物/呪文のポップアップ（t / 🎒）：カーソル＋Enter でもタップでも -->
         <div id="bagpanel" hidden>
-          <div id="bagpanelhd"><span>🎒 持ち物・呪文（t）</span><button id="bagclose" type="button">閉じる（Esc）</button></div>
+          <div id="bagpanelhd"><span data-i18n="ui.html.bagPanelHd">🎒 持ち物・呪文（t）</span><button id="bagclose" type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
           <section id="bag"></section>
         </div>
         <div id="padopts"></div>
@@ -435,7 +449,7 @@
           <button class="pb" type="button" data-dx="0" data-dy="-1">↑</button>
           <button class="pb" type="button" data-dx="1" data-dy="-1">↗</button>
           <button class="pb" type="button" data-dx="-1" data-dy="0">←</button>
-          <button class="pb" id="pad-center" type="button" data-dx="0" data-dy="0">待つ</button>
+          <button class="pb" id="pad-center" type="button" data-dx="0" data-dy="0" data-i18n="ui.wait">待つ</button>
           <button class="pb" type="button" data-dx="1" data-dy="0">→</button>
           <button class="pb" type="button" data-dx="-1" data-dy="1">↙</button>
           <button class="pb" type="button" data-dx="0" data-dy="1">↓</button>
@@ -444,11 +458,11 @@
 
         <!-- 下部 hotbar＝手（技/呪文/道具・溜め/MP/満タン金縁をスロット内に・キーヒント付き） -->
         <div id="quickbar">
-          <button class="slot" id="qs-melee" type="button" title="近接：↑/W（正面へ踏み込み）"><span class="key">W</span><span class="ic">⚔</span><span class="lb">攻撃</span></button>
-          <button class="slot" id="qs-shoot" type="button" title="射撃：f（構えて放つ）"><span class="key">f</span><span class="ic">🏹</span><span class="lb">射撃</span></button>
+          <button class="slot" id="qs-melee" type="button" title="近接：↑/W（正面へ踏み込み）" data-i18n-title="ui.html.qsMeleeTitle"><span class="key">W</span><span class="ic">⚔</span><span class="lb" data-i18n="ui.html.qsMelee">攻撃</span></button>
+          <button class="slot" id="qs-shoot" type="button" title="射撃：f（構えて放つ）" data-i18n-title="ui.html.qsShootTitle"><span class="key">f</span><span class="ic">🏹</span><span class="lb" data-i18n="ui.html.qsShoot">射撃</span></button>
           <button class="slot" id="qs-spell" type="button" title="魔法：r（装備画面 i で術をセット）"><span class="key">r</span><span class="cost"></span><span class="ic">✦</span><span class="lb">術</span></button>
           <button class="slot dim" id="qs-tech" type="button" title="特技：g（技を授ける装備が要る・溜めが満ちたら放てる）"><span class="key">g</span><span class="gauge"></span><span class="ic">⚡</span><span class="lb">特技</span></button>
-          <button class="slot" id="qs-bag" type="button" title="持ち物・呪文：t"><span class="key">t</span><span class="ic">🎒</span><span class="lb">持ち物</span></button>
+          <button class="slot" id="qs-bag" type="button" title="持ち物・呪文：t" data-i18n-title="ui.html.qsBagTitle"><span class="key">t</span><span class="ic">🎒</span><span class="lb" data-i18n="ui.html.qsBag">持ち物</span></button>
         </div>
       </section>
     </main>
@@ -459,15 +473,15 @@
     <!-- ⚑ 作戦シート（旧 #sakusen 常駐6ボタンの置換＝機能温存・説明＋現在＋解禁条件） -->
     <div class="sheet" id="sakusensheet">
       <div class="grab"></div>
-      <h3>⚑ 作戦（全員に命じる） <button class="x" data-close type="button">閉じる</button></h3>
-      <div class="sub">構えは仲間全員に効き、毎手の自律判断を傾ける。作戦由来の行動は実況に「⚑」付きで流れる。</div>
+      <h3><span data-i18n="ui.html.sakusenTitle">⚑ 作戦（全員に命じる）</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="sub" data-i18n="ui.html.sakusenSub">構えは仲間全員に効き、毎手の自律判断を傾ける。作戦由来の行動は実況に「⚑」付きで流れる。</div>
       <section id="sakusen">
-        <button class="strow" type="button" data-stance="guard"><span class="sic">🛡</span><span><span class="snm">前で守れ</span><span class="sds"></span></span><span class="smeta"></span></button>
-        <button class="strow" type="button" data-stance="shoot"><span class="sic">🏹</span><span><span class="snm">撃て</span><span class="sds"></span></span><span class="smeta"></span></button>
-        <button class="strow" type="button" data-stance="heal"><span class="sic">💚</span><span><span class="snm">回復優先</span><span class="sds"></span></span><span class="smeta"></span></button>
-        <button class="strow" type="button" data-stance="retreat"><span class="sic">🌫</span><span><span class="snm">下がれ</span><span class="sds"></span></span><span class="smeta"></span></button>
-        <button class="strow" type="button" data-stance="conserve"><span class="sic">🕯</span><span><span class="snm">温存</span><span class="sds"></span></span><span class="smeta"></span></button>
-        <button class="strow" type="button" data-stance="allout"><span class="sic">🔥</span><span><span class="snm">全力</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="guard"><span class="sic">🛡</span><span><span class="snm" data-i18n="stance.guard.name">前で守れ</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="shoot"><span class="sic">🏹</span><span><span class="snm" data-i18n="stance.shoot.name">撃て</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="heal"><span class="sic">💚</span><span><span class="snm" data-i18n="stance.heal.name">回復優先</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="retreat"><span class="sic">🌫</span><span><span class="snm" data-i18n="stance.retreat.name">下がれ</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="conserve"><span class="sic">🕯</span><span><span class="snm" data-i18n="stance.conserve.name">温存</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="allout"><span class="sic">🔥</span><span><span class="snm" data-i18n="stance.allout.name">全力</span><span class="sds"></span></span><span class="smeta"></span></button>
       </section>
       <div id="stfoot"></div>
     </div>
@@ -475,34 +489,35 @@
     <!-- 👥 パーティ詳細シート（TO式・個別命令もここから） -->
     <div class="sheet" id="partysheet">
       <div class="grab"></div>
-      <h3>👥 パーティ <button class="x" data-close type="button">閉じる</button></h3>
-      <div class="sub">個別の命令もここから（命令はターンを消費しない）。行き先は盤タップで指す。</div>
+      <h3><span data-i18n="ui.html.partyTitle">👥 パーティ</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="sub" data-i18n="ui.html.partySub">個別の命令もここから（命令はターンを消費しない）。行き先は盤タップで指す。</div>
       <div id="pdets"></div>
     </div>
 
     <!-- ☰ メニューシート（低頻度を格納・実況の履歴もここ＝全機能温存） -->
     <div class="sheet" id="menupanel">
       <div class="grab"></div>
-      <h3>☰ メニュー <button class="x" data-close type="button">閉じる</button></h3>
+      <h3><span data-i18n="ui.html.menuTitle">☰ メニュー</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
       <div class="mgroup">
-        <button id="descend" type="button">降りる（&gt;）</button>
-        <button id="equipbtn" type="button">🛡 装備（i）</button>
-        <button id="composemode" type="button">🧑 編成</button>
+        <button id="descend" type="button" data-i18n="ui.html.descendBtn">降りる（&gt;）</button>
+        <button id="equipbtn" type="button" data-i18n="ui.html.equipBtn">🛡 装備（i）</button>
+        <button id="composemode" type="button" data-i18n="ui.html.composeBtn">🧑 編成</button>
         <button id="aimmode" type="button">🏹 狙う: OFF</button>
       </div>
       <div class="mgroup">
+        <button id="langmode" type="button">🌐 日本語</button>
         <button id="layoutmode" type="button">🖥 PC</button>
         <button id="turnmode" type="button">🧭 向きモード: OFF</button>
-        <button id="reset" type="button">もう一度</button>
-        <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" />階へ<button id="godepth" type="button">直行</button></span>
+        <button id="reset" type="button" data-i18n="ui.html.retryBtn">もう一度</button>
+        <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" /><span data-i18n="ui.html.floorsTo">階へ</span><button id="godepth" type="button" data-i18n="ui.html.go">直行</button></span>
       </div>
       <form id="cmdform" autocomplete="off">
-        <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" />
-        <button type="submit">送る</button>
+        <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" data-i18n-ph="ui.html.cmdPh" />
+        <button type="submit" data-i18n="ui.html.send">送る</button>
       </form>
-      <div class="loghd">📜 実況の履歴</div>
+      <div class="loghd" data-i18n="ui.html.logHd">📜 実況の履歴</div>
       <section id="log"></section>
-      <div class="hint">
+      <div class="hint" data-i18n-html="ui.html.hint">
         <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
         <b>攻防のキー</b>＝⚔近接は<b>↑/W</b>（正面へ）・🏹射撃は<b>f</b>・✦術は<b>r</b>（装備画面 i でセット）・⚡特技は<b>g</b>・🎒持ち物/呪文は<b>t</b>。<b>ポップアップ表示中は方向キーで選び Enter で決定・Esc で閉じる</b>（WASD 移動はそのまま生きる）。<br />
         <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>。同じ仲間をもう一度クリックで<b>追従に戻す</b>。パーティ帯タップ→詳細からも。テキスト：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません。<br />
@@ -513,7 +528,7 @@
 
     <div id="equip">
       <div id="equippanel">
-        <div id="equiphd"><span id="modaltitle">装備を整える</span><button id="equipclose" data-eqclose type="button">閉じる（Esc）</button></div>
+        <div id="equiphd"><span id="modaltitle">装備を整える</span><button id="equipclose" data-eqclose type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
         <div id="equipbody"></div>
       </div>
     </div>
