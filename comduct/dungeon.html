@@ -205,6 +205,9 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
       }
       #quickbar .qs.dim { opacity: 0.38; } /* 空き/使えない枠は淡色 */
+      /* P7 特技（⚡g）：充填ゲージ＝ボタン背景の帯（--fill%）。満タンは金縁が灯る＝解き放つ頃合いが一目 */
+      #qs-tech { --fill: 0%; background: linear-gradient(to right, rgba(255, 209, 102, 0.34) var(--fill), rgba(14, 19, 28, 0.42) var(--fill)); }
+      #qs-tech.ready { border-color: #ffd166; color: #ffe9a8; box-shadow: 0 0 10px rgba(255, 209, 102, 0.45); }
       body.mode-mobile #quickbar { flex-direction: column; top: 66px; right: 8px; align-items: flex-end; }
       body.mode-mobile #quickbar .qs { font-size: 11.5px; padding: 6px 8px; }
 
@@ -272,7 +275,8 @@
       .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
       .eqlist { display: flex; flex-direction: column; gap: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-DmWPfjzA.js"></script>
+    <script type="module" crossorigin src="./assets/ability-C4TqW-bP.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-y7AVoF8U.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-CUDl0B5M.css">
   </head>
   <body>
@@ -300,6 +304,7 @@
           <button class="qs" id="qs-melee" type="button" title="近接：↑/W（正面へ踏み込み）">⚔↑</button>
           <button class="qs" id="qs-shoot" type="button" title="射撃：f（構えて放つ）">🏹f</button>
           <button class="qs" id="qs-spell" type="button" title="魔法：r（装備画面 i で術をセット）">✦r</button>
+          <button class="qs dim" id="qs-tech" type="button" title="特技：g（技を授ける装備が要る・溜めが満ちたら放てる）">⚡g</button>
           <button class="qs" id="qs-bag" type="button" title="持ち物・呪文：t">🎒t</button>
         </div>
 
