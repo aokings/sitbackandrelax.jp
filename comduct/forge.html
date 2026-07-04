@@ -22,8 +22,8 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
       #app { display: flex; height: 100vh; }
-      /* §tool-i18n：狭幅（スマホ）ではデスクトップ・レイアウトのまま横パン＝崩さない（full-touch 化は別パス） */
-      @media (max-width: 900px) { body { overflow-x: auto; } #app { min-width: 900px; } }
+      /* §M0 full-touch（DESIGN-tools-mobile §1-d/§2）：狭幅＝上チップ行・盤最大・下 hotbar・シート召喚。
+         パネル（#topbar/#side/#loop）は JS がシートへ移動する＝DOM は同一実体（リスナ/i18n 無傷）。 */
       #side { width: 300px; min-width: 260px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
       #side > * { flex: 0 0 auto; } /* overflow 付きの子（モンスター一覧）が flex-shrink で潰れない */
       #side h1 { font-size: 15px; }
@@ -90,13 +90,53 @@
       .live { font-size: 11px; color: var(--muted); }
       .live b { color: var(--ok); }
       details.hist summary { cursor: pointer; font-size: 11px; color: var(--muted); }
+      /* ⭐2段確認（決定⑥）：promote タップ→確認バー→確定。PC/モバイル共通 */
+      .confirmbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #33290f; border: 1px solid var(--warn); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
+      .confirmbar span { color: var(--warn); }
+      /* ── M0 モバイル部品（デスクトップでは非表示） ───────────────────────── */
+      #mchips, #hotbar, .sheet, #veil, #mtoast { display: none; }
+      #mchips { gap: 6px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--panel); overflow-x: auto; flex: 0 0 auto; }
+      #mchips button { min-height: 44px; min-width: 44px; font-size: 14px; flex: 0 0 auto; }
+      #mchips .mchip.ok { color: var(--ok); border-color: var(--ok); }
+      #mchips .mchip.warn { color: var(--warn); border-color: var(--warn); }
+      #mchips .mchip.err { color: var(--err); border-color: var(--err); font-weight: 700; }
+      #mchips button.on { background: var(--tint); border-color: var(--accent); }
+      .mnow { display: inline-flex; align-items: center; gap: 5px; background: var(--tint); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 8px 3px 4px; font-size: 12px; flex: 0 0 auto; max-width: 34vw; }
+      .mnow img { width: 30px; height: 30px; border-radius: 5px; background: #0d1117; }
+      .mnow b { color: #cfe3ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #hotbar { gap: 6px; align-items: stretch; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); overflow-x: auto; flex: 0 0 auto; }
+      #hotbar .hshape { display: flex; gap: 4px; align-items: stretch; padding-right: 6px; border-right: 1px solid var(--line); }
+      #hotbar .hshape button, #hotbar > button { min-width: 44px; min-height: 52px; font-size: 12px; flex: 0 0 auto; }
+      #hrecent { display: flex; gap: 6px; }
+      .hswatch { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 54px; border: 2px solid var(--line); border-radius: 8px; background: var(--panel); padding: 2px 3px; }
+      .hswatch.on { border-color: var(--accent); background: var(--tint); box-shadow: 0 0 0 1px var(--accent); }
+      .hswatch img, .hswatch .glyph { width: 32px; height: 32px; border-radius: 5px; background: #0d1117; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+      .hswatch .nm { font-size: 9px; max-width: 62px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      #mtoast { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 12px; z-index: 6; max-width: 92%; }
+      #veil { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 29; }
+      .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg); border-top: 1px solid var(--accent); border-radius: 14px 14px 0 0; max-height: 78vh; flex-direction: column; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5); }
+      .sheet .sheethead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+      .sheet .sheethead b { color: #cfe3ff; }
+      .sheet .sheethead button { min-width: 44px; min-height: 38px; }
+      .sheet .sheetbody { overflow-y: auto; min-height: 0; }
+      .sheet #side { width: auto; min-width: 0; border-right: none; }
+      .sheet #loop { width: auto; min-width: 0; border-left: none; }
+      .sheet #topbar { border-bottom: 1px solid var(--line); }
+      #mlegend { display: none; position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.85); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: 10.5px; color: var(--muted); pointer-events: none; z-index: 5; max-width: 94%; text-align: center; }
+      @media (max-width: 900px) {
+        #mchips, #hotbar { display: flex; }
+        #foot { display: none; }
+        #guide[style*="block"] ~ #mlegend { display: block; }
+        #stage { touch-action: none; }
+        #stage canvas { touch-action: none; }
+      }
     </style>
-    <script type="module" crossorigin src="./assets/forge-BE2Pbz4m.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-DldJphbq.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-C_E4HLmP.js">
-    <link rel="modulepreload" crossorigin href="./assets/render-voxel-EiEd0l0V.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-BrwnS4SR.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BJG3qwwL.js">
+    <script type="module" crossorigin src="./assets/forge-DiXGQkg5.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-XXY0fGky.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-BSOsYs8l.js">
+    <link rel="modulepreload" crossorigin href="./assets/render-voxel-CewVrQoT.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-bJAvRd70.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-DLQ_GbYG.js">
     <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
   </head>
   <body>
@@ -155,6 +195,17 @@
           </div>
           <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
         </div>
+        <div id="mchips">
+          <button id="mSolv" class="mchip ok" data-i18n-title="tool.forge.mSolvTitle" title="生成に耐えるか（タップで詳細）">✓</button>
+          <span class="mnow"><img id="mNowImg" alt="" /><b id="mNowName">床</b></span>
+          <button id="mUndo" title="undo">↶</button>
+          <button id="mRedo" title="redo">↷</button>
+          <button id="mFit" data-i18n-title="tool.forge.mFit" title="全体が見える距離に戻す">⛶</button>
+          <button id="mReach" data-i18n-title="tool.forge.mReach" title="接続口から届かない床を薄赤で示す">🟥</button>
+          <button id="mSave" data-i18n="tool.forge.mSaveShort" data-i18n-title="tool.forge.mSolvTitle" title="生成に耐えるか（タップで詳細）">🔨 保存</button>
+          <button id="mMenu" data-i18n-title="tool.forge.mMenu" title="道具と保存">☰</button>
+          <button id="mShelf" data-i18n-title="tool.forge.mShelf" title="棚（future / truth）">📚</button>
+        </div>
         <div id="stage">
           <div id="guide" data-i18n-html="tool.forge.guide">
             <b>① 左のパレットで筆を選ぶ</b>（いまの筆は左上に常時表示）<br />
@@ -162,11 +213,22 @@
             <b>③ 背景をドラッグ</b>＝回す　<b>ホイール</b>＝寄る<br />
             描けたら左下の <b>🔨 保存</b> → 右の一覧で <b>⭐promote</b> → 実機に出る
           </div>
+          <div id="mlegend" data-i18n="tool.forge.mLegend">1本指=描く｜2本指=回す・寄る｜2本指タップ=戻す・3本指タップ=進む｜長押し=マス調べ</div>
+          <div id="mtoast"></div>
         </div>
         <div id="foot">
           <span id="hoverhint">—</span>
           <span id="msg"></span>
           <span id="legend" data-i18n-html="tool.forge.legend"><b>左ドラッグ</b>=塗る｜<b>右クリック</b>=消す｜<b>背景ドラッグ/Space+ドラッグ</b>=回す｜<b>ホイール</b>=寄る｜<b>⌘Z</b>=戻す</span>
+        </div>
+        <div id="hotbar">
+          <div class="hshape">
+            <button id="mShB" class="on" data-i18n="tool.common.shape.brush">筆</button>
+            <button id="mShR" data-i18n="tool.common.shape.rect">矩形</button>
+            <button id="mShF" data-i18n="tool.common.shape.fill">塗りつぶし</button>
+          </div>
+          <div id="hrecent"></div>
+          <button id="hMore" data-i18n-title="tool.forge.mPalette" title="パレットをすべて見る">…</button>
         </div>
       </div>
       <div id="loop">
@@ -176,6 +238,16 @@
         <div id="truth"></div>
         <div class="sub" data-i18n="tool.common.watchNote">ファイル変更は watch（150ms debounce＋内容署名 dedupe）で自動反映＝AI がファイルで future を書いてもここに現れる。編集中の盤は reload されない（状態保持）。</div>
       </div>
+    </div>
+    <!-- M0 モバイル：シート召喚（パネル DOM は JS がここへ移動＝同一実体・リスナ無傷） -->
+    <div id="veil"></div>
+    <div id="sheetSide" class="sheet">
+      <div class="sheethead"><b data-i18n="tool.forge.mMenu">道具と保存</b><button class="shclose">✕</button></div>
+      <div class="sheetbody" id="sheetSideBody"></div>
+    </div>
+    <div id="sheetLoop" class="sheet">
+      <div class="sheethead"><b data-i18n="tool.forge.mShelf">棚（future / truth）</b><button class="shclose">✕</button></div>
+      <div class="sheetbody" id="sheetLoopBody"></div>
     </div>
   </body>
 </html>
