@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title data-i18n="tool.catalog.title">comduct · voxel カタログ（開発ツール）</title>
     <style>
       /* ============================================================
@@ -23,7 +23,7 @@
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
-      #app { display: flex; height: 100vh; }
+      #app { display: flex; height: 100vh; height: 100dvh; }
 
       /* ── 左：一覧 ─────────────────────────── */
       #list { width: 460px; min-width: 320px; overflow-y: auto; border-right: 1px solid var(--line); padding: 12px; }
@@ -59,9 +59,9 @@
       /* ── §tool-i18n responsive：スマホ縦（375px）で一覧/プレビュー/操作が崩れず使える ── */
       @media (max-width: 860px) {
         #app { flex-direction: column; }
-        #list { width: 100%; min-width: 0; height: 40vh; border-right: none; border-bottom: 1px solid var(--line); }
+        #list { width: 100%; min-width: 0; height: 40vh; height: 40dvh; border-right: none; border-bottom: 1px solid var(--line); padding-top: calc(12px + env(safe-area-inset-top)); }
         #main { min-height: 0; }
-        #ctl { max-height: 46vh; overflow-y: auto; padding: 8px 10px; }
+        #ctl { max-height: 46vh; max-height: 46dvh; overflow-y: auto; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
         .grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
         .row { gap: 6px; }
         .row .lbl { min-width: 3.6em; }

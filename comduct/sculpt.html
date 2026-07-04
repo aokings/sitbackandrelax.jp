@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title data-i18n="tool.sculpt.title">comduct · 彫房（素材 voxel エディタ P4・開発ツール）</title>
     <style>
       /* ============================================================
@@ -21,7 +21,7 @@
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
-      #app { display: flex; height: 100vh; }
+      #app { display: flex; height: 100vh; height: 100dvh; }
       /* §M1 full-touch（DESIGN-tools-mobile §1）：狭幅＝上チップ行・3D 最大・下 hotbar・シート召喚。
          2D スライス盤はモバイルでは畳む（真上視点＋層ロックで統合）。パネル（#topbar/#side/#libwrap）は
          JS がシートへ移動する＝DOM は同一実体（リスナ/i18n 無傷）。PC は現行2面（スライス＋3D）温存。 */
@@ -120,7 +120,7 @@
       #mtoast { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 12px; z-index: 6; max-width: 92%; }
       #mlegend { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.85); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: 10.5px; color: var(--muted); pointer-events: none; z-index: 5; max-width: 94%; text-align: center; }
       #veil { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 29; }
-      .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg); border-top: 1px solid var(--accent); border-radius: 14px 14px 0 0; max-height: 78vh; flex-direction: column; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5); }
+      .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg); border-top: 1px solid var(--accent); border-radius: 14px 14px 0 0; max-height: 78vh; max-height: 78dvh; flex-direction: column; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5); }
       .sheet .sheethead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
       .sheet .sheethead b { color: #cfe3ff; }
       .sheet .sheethead button { min-width: 44px; min-height: 38px; }
@@ -130,6 +130,7 @@
       .sheet #topbar { border-bottom: 1px solid var(--line); }
       @media (max-width: 900px) {
         #mchips, #hotbar, #lrail { display: flex; }
+        #mchips { padding-top: calc(6px + env(safe-area-inset-top)); } /* notch 側（viewport-fit=cover） */
         #mstage { display: block; touch-action: none; }
         #mstage canvas { touch-action: none; }
         #stage, #foot { display: none; } /* 2D スライス盤は畳む（§8 決定②）＝真上視点＋層ロックで統合 */

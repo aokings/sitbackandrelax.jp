@@ -2,7 +2,7 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>comduct · dungeon（簡易トルネコ）</title>
     <style>
       /* ============================================================
@@ -62,6 +62,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         width: min(100vw, calc((100vh - 12px) * 748 / 440));
+        width: min(100vw, calc((100dvh - 12px) * 748 / 440)); /* iOS 動的ツールバー勘定（dvh 対応機） */
         height: auto;
         background: #0f1115;
         border: 1px solid rgba(255, 255, 255, 0.08);
