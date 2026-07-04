@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>comduct · 工房（能力/実体エディタ P7・開発ツール）</title>
+    <title>comduct · 工房（能力/実体/敵エディタ P7＋R1・開発ツール）</title>
     <style>
       /* ============================================================
          P7 能力＋実体エディタ（DESIGN-abilities.md・forge/sculpt の隣）
@@ -56,18 +56,19 @@
       details.hist summary { cursor: pointer; color: var(--muted); font-size: 11px; }
       .tag { display: inline-block; background: #232c3e; border-radius: 5px; padding: 0 6px; font-size: 10px; color: var(--muted); margin-right: 4px; }
     </style>
-    <script type="module" crossorigin src="./assets/smith-BLxnKul7.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/ability-DwoIGRV_.js">
+    <script type="module" crossorigin src="./assets/smith-CCrqI1wF.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/monster-B71lwl6j.js">
   </head>
   <body>
     <div id="app">
       <div id="side">
-        <h1>🔨 工房 — 能力/実体エディタ <span class="sub">P7</span></h1>
+        <h1>🔨 工房 — 能力/実体/敵エディタ <span class="sub">P7＋R1</span></h1>
         <div class="sub">数値と enum の合成だけ＝決定論の語彙。保存は future（truth 不変）・採用は ⭐（人間ゲート）。<a href="./forge.html" style="color:#8fb7ff">鍛冶場</a>・<a href="./sculpt.html" style="color:#8fb7ff">彫房</a>・<a href="./dungeon.html" style="color:#8fb7ff">実機</a></div>
         <div class="kv" id="tabs">
           <button id="tab-tech" class="on" type="button">⚡ 特技</button>
           <button id="tab-spell" type="button">✦ 呪文</button>
           <button id="tab-item" type="button">🗡 実体</button>
+          <button id="tab-mon" type="button">👹 敵</button>
         </div>
         <div id="form"></div>
         <button class="big" id="save" type="button">💾 提案として保存（future）</button>
