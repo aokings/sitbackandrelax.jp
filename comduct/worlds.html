@@ -5,62 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>comduct worlds — ワールド管理</title>
     <style>
-      /* マルチテナント E — ダッシュボード（アカウント→ワールド一覧→開く/複製/公開）。
-         見た目はツール群（forge/sculpt/smith）と同じ暗色の流儀・依存なしの素朴 CSS。 */
-      * { box-sizing: border-box; }
-      body { margin: 0; background: #12151c; color: #dfe6f2; font: 14px/1.6 -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
-      header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 14px 18px 6px; }
-      header h1 { font-size: 18px; margin: 0; }
-      header .sub { color: #8b96ab; font-size: 12px; }
-      .langpick { color: #8b96ab; margin-left: auto; }
-      .langpick select { background: #1b2030; color: #eef2ff; border: 1px solid #333c52; border-radius: 6px; padding: 2px 6px; }
-      main { padding: 8px 18px 40px; max-width: 980px; }
-      h2 { font-size: 14px; color: #aeb9cf; border-bottom: 1px solid #262e40; padding-bottom: 4px; margin: 22px 0 10px; }
-      .acct { color: #8b96ab; font-size: 12px; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-      .card { background: #181d29; border: 1px solid #262e40; border-radius: 10px; padding: 12px; }
-      .card b { font-size: 15px; }
-      .key { color: #8b96ab; font-size: 11px; font-family: ui-monospace, monospace; }
-      .tagrow { margin: 6px 0; display: flex; gap: 6px; flex-wrap: wrap; }
-      .tag { font-size: 11px; border-radius: 999px; padding: 1px 8px; border: 1px solid #333c52; color: #aeb9cf; }
-      .tag.pub { border-color: #3e7a4f; color: #8fd6a3; }
-      .row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-      button, .btn { background: #232b3d; color: #dfe6f2; border: 1px solid #333c52; border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-block; }
-      button.on, .btn.on { background: #2e4a7a; border-color: #47639c; }
-      button:hover, .btn:hover { filter: brightness(1.15); }
-      form.create { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; background: #181d29; border: 1px solid #262e40; border-radius: 10px; padding: 12px; }
-      form.create label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: #8b96ab; }
-      form.create input, form.create select { background: #1b2030; color: #eef2ff; border: 1px solid #333c52; border-radius: 6px; padding: 5px 8px; min-width: 150px; }
-      #say { margin: 10px 0; min-height: 1.4em; color: #8fd6a3; }
-      #say.err { color: #e08a8a; }
-      .live { color: #8b96ab; font-size: 12px; }
-      @media (max-width: 480px) { main { padding: 8px 12px 40px; } }
+      /* §studio W3 — stub 化（DESIGN-maker-workspace §4-c 末尾）：
+         markup も style も src/panels/worlds.html（単一実体）が持ち、src/worlds.ts が
+         standalone mount で #phost に注入する＝二重持ちゼロ。この骨格は高さの連鎖だけ。
+         ブックマーク/共有リンクは従来どおり生きる。 */
+      html, body { height: 100%; margin: 0; background: #12151c; }
+      #phost { height: 100%; }
     </style>
-    <script type="module" crossorigin src="./assets/worlds-xRQedeGb.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-DuJZb5TZ.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-CXFSt-ui.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BmkteAir.js">
-    <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
+    <script type="module" crossorigin src="./assets/worlds-CHv8oFF9.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-CUpE17Zf.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C9Tw5ccD.js">
+    <link rel="modulepreload" crossorigin href="./assets/shell-D-WKfnWk.js">
+    <link rel="modulepreload" crossorigin href="./assets/standalone-dBtbWE80.js">
+    <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
+    <link rel="modulepreload" crossorigin href="./assets/registry-BFQ11tWJ.js">
+    <link rel="modulepreload" crossorigin href="./assets/worlds-XsM73x2D.js">
+    <link rel="stylesheet" crossorigin href="./assets/shell-B7ujmJDW.css">
   </head>
   <body>
-    <header>
-      <h1 data-i18n="worlds.title">ワールド管理</h1>
-      <span class="sub" data-i18n="worlds.sub">アカウント → ワールド一覧 → 開く/複製/公開（1ワールド=1公開ゲーム=1URL）</span>
-      <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
-    </header>
-    <main>
-      <div class="acct"><span data-i18n="worlds.account">アカウント</span>: <b id="acct">—</b></div>
-      <div id="say"></div>
-      <h2 data-i18n="worlds.title">ワールド管理</h2>
-      <div id="worlds" class="grid"><div class="live">…</div></div>
-      <h2 data-i18n="worlds.createHead">新しいワールド</h2>
-      <form class="create" id="createForm">
-        <label><span data-i18n="worlds.fldId">id（kebab-case）</span><input id="fldId" pattern="[a-z0-9][a-z0-9-]*" required placeholder="my-dungeon" /></label>
-        <label><span data-i18n="worlds.fldTitle">タイトル</span><input id="fldTitle" placeholder="わたしの迷宮" /></label>
-        <label><span data-i18n="worlds.fldFrom">雛形</span><select id="fldFrom"></select></label>
-        <button type="submit" class="on" id="createDo" data-i18n="worlds.createDo">作成</button>
-      </form>
-    </main>
+    <div id="phost"></div>
   </body>
 </html>
