@@ -80,6 +80,18 @@
         pointer-events: none;
       }
 
+      /* §OW 世界地図＝別レイヤー・別縮尺（ノード＝丸・エッジ＝線・現在地＝光点）。トルネコ地図とは独立 */
+      #worldmapwrap {
+        position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
+        background: rgba(8, 10, 14, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      }
+      #worldmapwrap[hidden] { display: none; }
+      #worldmap {
+        width: min(92vw, 380px); height: auto; border-radius: 14px;
+        background: rgba(14, 17, 23, 0.92); border: 1px solid var(--glass-line);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      }
+
       /* ── 上＝細い glanceable 状態行（今効く数字だけ・低頻度は☰へ） ── */
       #topline {
         position: absolute; left: 8px; right: 8px; top: calc(10px + env(safe-area-inset-top));
@@ -433,11 +445,11 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-BFD_bXlO.js"></script>
+    <script type="module" crossorigin src="./assets/i18n-BS5mWJ17.js"></script>
     <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
     <script type="module" crossorigin src="./assets/voxmodel-tCB1eYMf.js"></script>
-    <script type="module" crossorigin src="./assets/tables-BPiiwUz0.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-2WgRvkLO.js"></script>
+    <script type="module" crossorigin src="./assets/tables-Du__anr4.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CadNYUDr.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -450,6 +462,9 @@
         <canvas id="board" width="748" height="440"></canvas>
         <canvas id="minimap" width="208" height="126"></canvas>
 
+        <!-- §OW 世界地図オーバレイ（ノード地図・トルネコ式フロア地図とは別レイヤー・タップで閉じる） -->
+        <div id="worldmapwrap" hidden><canvas id="worldmap" width="380" height="300"></canvas></div>
+
         <!-- 上＝細い glanceable 状態行（階・G・party・現作戦＋🗺☰） -->
         <div id="topline">
           <span class="chip" id="chip-floor">…</span>
@@ -459,6 +474,7 @@
           <span class="chip" id="chip-return" hidden></span><!-- A-5 帰り支度：📜帰還の書物/🌀帰還装置（地下だけ・所持事実のみ） -->
           <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）" data-i18n-title="ui.html.stancechipTitle"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
           <span class="spacer"></span>
+          <button class="iconbtn" id="worldbtn" type="button" title="世界地図（m）" data-i18n-title="ui.html.worldBtnTitle" hidden>🌍</button><!-- §OW 世界地図（WORLD のあるゲームだけ現れる） -->
           <button class="iconbtn" id="mapmode" type="button" title="地図" data-i18n-title="ui.html.mapBtnTitle">🗺</button>
           <button class="iconbtn" id="menubtn" type="button" title="メニュー" data-i18n-title="ui.html.menuBtnTitle">☰</button>
         </div>
