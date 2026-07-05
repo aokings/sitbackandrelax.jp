@@ -5,258 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title data-i18n="tool.forge.title">comduct · 鍛冶場（構造エディタ P2・開発ツール）</title>
     <style>
-      /* ============================================================
-         §18 クリエイター P2（DESIGN-creator §8）
-         ・第一要件＝迷わず描ける：現在筆が常に見える・ドラッグ塗り・右クリック消し・
-           矩形/塗りつぶし・undo/redo・hover ヒント・カメラ操作の明示・空グリッド誘導
-         ・描画＝render-voxel（buildPrefabPreview/buildSample/buildActorBody）＝
-           サムネも盤もゲームと同一実体（ドリフト無し）
-         ・左＝パレット＋メタ＋solvability／中＝3D 編集面／右＝ライブラリ（truth/future）
-         ・§tool-i18n：UI 文字列は data-i18n / t()（tool.* キー・6言語）。ja は原文と同文。
-         ============================================================ */
-      :root {
-        --bg: #12161f; --panel: #1a2130; --line: #2b3547;
-        --text: #e8edf5; --muted: #8b96a8; --accent: #5b9bff; --tint: #223048;
-        --ok: #7fd17f; --warn: #ffd166; --err: #ff7a6e; --erase: #e06a5a;
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
-      #app { display: flex; height: 100vh; height: 100dvh; }
-      /* §M0 full-touch（DESIGN-tools-mobile §1-d/§2）：狭幅＝上チップ行・盤最大・下 hotbar・シート召喚。
-         パネル（#topbar/#side/#loop）は JS がシートへ移動する＝DOM は同一実体（リスナ/i18n 無傷）。 */
-      #side { width: 300px; min-width: 260px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
-      #side > * { flex: 0 0 auto; } /* overflow 付きの子（モンスター一覧）が flex-shrink で潰れない */
-      #side h1 { font-size: 15px; }
-      .sub { color: var(--muted); font-size: 11px; }
-      #side h2, #loop h2 { font-size: 12px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 3px; margin-top: 3px; }
-      button, select, input[type="text"], input[type="number"] { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
-      input[type="text"], input[type="number"] { cursor: text; }
-      button:hover { border-color: var(--accent); }
-      button.on { background: var(--accent); color: #0d1017; border-color: var(--accent); font-weight: 700; }
-      button.big { background: var(--tint); border-color: var(--accent); padding: 8px 10px; font-weight: 700; }
-      button:disabled { opacity: 0.45; cursor: not-allowed; }
-      /* パレット＝サムネ付きの筆グリッド。選択中は青枠＋名前が主張＝「いま何の筆か」を常時可視化 */
-      .pal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-      .pal .swatch { position: relative; border: 2px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; padding: 0 0 2px; text-align: center; }
-      .pal .swatch:hover { border-color: #4a648f; }
-      .pal .swatch.on { border-color: var(--accent); background: var(--tint); box-shadow: 0 0 0 1px var(--accent); }
-      .pal .swatch img { width: 100%; aspect-ratio: 1; display: block; border-radius: 6px 6px 0 0; background: #0d1117; }
-      .pal .swatch .nm { font-size: 10px; line-height: 1.25; padding: 1px 2px 0; overflow-wrap: anywhere; }
-      .pal .swatch .kbd { position: absolute; top: 2px; left: 4px; font-size: 9px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; background: rgba(13,17,23,0.7); border-radius: 3px; padding: 0 3px; }
-      .pal .swatch .glyph { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; background: #0d1117; border-radius: 6px 6px 0 0; }
-      .pal.mons { max-height: 168px; overflow-y: auto; }
-      #palopts { display: none; gap: 5px; align-items: center; flex-wrap: wrap; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-size: 11px; }
-      #palopts.show { display: flex; }
-      #palopts .chip { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
-      #palopts .chip.on { border-color: #fff; box-shadow: 0 0 0 1px var(--accent); }
-      .kv { display: flex; align-items: center; gap: 6px; font-size: 12px; }
-      .kv .lbl { color: var(--muted); font-size: 11px; min-width: 3.2em; }
-      .kv input[type="text"] { flex: 1; min-width: 0; }
-      .kv input.num { width: 3.6em; }
-      /* solvability 判定パネル */
-      #solv { display: flex; flex-direction: column; gap: 3px; font-size: 11px; }
-      #solv .s-ok { color: var(--ok); } #solv .s-warn { color: var(--warn); } #solv .s-err { color: var(--err); }
-      /* 中央＝ステージ */
-      #stagewrap { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-      #topbar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
-      #nowtool { display: flex; align-items: center; gap: 7px; background: var(--tint); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 10px 3px 4px; font-size: 12px; }
-      #nowtool img { width: 26px; height: 26px; border-radius: 5px; background: #0d1117; }
-      #nowtool b { color: #cfe3ff; }
-      .tgroup { display: flex; gap: 4px; align-items: center; }
-      .tgroup .cap { color: var(--muted); font-size: 10px; margin-right: 2px; }
-      /* §tool-i18n：6言語ピッカー（ゲームの ☰ と同じ #langmode 流儀） */
-      .langpick { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
-      #langmode { max-width: 11em; }
-      #stage { flex: 1; position: relative; min-height: 0; }
-      #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-      /* 空グリッドの誘導（最初の1筆で消える） */
-      #guide { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); background: rgba(18,22,31,0.88); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 18px; font-size: 13px; line-height: 1.9; pointer-events: none; z-index: 5; box-shadow: 0 6px 24px rgba(0,0,0,0.45); max-width: min(92%, 560px); }
-      #guide b { color: #cfe3ff; }
-      #foot { border-top: 1px solid var(--line); background: var(--panel); padding: 7px 12px; font-size: 12px; color: var(--muted); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-      #hoverhint { color: #cfe3ff; min-width: 16em; }
-      #msg { color: var(--ok); }
-      #legend { margin-left: auto; font-size: 11px; }
-      #legend b { color: var(--text); font-weight: 600; }
-      /* 右＝ライブラリ */
-      #loop { width: 310px; min-width: 260px; border-left: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
-      .card.sel { border-color: var(--accent); }
-      .card .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted); }
-      .card .who { font-size: 10px; color: var(--warn); }
-      .card .row { display: flex; gap: 6px; flex-wrap: wrap; }
-      .card img.pv { width: 64px; height: 64px; border-radius: 6px; background: #0d1117; float: right; }
-      .card .head { display: flex; gap: 8px; align-items: flex-start; }
-      .card .head .info { flex: 1; min-width: 0; }
-      .live { font-size: 11px; color: var(--muted); }
-      .live b { color: var(--ok); }
-      details.hist summary { cursor: pointer; font-size: 11px; color: var(--muted); }
-      /* ⭐2段確認（決定⑥）：promote タップ→確認バー→確定。PC/モバイル共通 */
-      .confirmbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #33290f; border: 1px solid var(--warn); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
-      .confirmbar span { color: var(--warn); }
-      /* ── M0 モバイル部品（デスクトップでは非表示） ───────────────────────── */
-      #mchips, #hotbar, .sheet, #veil, #mtoast { display: none; }
-      #mchips { gap: 6px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); background: var(--panel); overflow-x: auto; flex: 0 0 auto; }
-      #mchips button { min-height: 44px; min-width: 44px; font-size: 14px; flex: 0 0 auto; }
-      #mchips .mchip.ok { color: var(--ok); border-color: var(--ok); }
-      #mchips .mchip.warn { color: var(--warn); border-color: var(--warn); }
-      #mchips .mchip.err { color: var(--err); border-color: var(--err); font-weight: 700; }
-      #mchips button.on { background: var(--tint); border-color: var(--accent); }
-      .mnow { display: inline-flex; align-items: center; gap: 5px; background: var(--tint); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 8px 3px 4px; font-size: 12px; flex: 0 0 auto; max-width: 34vw; }
-      .mnow img { width: 30px; height: 30px; border-radius: 5px; background: #0d1117; }
-      .mnow b { color: #cfe3ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      #hotbar { gap: 6px; align-items: stretch; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); overflow-x: auto; flex: 0 0 auto; }
-      #hotbar .hshape { display: flex; gap: 4px; align-items: stretch; padding-right: 6px; border-right: 1px solid var(--line); }
-      #hotbar .hshape button, #hotbar > button { min-width: 44px; min-height: 52px; font-size: 12px; flex: 0 0 auto; }
-      #hrecent { display: flex; gap: 6px; }
-      .hswatch { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 54px; border: 2px solid var(--line); border-radius: 8px; background: var(--panel); padding: 2px 3px; }
-      .hswatch.on { border-color: var(--accent); background: var(--tint); box-shadow: 0 0 0 1px var(--accent); }
-      .hswatch img, .hswatch .glyph { width: 32px; height: 32px; border-radius: 5px; background: #0d1117; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-      .hswatch .nm { font-size: 9px; max-width: 62px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-      #mtoast { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 12px; z-index: 6; max-width: 92%; }
-      #veil { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 29; }
-      .sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg); border-top: 1px solid var(--accent); border-radius: 14px 14px 0 0; max-height: 78vh; max-height: 78dvh; flex-direction: column; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5); }
-      .sheet .sheethead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
-      .sheet .sheethead b { color: #cfe3ff; }
-      .sheet .sheethead button { min-width: 44px; min-height: 38px; }
-      .sheet .sheetbody { overflow-y: auto; min-height: 0; }
-      .sheet #side { width: auto; min-width: 0; border-right: none; }
-      .sheet #loop { width: auto; min-width: 0; border-left: none; }
-      .sheet #topbar { border-bottom: 1px solid var(--line); }
-      #mlegend { display: none; position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); background: rgba(18, 22, 31, 0.85); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; font-size: 10.5px; color: var(--muted); pointer-events: none; z-index: 5; max-width: 94%; text-align: center; }
-      @media (max-width: 900px) {
-        #mchips, #hotbar { display: flex; }
-        #mchips { padding-top: calc(6px + env(safe-area-inset-top)); } /* notch 側（viewport-fit=cover） */
-        #foot { display: none; }
-        #guide[style*="block"] ~ #mlegend { display: block; }
-        #stage { touch-action: none; }
-        #stage canvas { touch-action: none; }
-      }
+      /* §studio W1 — stub 化（DESIGN-maker-workspace §4-c 末尾）：
+         markup も style も src/panels/forge.html（単一実体）が持ち、src/forge.ts が
+         standalone mount で #phost に注入する＝二重持ちゼロ。この骨格は高さの連鎖だけ。
+         ブックマーク/回遊リンク（worlds.ts の toolLink 等）は従来どおり生きる。 */
+      html, body { height: 100%; margin: 0; background: #12161f; }
+      #phost { height: 100%; }
     </style>
-    <script type="module" crossorigin src="./assets/forge-CAZ77kP9.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-BS5mWJ17.js">
+    <script type="module" crossorigin src="./assets/forge-CCSuYCHP.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-C4nEDUzS.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BjTiHMft.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-Cyf9StK9.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
+    <link rel="modulepreload" crossorigin href="./assets/shell-Bx9qrE2n.js">
     <link rel="modulepreload" crossorigin href="./assets/schemas-BBGxizon.js">
     <link rel="modulepreload" crossorigin href="./assets/voxmodel-tCB1eYMf.js">
-    <link rel="modulepreload" crossorigin href="./assets/render-voxel-Dxlz5ar3.js">
+    <link rel="modulepreload" crossorigin href="./assets/render-voxel-qtoXloV6.js">
+    <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
     <link rel="modulepreload" crossorigin href="./assets/tables-Du__anr4.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-CadNYUDr.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-CA8jmIrQ.js">
     <link rel="modulepreload" crossorigin href="./assets/forge-edit-BmmllVxS.js">
     <link rel="modulepreload" crossorigin href="./assets/touch-input-D1HYJrcI.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-shelf-BbkEzH9h.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-CdD0lsYW.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BmkSdslz.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-shelf-DXpbAfyu.js">
+    <link rel="modulepreload" crossorigin href="./assets/forge-C54onPvx.js">
     <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
   </head>
   <body>
-    <div id="app">
-      <div id="side">
-        <h1><span data-i18n="tool.forge.h1">鍛冶場</span> <span class="sub" data-i18n="tool.forge.h1sub">構造エディタ P2</span></h1>
-        <div class="sub" data-i18n-html="tool.forge.intro">描く→<b>提案（future）</b>を保存→<b>⭐promote</b> で truth へ→生成がスタンプ→実機で歩ける。盤もサムネもゲームと同一実体で描画。</div>
-        <h2 data-i18n="tool.forge.palTerrain">地形の筆</h2>
-        <div class="pal" id="palTerrain"></div>
-        <div id="palopts"></div>
-        <h2 data-i18n="tool.forge.palProps">置物の筆</h2>
-        <div class="pal" id="palProps"></div>
-        <h2 data-i18n="tool.forge.palMisc">接続口・消しゴム</h2>
-        <div class="pal" id="palMisc"></div>
-        <h2><span data-i18n="tool.forge.palMons">モンスター</span> <span class="sub" data-i18n="tool.forge.palMonsSub">（生成が読む＝実機で湧く。おまかせ=深度で選ばれる）</span></h2>
-        <div class="pal mons" id="palSpawns"></div>
-        <h2 data-i18n="tool.forge.prefabHead">プレハブ</h2>
-        <div class="kv"><span class="lbl">id</span><input type="text" id="pid" /></div>
-        <div class="kv"><span class="lbl" data-i18n="tool.common.name">名前</span><input type="text" id="pname" /></div>
-        <div class="kv"><span class="lbl" data-i18n="tool.common.size">大きさ</span>
-          <input type="number" id="pw" class="num" min="2" max="18" /> ×
-          <input type="number" id="pd" class="num" min="2" max="14" />
-          <button id="applySize" data-i18n="tool.forge.applySize">寸法を変える</button>
-        </div>
-        <div class="kv"><span class="lbl" data-i18n="tool.forge.depth">深度</span><input type="text" id="pdepth" style="width:5em" />
-          <span class="lbl" data-i18n="tool.forge.weight">重み</span><input type="number" id="pweight" class="num" min="1" max="9" /></div>
-        <div class="kv"><span class="lbl">tags</span><input type="text" id="ptags" placeholder="room arena shrine …" /></div>
-        <div class="kv sub"><label><input type="checkbox" id="cPorts" /> <span data-i18n="tool.forge.cPorts">port 相互到達を生成に要求</span></label></div>
-        <div class="kv sub"><label><input type="checkbox" id="cHaz" /> <span data-i18n="tool.forge.cHaz">hazard は迂回可能（宣言）</span></label></div>
-        <h2 data-i18n="tool.forge.solvHead">solvability（promote 前の判定）</h2>
-        <div id="solv"></div>
-        <button class="big" id="save" data-i18n="tool.forge.save">🔨 提案として保存（future）</button>
-        <div class="sub" id="savenote" data-i18n="tool.common.savenote">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</div>
-      </div>
-      <div id="stagewrap">
-        <div id="topbar">
-          <div id="nowtool"><img id="nowimg" alt="" /><span><span data-i18n="tool.common.nowBrush">いまの筆：</span><b id="nowname">床</b><span class="sub" id="nowshape">（筆）</span></span></div>
-          <div class="tgroup"><span class="cap" data-i18n="tool.common.shapeCap">かたち</span>
-            <button id="shBrush" class="on" data-i18n-title="tool.forge.shBrushTitle" title="1マスずつ塗る（ドラッグ可）"><span data-i18n="tool.common.shape.brush">筆</span> <span class="sub">B</span></button>
-            <button id="shRect" data-i18n-title="tool.forge.shRectTitle" title="対角にドラッグして長方形に敷く"><span data-i18n="tool.common.shape.rect">矩形</span> <span class="sub">R</span></button>
-            <button id="shFill" data-i18n-title="tool.forge.shFillTitle" title="同じ素材の続く範囲をまとめて塗る"><span data-i18n="tool.common.shape.fill">塗りつぶし</span> <span class="sub">F</span></button>
-          </div>
-          <div class="tgroup"><span class="cap" data-i18n="tool.common.undoCap">やり直し</span>
-            <button id="undo" title="⌘Z / Ctrl+Z" data-i18n="tool.common.undo">↶ 戻す</button>
-            <button id="redo" title="⌘⇧Z / Ctrl+Y" data-i18n="tool.common.redo">↷ 進む</button>
-          </div>
-          <div class="tgroup"><span class="cap" data-i18n="tool.forge.camCap">カメラ</span>
-            <button id="camL" data-i18n-title="tool.forge.camL" title="左へ回す（←）">⟲</button>
-            <button id="camR" data-i18n-title="tool.forge.camR" title="右へ回す（→）">⟳</button>
-            <button id="camIn" data-i18n-title="tool.forge.camIn" title="寄る（ホイール↑）">＋</button>
-            <button id="camOut" data-i18n-title="tool.forge.camOut" title="引く（ホイール↓）">−</button>
-          </div>
-          <div class="tgroup">
-            <button id="newpf" data-i18n="tool.common.new" data-i18n-title="tool.forge.newTitle" title="いまの寸法で空のプレハブから">新規</button>
-            <button id="help" data-i18n-title="tool.common.helpTitle" title="操作の説明をもう一度出す">？</button>
-          </div>
-          <span class="langpick worldpick">🗺<select id="worldmode" title="World / ワールド"></select></span>
-          <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
-        </div>
-        <div id="mchips">
-          <button id="mSolv" class="mchip ok" data-i18n-title="tool.forge.mSolvTitle" title="生成に耐えるか（タップで詳細）">✓</button>
-          <span class="mnow"><img id="mNowImg" alt="" /><b id="mNowName">床</b></span>
-          <button id="mUndo" title="undo">↶</button>
-          <button id="mRedo" title="redo">↷</button>
-          <button id="mFit" data-i18n-title="tool.forge.mFit" title="全体が見える距離に戻す">⛶</button>
-          <button id="mReach" data-i18n-title="tool.forge.mReach" title="接続口から届かない床を薄赤で示す">🟥</button>
-          <button id="mSave" data-i18n="tool.forge.mSaveShort" data-i18n-title="tool.forge.mSolvTitle" title="生成に耐えるか（タップで詳細）">🔨 保存</button>
-          <button id="mMenu" data-i18n-title="tool.forge.mMenu" title="道具と保存">☰</button>
-          <button id="mShelf" data-i18n-title="tool.forge.mShelf" title="棚（future / truth）">📚</button>
-        </div>
-        <div id="stage">
-          <div id="guide" data-i18n-html="tool.forge.guide">
-            <b>① 左のパレットで筆を選ぶ</b>（いまの筆は左上に常時表示）<br />
-            <b>② 盤を左クリック/ドラッグ</b>＝塗る　<b>右クリック</b>＝消す<br />
-            <b>③ 背景をドラッグ</b>＝回す　<b>ホイール</b>＝寄る<br />
-            描けたら左下の <b>🔨 保存</b> → 右の一覧で <b>⭐promote</b> → 実機に出る
-          </div>
-          <div id="mlegend" data-i18n="tool.forge.mLegend">1本指=描く｜2本指=回す・寄る｜2本指タップ=戻す・3本指タップ=進む｜長押し=マス調べ</div>
-          <div id="mtoast"></div>
-        </div>
-        <div id="foot">
-          <span id="hoverhint">—</span>
-          <span id="msg"></span>
-          <span id="legend" data-i18n-html="tool.forge.legend"><b>左ドラッグ</b>=塗る｜<b>右クリック</b>=消す｜<b>背景ドラッグ/Space+ドラッグ</b>=回す｜<b>ホイール</b>=寄る｜<b>⌘Z</b>=戻す</span>
-        </div>
-        <div id="hotbar">
-          <div class="hshape">
-            <button id="mShB" class="on" data-i18n="tool.common.shape.brush">筆</button>
-            <button id="mShR" data-i18n="tool.common.shape.rect">矩形</button>
-            <button id="mShF" data-i18n="tool.common.shape.fill">塗りつぶし</button>
-          </div>
-          <div id="hrecent"></div>
-          <button id="hMore" data-i18n-title="tool.forge.mPalette" title="パレットをすべて見る">…</button>
-        </div>
-      </div>
-      <div id="loop">
-        <h2><span data-i18n="tool.common.futureHead">提案（future）</span><span class="live" id="live">·</span></h2>
-        <div id="proposals"></div>
-        <h2 data-i18n="tool.forge.truthHead">truth ライブラリ（data/prefabs/）</h2>
-        <div id="truth"></div>
-        <div class="sub" data-i18n="tool.common.watchNote">ファイル変更は watch（150ms debounce＋内容署名 dedupe）で自動反映＝AI がファイルで future を書いてもここに現れる。編集中の盤は reload されない（状態保持）。</div>
-      </div>
-    </div>
-    <!-- M0 モバイル：シート召喚（パネル DOM は JS がここへ移動＝同一実体・リスナ無傷） -->
-    <div id="veil"></div>
-    <div id="sheetSide" class="sheet">
-      <div class="sheethead"><b data-i18n="tool.forge.mMenu">道具と保存</b><button class="shclose">✕</button></div>
-      <div class="sheetbody" id="sheetSideBody"></div>
-    </div>
-    <div id="sheetLoop" class="sheet">
-      <div class="sheethead"><b data-i18n="tool.forge.mShelf">棚（future / truth）</b><button class="shclose">✕</button></div>
-      <div class="sheetbody" id="sheetLoopBody"></div>
-    </div>
+    <div id="phost"></div>
   </body>
 </html>

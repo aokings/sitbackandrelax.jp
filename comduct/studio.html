@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title data-i18n="tool.studio.title">comduct · スタジオ（統合ワークスペース）</title>
+    <style>
+      /* ============================================================
+         §studio W1 — シェルの常設 chrome（DESIGN-maker-workspace §4-a）。
+         ・topbar（world/言語/トークン印）＋左レール（PC）／下タブ（モバイル・900px 境界）
+         ・#phost＝パネルの host（排他 mount）。パネルの style は markup と共に注入され
+           dispose で丸ごと消える＝シェルはパネル CSS に依存しない（ここで完結）。
+         ・パネル内の .langpick/.worldpick はシェルが二重にならないよう非表示
+           （standalone stub では従来どおり見える）。
+         ============================================================ */
+      :root {
+        --bg: #12161f; --panel: #1a2130; --line: #2b3547;
+        --text: #e8edf5; --muted: #8b96a8; --accent: #5b9bff; --tint: #223048;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
+      #studio { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+      #stutop { display: flex; align-items: center; gap: 10px; padding: 5px 12px; border-bottom: 1px solid var(--line); background: var(--panel); flex: 0 0 auto; }
+      #stutop .brand { font-weight: 700; font-size: 13px; color: #cfe3ff; }
+      #stutop .brand .sub { color: var(--muted); font-weight: 400; font-size: 11px; }
+      #stutop select { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font: inherit; font-size: 12px; max-width: 13em; }
+      #stutop .pick { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+      #stutop .spacer { margin-left: auto; }
+      #stuworldlbl { color: var(--muted); font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      #stutoken { font-size: 13px; }
+      #stubody { flex: 1; display: flex; min-height: 0; }
+      #sturail { width: 58px; flex: 0 0 auto; border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 6px; padding: 8px 5px; }
+      .railbtn, .tabbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 8px; padding: 6px 2px; font: inherit; cursor: pointer; }
+      .railbtn .ic, .tabbtn .ic { font-size: 19px; }
+      .railbtn .lb, .tabbtn .lb { font-size: 9px; color: var(--muted); max-width: 52px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      .railbtn:hover, .tabbtn:hover { border-color: #4a648f; }
+      .railbtn.on, .tabbtn.on { background: var(--tint); border-color: var(--accent); }
+      .railbtn.on .lb, .tabbtn.on .lb { color: #cfe3ff; }
+      #phost { flex: 1; min-width: 0; min-height: 0; position: relative; }
+      /* パネル注入 markup の言語/ワールドピッカーはシェルが持つ＝二重表示を畳む（standalone では出る） */
+      #phost .langpick, #phost .worldpick { display: none; }
+      #stutabs { display: none; flex: 0 0 auto; border-top: 1px solid var(--line); background: var(--panel); padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); gap: 6px; z-index: 20; }
+      #stutabs .tabbtn { flex: 1; min-height: 48px; }
+      @media (max-width: 900px) {
+        #sturail { display: none; }
+        #stutabs { display: flex; }
+        #stutop { overflow-x: auto; }
+        #stuworldlbl { display: none; }
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/studio-DIfBwGhp.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-C4nEDUzS.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BjTiHMft.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-Cyf9StK9.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
+    <link rel="modulepreload" crossorigin href="./assets/shell-Bx9qrE2n.js">
+    <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
+    <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
+  </head>
+  <body>
+    <div id="studio">
+      <div id="stutop">
+        <span class="brand">comduct <span class="sub">studio</span></span>
+        <span class="pick worldpick">🗺<select id="stuWorld" title="World / ワールド"></select></span><!-- API 無し＝initWorldSwitcher が .worldpick ごと隠す（絵文字も残らない） -->
+        <span id="stuworldlbl"></span>
+        <span class="spacer"></span>
+        <span id="stutoken"></span>
+        <span class="pick">🌐<select id="stuLang" title="Language / 言語"></select></span>
+      </div>
+      <div id="stubody">
+        <div id="sturail"></div>
+        <div id="phost"></div>
+      </div>
+      <div id="stutabs"></div>
+    </div>
+  </body>
+</html>
