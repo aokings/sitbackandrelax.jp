@@ -93,6 +93,7 @@
       }
       .chip small { font-weight: 700; color: var(--text-dim); font-size: 11px; }
       button.chip { cursor: pointer; }
+      .chip[hidden] { display: none; } /* A-4/A-5：非表示チップは空ピルとして残さない（display が hidden 属性に勝つのを防ぐ） */
       #stancechip { border-color: rgba(185, 140, 255, 0.55); color: #dcc8ff; }
       #stancechip .flag { color: var(--stance); }
       #stancechip.pulse { animation: chippulse 0.9s ease-out; }
@@ -163,6 +164,7 @@
         background: var(--glass); border: 1px solid var(--glass-line);
         backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       }
+      .pmini.rally { display: block; width: 44px; align-self: flex-start; padding: 5px 0; text-align: center; font-size: 15px; font-weight: 800; color: #dcc8ff; border-color: rgba(185, 140, 255, 0.55); } /* A-2 ⚑集合＝帯の端の1チップ（テキスト「集合」と同一意味論） */
       .pmini .g { grid-row: 1 / 3; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; border: 1.5px solid rgba(255, 255, 255, 0.8); }
       .pmini .row1 { display: flex; align-items: center; gap: 5px; min-width: 0; }
       .pmini .nm { font-size: 12px; font-weight: 800; color: var(--text-hi); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -395,6 +397,7 @@
       body.mode-pc #pad { display: none; }
       body.mode-pc #party { left: 14px; right: auto; bottom: 14px; }
       body.mode-pc .pmini { width: 184px; }
+      body.mode-pc .pmini.rally, .pmini.rally { width: 44px; } /* A-2 ⚑集合＝mode-pc の幅指定にも勝つ（コンパクトな1チップ） */
       body.mode-pc #quickbar { gap: 8px; }
       body.mode-pc .slot { width: 62px; height: 64px; }
       body.mode-pc .slot .key { font-size: 10px; color: var(--gold); }
@@ -430,11 +433,11 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-WrEyD3Of.js"></script>
+    <script type="module" crossorigin src="./assets/i18n-DOfTLams.js"></script>
     <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
     <script type="module" crossorigin src="./assets/voxmodel-Da96CgHi.js"></script>
     <script type="module" crossorigin src="./assets/monster-H1vDngsT.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-BLvCVkYw.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-USuf3C7Q.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -452,6 +455,8 @@
           <span class="chip" id="chip-floor">…</span>
           <span class="chip" id="chip-gold">💰 0</span>
           <span class="chip" id="chip-party">👥 -</span>
+          <span class="chip" id="chip-forecast" hidden></span><!-- A-4 forecast：前線/次波の残り手数（圧がある階だけ現れる） -->
+          <span class="chip" id="chip-return" hidden></span><!-- A-5 帰り支度：📜帰還の書物/🌀帰還装置（地下だけ・所持事実のみ） -->
           <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）" data-i18n-title="ui.html.stancechipTitle"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
           <span class="spacer"></span>
           <button class="iconbtn" id="mapmode" type="button" title="地図" data-i18n-title="ui.html.mapBtnTitle">🗺</button>
