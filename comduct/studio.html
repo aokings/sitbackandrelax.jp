@@ -27,6 +27,9 @@
       #stutop .pick { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
       #stutop .spacer { margin-left: auto; }
       #stuworldlbl { color: var(--muted); font-size: 11px; font-family: ui-monospace, Menlo, monospace; }
+      /* R3面：account chip＝「誰として作っているか」（world 切替の隣・whoami の表示層） */
+      #stuacct { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #cfe3ff; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; background: #232c3e; white-space: nowrap; }
+      #stuacct.off { color: var(--muted); border-style: dashed; background: transparent; }
       #stutoken { font-size: 13px; }
       #stubody { flex: 1; display: flex; min-height: 0; }
       #sturail { width: 58px; flex: 0 0 auto; border-right: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; gap: 6px; padding: 8px 5px; }
@@ -48,9 +51,9 @@
         #stuworldlbl { display: none; }
       }
     </style>
-    <script type="module" crossorigin src="./assets/studio-BBWstWjK.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-D6wL48qN.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-Bl-sL_3z.js">
+    <script type="module" crossorigin src="./assets/studio-BpP2cUMc.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-CyHpDAlw.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-B1Dea2cT.js">
     <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
     <link rel="stylesheet" crossorigin href="./assets/studio-B7ujmJDW.css">
   </head>
@@ -60,6 +63,7 @@
         <span class="brand">comduct <span class="sub">studio</span></span>
         <span class="pick worldpick">🗺<select id="stuWorld" title="World / ワールド"></select></span><!-- API 無し＝initWorldSwitcher が .worldpick ごと隠す（絵文字も残らない） -->
         <span id="stuworldlbl"></span>
+        <span id="stuacct" hidden></span><!-- R3面：誰として作っているか（whoami の表示層・main.ts が埋める） -->
         <span class="spacer"></span>
         <span id="stutoken"></span>
         <span class="pick">🌐<select id="stuLang" title="Language / 言語"></select></span>
