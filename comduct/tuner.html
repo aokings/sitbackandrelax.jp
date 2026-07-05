@@ -6,151 +6,30 @@
     <title data-i18n="tool.tuner.title">comduct · 調律台（生成チューナー＋seed 束見・開発ツール）</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🎛</text></svg>" /><!-- console 0 の柵（favicon 404 を出さない） -->
     <style>
-      /* ============================================================
-         §maker M1 生成チューナー（DESIGN-maker §B4・forge/sculpt/smith の隣）
-         ・左＝3タブ（カーブ／表／feel）＝GameTables のつまみ（schema 工事ゼロ）
-         ・中＝★seed 束見＝つまみを動かすと 9〜16 seed の小盤面が即並び直す
-           （決定論だからタダ＝genFloor を read で回すだけ・乱数写像に触れない）
-         ・右＝協働ループ（truth／future・⭐promote は人間ゲート）＋試遊
-         ・§tool-i18n：UI 文字列は data-i18n / t()（tool.* キー）。ja は原文と同文。
-         ============================================================ */
-      :root {
-        --bg: #12161f; --panel: #1a2130; --line: #2b3547;
-        --text: #e8edf5; --muted: #8b96a8; --accent: #ffb347; --tint: #2e2412;
-        --ok: #7fd17f; --warn: #ffd166; --err: #ff7a6e;
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; background: var(--bg); color: var(--text); font: 14px/1.55 ui-rounded, "Hiragino Maru Gothic ProN", "Noto Sans Thai Sub", "Noto Sans Viet Sub", system-ui, sans-serif; }
-      #app { display: flex; height: 100vh; height: 100dvh; }
-      #side { width: 380px; min-width: 330px; border-right: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
-      #side h1 { font-size: 15px; }
-      .sub { color: var(--muted); font-size: 11px; }
-      h2 { font-size: 12px; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 3px; margin-top: 3px; }
-      button, select, input[type="text"], input[type="number"], input[type="color"] { background: #232c3e; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 9px; font: inherit; font-size: 12px; cursor: pointer; }
-      input[type="text"], input[type="number"] { cursor: text; }
-      input[type="range"] { accent-color: var(--accent); }
-      button:hover { border-color: var(--accent); }
-      button.on { background: var(--accent); color: #0d1017; border-color: var(--accent); font-weight: 700; }
-      button.big { background: var(--tint); border-color: var(--accent); padding: 8px 10px; font-weight: 700; }
-      button:disabled { opacity: 0.45; cursor: not-allowed; }
-      .kv { display: flex; align-items: center; gap: 6px; font-size: 12px; flex-wrap: wrap; }
-      .kv .lbl { color: var(--muted); font-size: 11px; min-width: 4.2em; }
-      .kv input[type="text"] { flex: 1; min-width: 0; }
-      .kv input.num { width: 4.6em; }
-      /* 既定と違う欄＝火が入っている印（差分だけが data になる、の可視化） */
-      input.chg, textarea.chg { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(255, 179, 71, 0.35) inset; }
-      /* 仕掛け/表の行 */
-      table.grid { border-collapse: collapse; width: 100%; font-size: 11px; }
-      table.grid th { color: var(--muted); font-weight: 400; text-align: left; padding: 2px 4px; position: sticky; top: 0; background: var(--panel); }
-      table.grid td { padding: 1px 2px; }
-      table.grid td input { width: 4em; padding: 3px 5px; font-size: 11px; }
-      table.grid td input.wide { width: 8.5em; }
-      table.grid tr.sel td:first-child { color: var(--accent); }
-      table.grid td.key { cursor: pointer; white-space: nowrap; color: #cfe3ff; }
-      .tblwrap { max-height: 300px; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; }
-      #curvechart { background: #0d1117; border: 1px solid var(--line); border-radius: 8px; width: 100%; }
-      #mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-      #stage { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-      #ctrl { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-      #ctrl input[type="range"] { width: 180px; }
-      #depthv { color: var(--warn); font-weight: 700; min-width: 3em; }
-      #gensum { color: var(--muted); font-size: 11px; }
-      #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(216px, 1fr)); gap: 10px; }
-      .thumb { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
-      .thumb canvas { width: 100%; image-rendering: pixelated; background: #0d1117; border-radius: 4px; }
-      .thumb .cap { font-size: 10px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
-      .thumb.zoom { grid-column: 1 / -1; }
-      #lint { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 12px; }
-      #lint .ok { color: var(--ok); }
-      #lint .err { color: var(--err); white-space: pre-wrap; }
-      #legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 10px; color: var(--muted); }
-      #legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 3px; vertical-align: -1px; }
-      #foot { border-top: 1px solid var(--line); background: var(--panel); padding: 7px 12px; font-size: 12px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
-      #msg { color: var(--ok); }
-      #loop { width: 320px; min-width: 270px; border-left: 1px solid var(--line); padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 12px; display: flex; flex-direction: column; gap: 5px; }
-      .card .id { font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: var(--muted); }
-      .card .who { font-size: 10px; color: var(--warn); }
-      .card .row { display: flex; gap: 6px; flex-wrap: wrap; }
-      .live { color: var(--muted); font-size: 11px; }
-      details.hist summary { cursor: pointer; color: var(--muted); font-size: 11px; }
-      details.json pre { max-height: 220px; overflow: auto; background: #0d1117; border-radius: 6px; padding: 6px 8px; font-size: 10px; font-family: ui-monospace, Menlo, monospace; white-space: pre-wrap; }
-      .tag { display: inline-block; background: #232c3e; border-radius: 5px; padding: 0 6px; font-size: 10px; color: var(--muted); margin-right: 4px; }
-      .langpick { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
-      #langmode { max-width: 12em; }
-      .confirmbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #33290f; border: 1px solid var(--warn); border-radius: 6px; padding: 6px 8px; font-size: 11px; }
-      .confirmbar span { color: var(--warn); }
-      /* ── スマホ（≤900px）＝縦積み：束見が先頭（つまみ→手応えの距離を最短に） ── */
-      @media (max-width: 900px) {
-        #app { flex-direction: column; height: auto; min-height: 100dvh; overflow-y: auto; }
-        #side, #loop { width: 100%; min-width: 0; border: none; border-top: 1px solid var(--line); }
-        #mid { order: -1; flex: 0 0 auto; }
-        #stage { overflow: visible; padding: 10px; }
-        #grid { grid-template-columns: repeat(2, 1fr); }
-        #ctrl input[type="range"] { width: 130px; }
-        .kv input[type="text"], .kv input[type="number"], .kv select, button.big { min-height: 44px; }
-        .kv input[type="text"], .kv input[type="number"] { font-size: 16px; } /* iOS の自動ズーム回避 */
-        table.grid td input { min-height: 34px; font-size: 13px; }
-      }
+      /* §studio W2 — stub 化（DESIGN-maker-workspace §4-c 末尾）：
+         markup も style も src/panels/tuner.html（単一実体）が持ち、src/tuner.ts が
+         standalone mount で #phost に注入する＝二重持ちゼロ。この骨格は高さの連鎖だけ。
+         ブックマーク/回遊リンク（smith.html 経由等）は従来どおり生きる。 */
+      html, body { height: 100%; margin: 0; background: #12161f; }
+      #phost { height: 100%; }
     </style>
-    <script type="module" crossorigin src="./assets/tuner-Y3QeLS60.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-C4nEDUzS.js">
+    <script type="module" crossorigin src="./assets/tuner-jsIeRdNU.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-DuJZb5TZ.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BmkteAir.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-CXFSt-ui.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
+    <link rel="modulepreload" crossorigin href="./assets/shell-Dl7yfy2d.js">
+    <link rel="modulepreload" crossorigin href="./assets/standalone-Df1GWtfR.js">
     <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
     <link rel="modulepreload" crossorigin href="./assets/schemas-BBGxizon.js">
-    <link rel="modulepreload" crossorigin href="./assets/voxmodel-tCB1eYMf.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-Czy-PBwZ.js">
     <link rel="modulepreload" crossorigin href="./assets/tables-Du__anr4.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-CA8jmIrQ.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-shelf-DXpbAfyu.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-C2cecs39.js">
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-Cyf9StK9.js">
-    <link rel="modulepreload" crossorigin href="./assets/tool-i18n-BjTiHMft.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-B7f2JynZ.js">
+    <link rel="modulepreload" crossorigin href="./assets/tool-shelf-O8VwfeA3.js">
+    <link rel="modulepreload" crossorigin href="./assets/tuner-DjFeDdbE.js">
     <link rel="stylesheet" crossorigin href="./assets/tool-i18n-B7ujmJDW.css">
   </head>
   <body>
-    <div id="app">
-      <div id="side">
-        <div id="about" style="display:flex;flex-direction:column;gap:9px">
-          <h1><span data-i18n="tool.tuner.h1">🎛 調律台 — 生成チューナー</span> <span class="sub">M1</span></h1>
-          <div class="sub"><span data-i18n="tool.tuner.intro">つまみは全部 data（GameTables）＝式と語彙は engine 固定。右の束見が「このつまみだと実際どんな盤が出るか」を分布で見せる。保存は future（truth 不変）・採用は ⭐（人間ゲート）。</span><a href="./forge.html" style="color:#8fb7ff" data-i18n="tool.tuner.linkForge">鍛冶場</a>・<a href="./smith.html" style="color:#8fb7ff" data-i18n="tool.tuner.linkSmith">工房</a>・<a href="./dungeon.html" style="color:#8fb7ff" data-i18n="tool.tuner.linkGame">実機</a></div>
-          <div class="kv"><span class="langpick worldpick">🗺<select id="worldmode" title="World / ワールド"></select></span><span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span></div>
-        </div>
-        <div class="kv" id="tabs">
-          <button id="tab-curve" class="on" type="button" data-i18n="tool.tuner.tab.curve">📈 カーブ</button>
-          <button id="tab-table" type="button" data-i18n="tool.tuner.tab.table">📋 表</button>
-          <button id="tab-feel" type="button" data-i18n="tool.tuner.tab.feel">🎚 feel</button>
-        </div>
-        <div id="form"></div>
-        <button id="reset" type="button" data-i18n="tool.tuner.reset">↩ 全部 comduct 既定に戻す</button>
-      </div>
-      <div id="mid">
-        <div id="stage">
-          <div id="ctrl">
-            <span class="lbl" data-i18n="tool.tuner.depth">深さ</span>
-            <input id="depth" type="range" min="1" max="30" value="3" />
-            <span id="depthv">3F</span>
-            <span class="lbl" data-i18n="tool.tuner.seedBase">seed</span>
-            <input id="seedbase" class="num" type="number" value="100" min="0" max="99999999" />
-            <select id="count"><option value="9">9</option><option value="12" selected>12</option><option value="16">16</option></select>
-            <button id="regen" type="button" data-i18n="tool.tuner.regen">🎲 束ね直す</button>
-            <button id="play" class="big" type="button" data-i18n="tool.tuner.play">▶ この調律で遊ぶ</button>
-            <span id="gensum"></span>
-          </div>
-          <div id="lint"></div>
-          <div id="grid"></div>
-          <div id="legend"></div>
-        </div>
-        <div id="foot"><span id="hint" data-i18n="tool.common.savenote">保存は truth を変えない。右の一覧に future が並び、⭐promote だけが truth を更新する。</span><span id="perf"></span><span id="msg"></span></div>
-      </div>
-      <div id="loop">
-        <h2 data-i18n="tool.tuner.overridesHead">🧾 いまの差分（これが data になる）</h2>
-        <details class="json" id="ovbox" open><summary class="sub" id="ovsum"></summary><pre id="ovjson"></pre></details>
-        <div class="kv"><input id="savelabel" type="text" placeholder="調律の名前（例：罠濃いめ）" data-i18n-ph="tool.tuner.labelPh" /></div>
-        <button class="big" id="save" type="button" data-i18n="tool.tuner.save">💾 提案として保存（future）</button>
-        <h2 data-i18n="tool.tuner.futureHead">⭐ 提案（future）</h2>
-        <div id="proposals"></div>
-        <h2 data-i18n="tool.tuner.truthHead">📜 truth（この world の調律）</h2>
-        <div id="truth"></div>
-      </div>
-    </div>
+    <div id="phost"></div>
   </body>
 </html>
