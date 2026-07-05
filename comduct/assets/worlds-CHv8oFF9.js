@@ -1,1 +1,0 @@
-import"./i18n-CUpE17Zf.js";import{m as o}from"./standalone-dBtbWE80.js";import{worldsPanel as m}from"./worlds-XsM73x2D.js";import"./shell-D-WKfnWk.js";import"./creator-auth-C9Tw5ccD.js";import"./registry-BFQ11tWJ.js";import"./preload-helper-Dp1pzeXC.js";o(m);
