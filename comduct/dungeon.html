@@ -408,6 +408,18 @@
       #equipbody .bagbtn { font-size: 11px; padding: 4px 10px; }
       #equipbody .eqd { font-size: 11px; color: var(--accent); opacity: 0.85; }
 
+      /* §gate6 分岐会話 modal（#equip と同じ流儀＝fixed 覆い＋中央カード。GL なし・window リスナなし） */
+      #dlg { display: none; position: fixed; inset: 0; background: rgba(5, 8, 13, 0.5); z-index: 52; align-items: center; justify-content: center; }
+      #dlgpanel { width: min(420px, 92vw); max-height: 80vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+      #dlghd { display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+      #dlghd button { font-size: 12px; padding: 6px 12px; }
+      #dlgsay { font-size: 14px; line-height: 1.7; color: var(--text); background: #f5f8fc; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; white-space: pre-wrap; }
+      #dlgchoices { display: flex; flex-direction: column; gap: 8px; }
+      #dlgchoices .dlgc { text-align: left; font-size: 13px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #f5f8fc; color: var(--text); cursor: pointer; font-family: inherit; }
+      #dlgchoices .dlgc:hover { border-color: var(--accent); }
+      #dlgchoices .dlgc:active { transform: scale(0.98); }
+      #dlgchoices .dlgc.kbsel { outline: 3px solid var(--gold); outline-offset: 1px; }
+
       /* 表示モード（PC ⇄ モバイル手動切替・起動時は自動判定） */
       body.mode-mobile #pad { display: grid; }
       body.mode-mobile #feed { max-width: min(70vw, 430px); }
@@ -452,14 +464,14 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-CCqvHJcg.js"></script>
+    <script type="module" crossorigin src="./assets/i18n-DpDGiTqf.js"></script>
     <script type="module" crossorigin src="./assets/preload-helper-Dp1pzeXC.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-types-JT-53Zyi.js"></script>
     <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
-    <script type="module" crossorigin src="./assets/voxmodel-DIWseshL.js"></script>
-    <script type="module" crossorigin src="./assets/prefab-CaEyAM_B.js"></script>
-    <script type="module" crossorigin src="./assets/tables-C--0aRhA.js"></script>
-    <script type="module" crossorigin src="./assets/monster-DQzjRv6s.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-BqHSYZEn.js"></script>
+    <script type="module" crossorigin src="./assets/voxmodel-BixVuI7N.js"></script>
+    <script type="module" crossorigin src="./assets/tables-C9qQMyiX.js"></script>
+    <script type="module" crossorigin src="./assets/gamepack-CsZzjqgK.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CPBohc3K.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -623,6 +635,13 @@
       <div id="equippanel">
         <div id="equiphd"><span id="modaltitle">装備を整える</span><button id="equipclose" data-eqclose type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
         <div id="equipbody"></div>
+      </div>
+    </div>
+    <div id="dlg">
+      <div id="dlgpanel">
+        <div id="dlghd"><span id="dlgtitle"></span><button data-dlgclose type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
+        <div id="dlgsay"></div>
+        <div id="dlgchoices"></div>
       </div>
     </div>
   </body>
