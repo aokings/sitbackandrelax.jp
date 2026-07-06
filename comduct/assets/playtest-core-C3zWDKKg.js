@@ -1,1 +1,0 @@
-import{D as o}from"./world-ui-DzxH_Z-b.js";import{p as e}from"./tuner-core-WuvvKRIo.js";function t(a){return a===o?"comduct":a.replace("/","--")}function l(a){return`dungeon.html?pack=${encodeURIComponent(`packs/${t(a)}.json`)}`}function m(a,n,r="atlas preview"){return`dungeon.html?pack=${encodeURIComponent(e({...a,world:n},r))}`}export{l as a,m as b,t as p};

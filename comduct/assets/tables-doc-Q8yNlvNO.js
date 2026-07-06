@@ -1,0 +1,1 @@
+import{N as s}from"./tables-C8uQll9a.js";import{o as e,h as a,l as t,f as o}from"./world-ui-C5GPurP4.js";const r="0.1.0";e({formatVersion:t(r),id:t("tables"),name:a().min(1),tables:s,createdAt:a(),updatedAt:a()});e({formatVersion:t(r),title:a(),updatedAt:a(),tablesOrder:o(a())});export{r as T};
