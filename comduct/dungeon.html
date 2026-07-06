@@ -92,6 +92,25 @@
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
       }
 
+      /* §world-spine ③ 目的の一覧オーバレイ（🎯チップで開閉・worldmap と同じ層/流儀） */
+      #goalswrap {
+        position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
+        background: rgba(8, 10, 14, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      }
+      #goalswrap[hidden] { display: none; }
+      #goalslist {
+        width: min(92vw, 380px); max-height: 72vh; overflow-y: auto; border-radius: 14px; padding: 14px 16px;
+        background: rgba(14, 17, 23, 0.94); border: 1px solid var(--glass-line);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); font-size: 13px; line-height: 1.6;
+      }
+      #goalslist .gl-h { font-weight: 700; color: #cfe0f2; margin-bottom: 8px; font-size: 14px; }
+      #goalslist .gl-row { padding: 6px 2px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+      #goalslist .gl-row.done { color: #7d8aa0; }
+      #goalslist .gl-w { font-size: 11px; color: #9fb0c8; margin-left: 1.6em; }
+      #goalslist .gl-n { color: #67e8f9; font-weight: 700; }
+      #goalslist .gl-win { color: #ffd166; font-weight: 700; padding: 4px 0 8px; }
+      #goalslist .gl-idle { color: #7d8aa0; font-size: 12px; }
+
       /* ── 上＝細い glanceable 状態行（今効く数字だけ・低頻度は☰へ） ── */
       #topline {
         position: absolute; left: 8px; right: 8px; top: calc(10px + env(safe-area-inset-top));
@@ -464,14 +483,14 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-BrZYbm5r.js"></script>
+    <script type="module" crossorigin src="./assets/i18n-xRoouL-_.js"></script>
     <script type="module" crossorigin src="./assets/preload-helper-Dp1pzeXC.js"></script>
     <script type="module" crossorigin src="./assets/dungeon-types-JT-53Zyi.js"></script>
     <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
     <script type="module" crossorigin src="./assets/voxmodel-BixVuI7N.js"></script>
-    <script type="module" crossorigin src="./assets/tables-bzICyt5g.js"></script>
-    <script type="module" crossorigin src="./assets/gamepack-iVRk6Fyk.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-DO0nJd2f.js"></script>
+    <script type="module" crossorigin src="./assets/tables-Baw1omEy.js"></script>
+    <script type="module" crossorigin src="./assets/gamepack-gXOeeXAj.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CHECrU6x.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -487,6 +506,9 @@
         <!-- §OW 世界地図オーバレイ（ノード地図・トルネコ式フロア地図とは別レイヤー・タップで閉じる） -->
         <div id="worldmapwrap" hidden><canvas id="worldmap" width="380" height="300"></canvas></div>
 
+        <!-- §world-spine ③ 目的の一覧オーバレイ（🎯チップで開閉・goals のあるゲームだけ） -->
+        <div id="goalswrap" hidden><div id="goalslist"></div></div>
+
         <!-- 上＝細い glanceable 状態行（階・G・party・現作戦＋🗺☰） -->
         <div id="topline">
           <span class="chip" id="chip-floor">…</span>
@@ -494,6 +516,7 @@
           <span class="chip" id="chip-party">👥 -</span>
           <span class="chip" id="chip-forecast" hidden></span><!-- A-4 forecast：前線/次波の残り手数（圧がある階だけ現れる） -->
           <span class="chip" id="chip-return" hidden></span><!-- A-5 帰り支度：📜帰還の書物/🌀帰還装置（地下だけ・所持事実のみ） -->
+          <button class="chip" id="chip-goal" type="button" hidden></button><!-- §world-spine ③ 🎯目的：goals のあるゲームだけ現れる（タップで一覧） -->
           <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）" data-i18n-title="ui.html.stancechipTitle"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
           <span class="spacer"></span>
           <button class="iconbtn" id="worldbtn" type="button" title="世界地図（m）" data-i18n-title="ui.html.worldBtnTitle" hidden>🌍</button><!-- §OW 世界地図（WORLD のあるゲームだけ現れる） -->
