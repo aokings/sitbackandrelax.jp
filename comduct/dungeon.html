@@ -6,7 +6,7 @@
     <title>comduct · dungeon（簡易トルネコ）</title>
     <style>
       /* ============================================================
-         潜行 UI 文法（docs/DESIGN-ux-overhaul.md P0＋§10・mock/ux-mock.html を本体化）
+         潜行 UI 文法（docs/DESIGN-ux-overhaul.md P0＋§10。mock は本体化済＝削除）
          ・盤＝画面いっぱい／上＝細い glanceable 状態行／下＝hotbar（手）
          ・実況＝自動フェードのフィード（全文は ☰ 実況の履歴）
          ・作戦/パーティ詳細/メニュー＝召喚（スマホ=bottom sheet・PC=右サイド）
@@ -320,6 +320,8 @@
         background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
       }
       #menupanel .mgroup a.mlink:hover { border-color: var(--accent); }
+      /* §玄関：静的配信の 🐙 案内（#makernote＝src/maker-link.ts が出す・表示専用） */
+      #menupanel .mgroup .mnote { flex-basis: 100%; font-size: 11px; font-weight: 700; color: var(--text-dim); padding: 0 2px; }
       /* §i18n Phase 3：6言語ピッカー（☰）＝ネイティブ select（スマホで使いやすい） */
       .langpick { display: inline-flex; align-items: center; gap: 5px; color: var(--text-hi); font-size: 13px; }
       #langmode {
@@ -483,14 +485,13 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-xRoouL-_.js"></script>
-    <script type="module" crossorigin src="./assets/preload-helper-Dp1pzeXC.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-types-JT-53Zyi.js"></script>
-    <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
-    <script type="module" crossorigin src="./assets/voxmodel-BixVuI7N.js"></script>
-    <script type="module" crossorigin src="./assets/tables-Baw1omEy.js"></script>
-    <script type="module" crossorigin src="./assets/gamepack-gXOeeXAj.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-CHECrU6x.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-CrHHXxA1.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-ByxNMi9Y.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-DbRJowUA.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-types-JT-53Zyi.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-DDqtqEqN.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-uipwLF1g.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-CH3vAcUE.js">
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -613,10 +614,12 @@
         <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" /><span data-i18n="ui.html.floorsTo">階へ</span><button id="godepth" type="button" data-i18n="ui.html.go">直行</button></span>
       </div>
       <!-- §showcase G3：遊ぶ→作るの橋（cosmetic＝表示専用リンク・engine/決定論/rng に一切触れない）。
-           この世界は作れる＝みんなの世界（ギャラリー）と自分の世界（studio）への1クリック -->
+           この世界は作れる＝みんなの世界（ギャラリー）と自分の世界（studio）への1クリック。
+           §玄関：静的配信では #makerlink を hosted studio（Fly）へ向け #makernote（🐙）を出す＝src/maker-link.ts -->
       <div class="mgroup">
         <a class="mlink" href="studio.html?panel=gallery">🖼 <span data-i18n="ui.html.galleryLink">みんなの世界（ギャラリー）</span></a>
-        <a class="mlink" href="studio.html">🛠 <span data-i18n="ui.html.makerLink">自分の世界を作る（studio）</span></a>
+        <a class="mlink" id="makerlink" href="studio.html">🛠 <span data-i18n="ui.html.makerLink">自分の世界を作る（studio）</span></a>
+        <span class="mnote" id="makernote" hidden>🐙 <span data-i18n="ui.html.makerLoginNote">作るのは hosted studio で＝GitHub でログインして作る（この配信面は遊ぶ専用）</span></span>
       </div>
       <form id="cmdform" autocomplete="off">
         <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" data-i18n-ph="ui.html.cmdPh" />
@@ -667,5 +670,6 @@
         <div id="dlgchoices"></div>
       </div>
     </div>
+    <!-- §玄関：静的配信では ☰ の「🛠 作る」を hosted studio へ（表示専用・engine 非依存の別モジュール） -->
   </body>
 </html>
