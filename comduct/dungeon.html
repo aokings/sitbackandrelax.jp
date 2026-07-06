@@ -294,6 +294,13 @@
         font-size: 13px; font-weight: 800; padding: 10px 12px; border-radius: 10px; cursor: pointer;
         background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
       }
+      /* §showcase G3：遊ぶ→作るの橋（表示専用リンク・見た目はメニューボタンと同格） */
+      #menupanel .mgroup a.mlink {
+        display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+        font-size: 13px; font-weight: 800; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
+      }
+      #menupanel .mgroup a.mlink:hover { border-color: var(--accent); }
       /* §i18n Phase 3：6言語ピッカー（☰）＝ネイティブ select（スマホで使いやすい） */
       .langpick { display: inline-flex; align-items: center; gap: 5px; color: var(--text-hi); font-size: 13px; }
       #langmode {
@@ -445,14 +452,14 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/i18n-uqLuzIOV.js"></script>
+    <script type="module" crossorigin src="./assets/i18n-D2Er-ixT.js"></script>
     <script type="module" crossorigin src="./assets/preload-helper-Dp1pzeXC.js"></script>
     <script type="module" crossorigin src="./assets/schemas-BBGxizon.js"></script>
     <script type="module" crossorigin src="./assets/voxmodel-DIWseshL.js"></script>
     <script type="module" crossorigin src="./assets/prefab-CaEyAM_B.js"></script>
     <script type="module" crossorigin src="./assets/tables-3Ch_nF30.js"></script>
     <script type="module" crossorigin src="./assets/monster-oRuueH1-.js"></script>
-    <script type="module" crossorigin src="./assets/dungeon-CglC65Uz.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-1fRO5wHK.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -569,6 +576,12 @@
         <button id="turnmode" type="button">🧭 向きモード: OFF</button>
         <button id="reset" type="button" data-i18n="ui.html.retryBtn">もう一度</button>
         <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" /><span data-i18n="ui.html.floorsTo">階へ</span><button id="godepth" type="button" data-i18n="ui.html.go">直行</button></span>
+      </div>
+      <!-- §showcase G3：遊ぶ→作るの橋（cosmetic＝表示専用リンク・engine/決定論/rng に一切触れない）。
+           この世界は作れる＝みんなの世界（ギャラリー）と自分の世界（studio）への1クリック -->
+      <div class="mgroup">
+        <a class="mlink" href="studio.html?panel=gallery">🖼 <span data-i18n="ui.html.galleryLink">みんなの世界（ギャラリー）</span></a>
+        <a class="mlink" href="studio.html">🛠 <span data-i18n="ui.html.makerLink">自分の世界を作る（studio）</span></a>
       </div>
       <form id="cmdform" autocomplete="off">
         <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" data-i18n-ph="ui.html.cmdPh" />
