@@ -1,0 +1,1 @@
+import{D as o}from"./creator-auth-q666652w.js";import{p as e}from"./tuner-core-BOPz8p1v.js";function t(a){return a===o?"comduct":a.replace("/","--")}function l(a){return`dungeon.html?pack=${encodeURIComponent(`packs/${t(a)}.json`)}`}function m(a,n,r="atlas preview"){return`dungeon.html?pack=${encodeURIComponent(e({...a,world:n},r))}`}export{l as a,m as b,t as p};
