@@ -30,6 +30,8 @@
       /* R3面：account chip＝「誰として作っているか」（world 切替の隣・whoami の表示層） */
       #stuacct { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #cfe3ff; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; background: #232c3e; white-space: nowrap; }
       #stuacct.off { color: var(--muted); border-style: dashed; background: transparent; }
+      #stuacct.oauth { cursor: pointer; } /* R3 認証：OAuth ログイン済＝クリックでログアウト */
+      #stuloginbtn { background: var(--tint, #232c3e); color: var(--text); border: 1px solid var(--accent, #4a90d9); border-radius: 999px; padding: 1px 10px; font: inherit; font-size: 11px; cursor: pointer; white-space: nowrap; }
       #stutoken { font-size: 13px; }
       /* R4面：🔌LLM 席（BYO-LLM＝authoring 支援・鍵はブラウザ保持＝サーバ非経由） */
       .llmseat { background: #232c3e; color: #cfe3ff; border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font: inherit; font-size: 11px; cursor: pointer; white-space: nowrap; }
@@ -73,9 +75,9 @@
         #stuworldlbl { display: none; }
       }
     </style>
-    <script type="module" crossorigin src="./assets/studio-Dy5zbV5Q.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/i18n-D2Er-ixT.js">
-    <link rel="modulepreload" crossorigin href="./assets/creator-auth-Bis908wL.js">
+    <script type="module" crossorigin src="./assets/studio-CrCfk4Go.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/i18n-WI9UQT1N.js">
+    <link rel="modulepreload" crossorigin href="./assets/creator-auth-erio8f_q.js">
     <link rel="modulepreload" crossorigin href="./assets/preload-helper-Dp1pzeXC.js">
     <link rel="stylesheet" crossorigin href="./assets/studio-B7ujmJDW.css">
   </head>
@@ -86,6 +88,7 @@
         <span class="pick worldpick">🗺<select id="stuWorld" title="World / ワールド"></select></span><!-- API 無し＝initWorldSwitcher が .worldpick ごと隠す（絵文字も残らない） -->
         <span id="stuworldlbl"></span>
         <span id="stuacct" hidden></span><!-- R3面：誰として作っているか（whoami の表示層・main.ts が埋める） -->
+        <span id="stulogin"></span><!-- R3 認証：🐙GitHub ログイン（サーバに OAuth 設定がある同一オリジンだけ・main.ts が埋める） -->
         <span class="spacer"></span>
         <span id="stullm"></span><!-- R4面：🔌LLM 席（BYO-LLM・llm.ts が埋める＝鍵はこの端末のみ） -->
         <span id="stutoken"></span>
