@@ -1,1 +1,0 @@
-import{a as m,m as i}from"./world-ui-ByxNMi9Y.js";import"./dungeon-CH3vAcUE.js";import"./tables-DbRJowUA.js";import"./dungeon-types-JT-53Zyi.js";import"./gamepack-uipwLF1g.js";import"./voxmodel-DDqtqEqN.js";const e=m();if(e!==""){const t=document.getElementById("makerlink");t&&(t.href=i(e));const o=document.getElementById("makernote");o&&(o.hidden=!1)}
