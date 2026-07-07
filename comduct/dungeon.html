@@ -305,7 +305,12 @@
       #padradial .prc .g { display: block; height: 3px; margin-top: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.22); overflow: hidden; }
       #padradial .prc .g i { display: block; height: 100%; background: #ffd166; width: var(--f, 0%); }
       #padradial .prc .mp { font-size: 10px; opacity: 0.85; margin-left: 3px; }
-      #pad #pad-center.flickable { background: rgba(46, 116, 240, 0.22); border-color: rgba(120, 170, 255, 0.4); }
+      /* 中央＝フリック可のサイン：外向きの小さな三角（上下左右）を背景に薄く。テキストは前面のまま。 */
+      #pad #pad-center.flickable {
+        background-color: rgba(46, 116, 240, 0.22); border-color: rgba(120, 170, 255, 0.45);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Cg fill='rgb(150,190,255)'%3E%3Cpolygon points='25,2 21,7 29,7'/%3E%3Cpolygon points='25,48 21,43 29,43'/%3E%3Cpolygon points='2,25 7,21 7,29'/%3E%3Cpolygon points='48,25 43,21 43,29'/%3E%3C/g%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
+      }
       /* mobile B：下部 hotbar は中央フリックに畳んだので、モバイルでは隠して盤を広く使う（PC はキー＋バー温存） */
       body.mode-mobile #quickbar { display: none; }
 
