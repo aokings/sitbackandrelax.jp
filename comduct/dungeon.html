@@ -287,6 +287,7 @@
         border-radius: 13px; font-size: 19px; color: rgba(238, 242, 248, 0.9); line-height: 1; padding: 0;
         background: rgba(14, 19, 28, 0.38); border: 1px solid rgba(255, 255, 255, 0.13);
         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer;
+        touch-action: none; /* ★実機フリック必須：ドラッグをスクロール扱いさせず pointermove を出す（中央フリック/方向フリック） */
       }
       #pad .pb:active { background: rgba(46, 116, 240, 0.55); }
       #pad #pad-center { font-size: 10px; font-weight: 800; color: var(--text-mid); background: rgba(255, 255, 255, 0.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; letter-spacing: -0.3px; }
