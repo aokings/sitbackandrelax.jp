@@ -289,8 +289,19 @@
         backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer;
       }
       #pad .pb:active { background: rgba(46, 116, 240, 0.55); }
-      #pad #pad-center { font-size: 11.5px; font-weight: 800; color: var(--text-mid); background: rgba(255, 255, 255, 0.1); }
+      #pad #pad-center { font-size: 10px; font-weight: 800; color: var(--text-mid); background: rgba(255, 255, 255, 0.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; letter-spacing: -0.3px; }
       #padopts { display: none; }
+      /* mobile B：中央フリックの放射メニュー（攻撃/射撃/術/特技/持ち物/待つ） */
+      #padradial { position: fixed; left: 0; top: 0; z-index: 30; display: none; pointer-events: none; }
+      #padradial .prc {
+        position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+        font-size: 12px; font-weight: 800; color: #fff; padding: 7px 11px; border-radius: 11px;
+        background: rgba(20, 26, 38, 0.9); border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+      #padradial .prc.on { background: rgba(46, 116, 240, 0.98); border-color: #fff; transform: translate(-50%, -50%) scale(1.14); }
+      #pad #pad-center.flickable { background: rgba(46, 116, 240, 0.22); border-color: rgba(120, 170, 255, 0.4); }
+      /* mobile B：下部 hotbar は中央フリックに畳んだので、モバイルでは隠して盤を広く使う（PC はキー＋バー温存） */
+      body.mode-mobile #quickbar { display: none; }
 
       /* ── 召喚式パネル（スマホ=bottom sheet／PC=右サイド） ── */
       #veil { position: fixed; inset: 0; background: rgba(5, 8, 13, 0.45); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.22s; }
@@ -522,14 +533,14 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-CKjPDiNI.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-BxqA3wkJ.js">
-    <link rel="modulepreload" crossorigin href="./assets/tables-BtvlRO7S.js">
+    <script type="module" crossorigin src="./assets/dungeon-Bhaqcpjf.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-6gT7-Xrb.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-ChfHX5yh.js">
     <link rel="modulepreload" crossorigin href="./assets/three.module-WWCVshk5.js">
-    <link rel="modulepreload" crossorigin href="./assets/monster-CnZB6dQE.js">
-    <link rel="modulepreload" crossorigin href="./assets/voxmodel-BFmqjwtD.js">
-    <link rel="modulepreload" crossorigin href="./assets/gamepack-Yh6e9waZ.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-D8mxsfeM.js">
+    <link rel="modulepreload" crossorigin href="./assets/monster-CNlJLiEB.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-Dcp997La.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-CkDy6Wip.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-BWGrdDU-.js">
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
