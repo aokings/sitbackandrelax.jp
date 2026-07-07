@@ -1,0 +1,1 @@
+import{E as s}from"./tables-CtwMFHZr.js";import{o as e,f as a,l as t,j as o}from"./world-ui-DsV3snq5.js";const r="0.1.0";e({formatVersion:t(r),id:t("tables"),name:a().min(1),tables:s,createdAt:a(),updatedAt:a()});e({formatVersion:t(r),title:a(),updatedAt:a(),tablesOrder:o(a())});export{r as T};
