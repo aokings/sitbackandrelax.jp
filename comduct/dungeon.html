@@ -209,6 +209,14 @@
       #contextbar .ctxq { align-self: center; font-size: 15px; font-weight: 800; color: #eaf1ff; padding: 6px 6px 6px 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
       #contextbar .ctxbtn.ctxno { background: rgba(70, 78, 92, 0.95); }
       #contextbar .ctxbtn.ctxno:hover { background: #5a6577; }
+      /* §5a 段差射撃の面切替ボタン（上下2面に敵がいる狙い中だけ出る） */
+      #facetoggle {
+        position: absolute; left: 50%; transform: translateX(-50%); bottom: 168px; z-index: 40;
+        font-size: 14px; font-weight: 800; padding: 10px 18px; border-radius: 12px; cursor: pointer; white-space: nowrap;
+        background: rgba(150, 96, 240, 0.95); color: #fff; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+      }
+      #facetoggle:hover { background: #9a5cf0; }
+      #facetoggle:active { transform: translateX(-50%) scale(0.97); }
       /* §13 キーボードカーソル：選択中の項目は視認できるハイライト（金の輪） */
       #contextbar .ctxbtn.kbsel { outline: 3px solid #ffd166; outline-offset: 2px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42), 0 0 0 7px rgba(255, 209, 102, 0.22); }
 
@@ -514,14 +522,14 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-piKQtc_M.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-BZT_Yd8i.js">
-    <link rel="modulepreload" crossorigin href="./assets/tables-Bs4JQ8mM.js">
+    <script type="module" crossorigin src="./assets/dungeon-DRiHDNV3.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-BxqA3wkJ.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-BtvlRO7S.js">
     <link rel="modulepreload" crossorigin href="./assets/three.module-WWCVshk5.js">
-    <link rel="modulepreload" crossorigin href="./assets/monster-DlVdxaxp.js">
-    <link rel="modulepreload" crossorigin href="./assets/voxmodel-B4_pObvu.js">
-    <link rel="modulepreload" crossorigin href="./assets/gamepack-jMKZPI93.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-DpSH-Wo3.js">
+    <link rel="modulepreload" crossorigin href="./assets/monster-CnZB6dQE.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-BFmqjwtD.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-Yh6e9waZ.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-DcBv29WF.js">
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -573,6 +581,9 @@
 
         <!-- 文脈アクション：乗っている対象（階段/宝箱/祠/施設）の「できること」（シレン式） -->
         <div id="contextbar"></div>
+
+        <!-- §5a 段差射撃の面選択：上下2面に敵がいる時だけ出る（e/q/Tab でも切替） -->
+        <button id="facetoggle" type="button" style="display:none;"></button>
 
         <!-- パーティ帯（コンパクト・stance 明示・タップで詳細召喚） -->
         <section id="party"></section>
