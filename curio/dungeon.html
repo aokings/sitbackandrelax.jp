@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>道具屋奇譚 · dungeon（簡易トルネコ）</title>
+    <style>
+      /* ============================================================
+         潜行 UI 文法（docs/DESIGN-ux-overhaul.md P0＋§10。mock は本体化済＝削除）
+         ・盤＝画面いっぱい／上＝細い glanceable 状態行／下＝hotbar（手）
+         ・実況＝自動フェードのフィード（全文は ☰ 実況の履歴）
+         ・作戦/パーティ詳細/メニュー＝召喚（スマホ=bottom sheet・PC=右サイド）
+         ・移動＝改良 d-pad（モバイル・長押し=連続歩行）／PC=キーボード
+         ・全機能温存：旧 #sakusen 常駐6ボタン→作戦シート・#quickbar 謎チップ→hotbar・
+           #log 大箱→フィード＋☰履歴（消さず畳む）
+         ============================================================ */
+      :root {
+        --bg: #0b0e14;
+        --panel: #ffffff;
+        --line: #dce3ec;
+        --text: #1b2532;
+        --muted: #5b6472;
+        --accent: #2e74f0;
+        --tint: #e7f0ff;
+        --hp: #3ad07f;
+        --mp: #4f92ff;
+        --danger: #e5484d;
+        --track: #e5eaf1;
+        --glass: rgba(14, 19, 28, 0.55);
+        --glass-line: rgba(255, 255, 255, 0.16);
+        --text-hi: #f2f5fa;
+        --text-mid: #c4ccd8;
+        --text-dim: #8b94a3;
+        --gold: #ffd166;
+        --stance: #b98cff;
+      }
+      html,
+      body {
+        touch-action: manipulation;
+        overscroll-behavior: none;
+        background: var(--bg);
+        color: var(--text);
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      #topbar { display: none; } /* 全画面化のため通常のヘッダは畳む */
+
+      /* 全画面ステージ */
+      #app { position: fixed; inset: 0; padding: 0; margin: 0; display: block; }
+      #left {
+        position: absolute;
+        inset: 0;
+        display: block;
+        background: linear-gradient(180deg, #101623 0%, #182234 45%, #0a0e16 100%);
+        overflow: hidden;
+      }
+      /* ゲーム画面（2D 追従窓）＝中央・アスペクト維持で最大化。3D 時は隠され voxel が重なる */
+      #board {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(100vw, calc((100vh - 12px) * 748 / 440));
+        width: min(100vw, calc((100dvh - 12px) * 748 / 440)); /* iOS 動的ツールバー勘定（dvh 対応機） */
+        height: auto;
+        background: #0f1115;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+      }
+      /* §11-B 大型の登場演出＝画面端の警告フラッシュ（一瞬・非モーダル・入力を遮らない） */
+      #introfx { position: fixed; inset: 0; pointer-events: none; z-index: 55; opacity: 0;
+        box-shadow: inset 0 0 110px 26px rgba(255, 92, 58, 0.4), inset 0 0 14px 3px rgba(255, 150, 80, 0.22); }
+      #introfx.go { animation: introfx 0.9s ease-out; }
+      @keyframes introfx { 0% { opacity: 0; } 16% { opacity: 1; } 100% { opacity: 0; } }
+
+      /* トルネコ式オーバレイ地図（主人公中央・半透明・床だけ・透ける）＝2層視界（不可侵） */
+      #minimap {
+        position: absolute; left: 0; top: 0; z-index: 5; display: none;
+        pointer-events: none;
+      }
+
+      /* §OW 世界地図＝別レイヤー・別縮尺（ノード＝丸・エッジ＝線・現在地＝光点）。トルネコ地図とは独立 */
+      #worldmapwrap {
+        position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
+        background: rgba(8, 10, 14, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      }
+      #worldmapwrap[hidden] { display: none; }
+      #worldmap {
+        width: min(92vw, 380px); height: auto; border-radius: 14px;
+        background: rgba(14, 17, 23, 0.92); border: 1px solid var(--glass-line);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+      }
+
+      /* §world-spine ③ 目的の一覧オーバレイ（🎯チップで開閉・worldmap と同じ層/流儀） */
+      #goalswrap {
+        position: fixed; inset: 0; z-index: 58; display: flex; align-items: center; justify-content: center;
+        background: rgba(8, 10, 14, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+      }
+      #goalswrap[hidden] { display: none; }
+      #goalslist {
+        width: min(92vw, 380px); max-height: 72vh; overflow-y: auto; border-radius: 14px; padding: 14px 16px;
+        background: rgba(14, 17, 23, 0.94); border: 1px solid var(--glass-line);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5); font-size: 13px; line-height: 1.6;
+      }
+      #goalslist .gl-h { font-weight: 700; color: #cfe0f2; margin-bottom: 8px; font-size: 14px; }
+      #goalslist .gl-row { padding: 6px 2px; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+      #goalslist .gl-row.done { color: #7d8aa0; }
+      #goalslist .gl-w { font-size: 11px; color: #9fb0c8; margin-left: 1.6em; }
+      #goalslist .gl-n { color: #67e8f9; font-weight: 700; }
+      #goalslist .gl-win { color: #ffd166; font-weight: 700; padding: 4px 0 8px; }
+      #goalslist .gl-idle { color: #7d8aa0; font-size: 12px; }
+
+      /* §win演出：勝利の凱旋1画面（cosmetic・worldmap/goals と同層の流儀・タップ/▶で閉じて余生＝フリープレイ） */
+      #winwrap {
+        position: fixed; inset: 0; z-index: 59; display: flex; align-items: center; justify-content: center;
+        background: rgba(8, 10, 14, 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      }
+      #winwrap[hidden] { display: none; }
+      #winbox {
+        width: min(92vw, 380px); border-radius: 16px; padding: 26px 22px; text-align: center;
+        background: linear-gradient(180deg, rgba(34, 28, 12, 0.96), rgba(14, 17, 23, 0.96));
+        border: 1px solid rgba(255, 209, 102, 0.55);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6), 0 0 42px rgba(255, 209, 102, 0.18) inset;
+        animation: winpop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+      }
+      @keyframes winpop { 0% { transform: scale(0.82); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+      #winbox .w-crown { font-size: 44px; line-height: 1; animation: winglow 1.8s ease-in-out infinite alternate; }
+      @keyframes winglow { 0% { text-shadow: 0 0 8px rgba(255, 209, 102, 0.4); } 100% { text-shadow: 0 0 26px rgba(255, 209, 102, 0.9); } }
+      #winbox .w-title { font-size: 19px; font-weight: 800; color: #ffd166; margin-top: 8px; }
+      #winbox .w-goal { font-size: 13px; color: #e8ecf4; margin-top: 10px; line-height: 1.6; }
+      #winbox .w-free { font-size: 12px; color: #9fb0c8; margin-top: 4px; }
+      #winbox .w-btn {
+        margin-top: 16px; padding: 9px 22px; border-radius: 12px; cursor: pointer;
+        background: rgba(255, 209, 102, 0.16); border: 1px solid rgba(255, 209, 102, 0.6);
+        color: #ffd166; font-size: 13px; font-weight: 800;
+      }
+
+      /* ── 上＝細い glanceable 状態行（今効く数字だけ・低頻度は☰へ） ── */
+      #topline {
+        position: absolute; left: 8px; right: 8px; top: calc(10px + env(safe-area-inset-top));
+        display: flex; align-items: center; gap: 5px; z-index: 20;
+      }
+      .chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: var(--glass); border: 1px solid var(--glass-line); border-radius: 10px;
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        color: var(--text-hi); font-size: 12px; font-weight: 800; padding: 6px 8px; white-space: nowrap;
+      }
+      .chip small { font-weight: 700; color: var(--text-dim); font-size: 11px; }
+      button.chip { cursor: pointer; }
+      .chip[hidden] { display: none; } /* A-4/A-5：非表示チップは空ピルとして残さない（display が hidden 属性に勝つのを防ぐ） */
+      #stancechip { border-color: rgba(185, 140, 255, 0.55); color: #dcc8ff; }
+      #stancechip .flag { color: var(--stance); }
+      #stancechip.pulse { animation: chippulse 0.9s ease-out; }
+      @keyframes chippulse { 0% { box-shadow: 0 0 0 0 rgba(185, 140, 255, 0.7); } 100% { box-shadow: 0 0 0 14px rgba(185, 140, 255, 0); } }
+      #topline .spacer { flex: 1; }
+      .iconbtn {
+        width: 37px; height: 35px; border-radius: 10px; font-size: 15px; flex: none; padding: 0;
+        background: var(--glass); border: 1px solid var(--glass-line); color: var(--text-hi);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); cursor: pointer;
+      }
+      .iconbtn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+      /* ── ガイダンス/フラッシュ（選択中の案内・無効手の理由）＝一時トースト ── */
+      #ctxbar {
+        position: absolute; left: 10px; top: calc(54px + env(safe-area-inset-top)); z-index: 21;
+        max-width: min(84vw, 470px); padding: 8px 12px; border-radius: 10px;
+        background: rgba(20, 26, 38, 0.88); border: 1px solid rgba(255, 209, 102, 0.35);
+        color: #ffe9a8; font-size: 13px; font-weight: 800; line-height: 1.4;
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        display: none;
+      }
+      #ctxbar.show { display: block; }
+
+      /* ── 実況＝自動フェードのフィード（全文は ☰「実況の履歴」） ── */
+      #feed {
+        position: absolute; left: 10px; top: calc(96px + env(safe-area-inset-top)); z-index: 15;
+        display: flex; flex-direction: column; gap: 4px; max-width: min(76vw, 430px); pointer-events: none;
+      }
+      /* §clarity 実況の読みやすさ（字幕基準）：サンサリフ・十分な大きさ・高コントラストの濃い箱・今の1件を大きく強く・古い行は縮小フェード */
+      #feed .fl {
+        font-size: 15px; font-weight: 750; color: #eef3fb; line-height: 1.5;
+        background: rgba(6, 9, 15, 0.74); border-radius: 9px; padding: 5px 11px; border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px);
+        opacity: 0; transform: translateY(-4px); transition: opacity 0.3s, transform 0.3s, font-size 0.3s;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85); width: fit-content; max-width: 100%;
+      }
+      #feed .fl.in { opacity: 1; transform: none; }
+      #feed .fl.old { opacity: 0.5; font-size: 12.5px; font-weight: 700; background: rgba(6, 9, 15, 0.55); } /* 古い行＝小さく淡く（今の1件が際立つ） */
+      #feed .fl.pingable { pointer-events: auto; cursor: pointer; } /* §clarity Wave3：当事者つきの行はタップで盤を ping */
+      #feed .fl.pingable:active { transform: scale(0.98); }
+      #feed .fl.out { opacity: 0; }
+      #feed .fl .tag { color: var(--stance); font-weight: 800; }
+      #feed .fl .tag.sos { color: #7ee7ab; }
+      /* §clarity 名前札（頭上）＋ログ着色＋帯の発話中：どれが誰か・今アクティブなのは誰かを一目で */
+      #nameplates { position: fixed; inset: 0; z-index: 15; pointer-events: none; }
+      #nameplates .nplate {
+        position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
+        font-size: 12px; font-weight: 800; padding: 1px 7px; border-radius: 8px; line-height: 1.35;
+        background: rgba(8, 11, 18, 0.72); border: 1.5px solid; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); transition: opacity 0.25s;
+      }
+      #nameplates .nplate.foe { font-size: 11px; }
+      #nameplates .nplate.act { box-shadow: 0 0 0 2px currentColor, 0 4px 14px rgba(0, 0, 0, 0.5); animation: npPulse 0.66s ease-in-out infinite alternate; }
+      #nameplates .nplate.tgt { box-shadow: 0 0 0 2px #ff6b6b, 0 0 12px rgba(255, 90, 90, 0.6); animation: npTgt 0.5s ease-out; } /* 対象＝赤フラッシュ（何に対して） */
+      @keyframes npTgt { from { box-shadow: 0 0 0 6px rgba(255, 90, 90, 0.7), 0 0 18px rgba(255, 90, 90, 0.9); } to { box-shadow: 0 0 0 2px #ff6b6b, 0 0 12px rgba(255, 90, 90, 0.5); } }
+      @keyframes npPulse { from { transform: translate(-50%, -100%) scale(1); } to { transform: translate(-50%, -106%) scale(1.09); } }
+      #feed .fl .cn, #log .cn { font-weight: 800; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); }
+      #party .pmini.speaking { outline: 2px solid #ffd166; outline-offset: 1px; box-shadow: 0 0 0 4px rgba(255, 209, 102, 0.28); }
+      /* §clarity 頭上の吹き出し（尻尾つき）＝今しゃべってるのは誰か */
+      #nameplates .sbubble {
+        position: absolute; transform: translate(-50%, -100%); max-width: 240px; white-space: normal; text-align: center;
+        font-size: 13px; font-weight: 700; color: #f4f7fc; line-height: 1.4; padding: 6px 11px; border-radius: 11px;
+        background: rgba(12, 16, 24, 0.94); border: 1.5px solid; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55); z-index: 16;
+      }
+      #nameplates .sbubble::after { content: ''; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: rgba(12, 16, 24, 0.94); } /* 尻尾（話者へ向く） */
+
+      /* ── 文脈アクション（シレン式・目立つボタン）＝ hotbar の真上・中央 ── */
+      #contextbar {
+        position: absolute; left: 50%; transform: translateX(-50%); z-index: 18;
+        bottom: calc(266px + env(safe-area-inset-bottom));
+        display: none; gap: 8px; align-items: center; flex-direction: column;
+      }
+      #contextbar.show { display: flex; }
+      #contextbar .ctxbtn {
+        font-size: 15px; font-weight: 800; padding: 12px 22px; border-radius: 13px; cursor: pointer; white-space: nowrap;
+        background: rgba(46, 116, 240, 0.95); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+      #contextbar .ctxbtn:hover { background: #2e74f0; }
+      #contextbar .ctxbtn:active { transform: scale(0.97); }
+      /* §UX masaru：文脈は「○○？ はい／いいえ」の明示2択。プロンプト文＋「いいえ」は控えめの色 */
+      #contextbar .ctxq { align-self: center; font-size: 15px; font-weight: 800; color: #eaf1ff; padding: 6px 6px 6px 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+      #contextbar .ctxbtn.ctxno { background: rgba(70, 78, 92, 0.95); }
+      #contextbar .ctxbtn.ctxno:hover { background: #5a6577; }
+      /* §5a 段差射撃の面切替ボタン（上下2面に敵がいる狙い中だけ出る） */
+      #facetoggle {
+        position: absolute; left: 50%; transform: translateX(-50%); bottom: 168px; z-index: 40;
+        font-size: 14px; font-weight: 800; padding: 10px 18px; border-radius: 12px; cursor: pointer; white-space: nowrap;
+        background: rgba(150, 96, 240, 0.95); color: #fff; border: 1px solid rgba(255, 255, 255, 0.4); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+      }
+      #facetoggle:hover { background: #9a5cf0; }
+      #facetoggle:active { transform: translateX(-50%) scale(0.97); }
+      /* §13 キーボードカーソル：選択中の項目は視認できるハイライト（金の輪） */
+      #contextbar .ctxbtn.kbsel { outline: 3px solid #ffd166; outline-offset: 2px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42), 0 0 0 7px rgba(255, 209, 102, 0.22); }
+
+      /* ── パーティ帯（コンパクト・stance 常時明示・タップで詳細召喚） ── */
+      #party {
+        position: absolute; right: 10px; z-index: 16;
+        bottom: calc(94px + env(safe-area-inset-bottom));
+        display: flex; flex-direction: column; gap: 5px; align-items: stretch;
+      }
+      .pmini {
+        display: grid; grid-template-columns: 26px 1fr; grid-template-rows: auto auto; column-gap: 7px; align-items: center;
+        width: 150px; padding: 6px 8px; border-radius: 11px; text-align: left; cursor: pointer;
+        background: var(--glass); border: 1px solid var(--glass-line);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      }
+      .pmini.rally { display: block; width: 44px; align-self: flex-start; padding: 5px 0; text-align: center; font-size: 15px; font-weight: 800; color: #dcc8ff; border-color: rgba(185, 140, 255, 0.55); } /* A-2 ⚑集合＝帯の端の1チップ（テキスト「集合」と同一意味論） */
+      .pmini .g { grid-row: 1 / 3; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; border: 1.5px solid rgba(255, 255, 255, 0.8); }
+      .pmini .row1 { display: flex; align-items: center; gap: 5px; min-width: 0; }
+      .pmini .nm { font-size: 12px; font-weight: 800; color: var(--text-hi); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .pmini .st { margin-left: auto; flex: none; font-size: 9.5px; font-weight: 800; padding: 1.5px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.12); color: #b8c0cc; white-space: nowrap; }
+      /* stance＝専用色（⚑紫系）に統一＝明示命令（青系）と一目で区別（§4 作戦フィードバック） */
+      .pmini .st.stance { background: rgba(185, 140, 255, 0.22); color: #dcc8ff; }
+      .pmini .st.order { background: rgba(46, 116, 240, 0.3); color: #a9c8ff; }
+      .pmini .st.req { background: rgba(214, 51, 132, 0.28); color: #ffb0d4; }
+      .pmini .st.dead { background: rgba(255, 255, 255, 0.1); color: #9aa4b2; }
+      .pmini .bars { display: flex; flex-direction: column; gap: 2.5px; margin-top: 3px; }
+      .pmini .bar { height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+      .pmini .bar i { display: block; height: 100%; border-radius: 3px; }
+      .pmini .bar.hp i { background: var(--hp); }
+      .pmini .bar.mp { height: 3.5px; }
+      .pmini .bar.mp i { background: var(--mp); }
+      .pmini.danger { border-color: var(--danger); box-shadow: 0 0 12px rgba(229, 72, 77, 0.4); }
+      .pmini.down { opacity: 0.55; }
+
+      /* ── 下部 hotbar（マイクラ式の手札・溜め/MP/満タン金縁をスロット内に） ── */
+      #quickbar {
+        position: absolute; left: 50%; transform: translateX(-50%); z-index: 20;
+        bottom: calc(8px + env(safe-area-inset-bottom));
+        display: flex; gap: 7px; padding: 7px; border-radius: 16px;
+        background: rgba(10, 14, 21, 0.5); border: 1px solid var(--glass-line);
+        backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      }
+      .slot {
+        position: relative; width: clamp(46px, calc((100vw - 72px) / 5), 60px); height: 62px; border-radius: 12px; overflow: hidden;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14);
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+        color: var(--text-hi); padding: 0; cursor: pointer;
+      }
+      .slot .ic { font-size: 20px; line-height: 1; z-index: 2; }
+      .slot .lb { font-size: 9px; font-weight: 800; color: var(--text-mid); z-index: 2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+      .slot .key { position: absolute; top: 2px; right: 5px; font-size: 9px; font-weight: 800; color: var(--text-dim); z-index: 2; }
+      .slot .cost { position: absolute; top: 2px; left: 5px; font-size: 9px; font-weight: 800; color: #9ec2ff; z-index: 2; }
+      /* P7 溜め＝スロット背景の充填ゲージ（--fill%・新しい資源バーは作らない） */
+      .slot .gauge { position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill, 0%); z-index: 1; transition: height 0.25s;
+        background: linear-gradient(180deg, rgba(255, 209, 102, 0.14), rgba(255, 209, 102, 0.45)); }
+      .slot.ready { border-color: rgba(255, 209, 102, 0.85); box-shadow: 0 0 12px rgba(255, 209, 102, 0.4), 0 0 10px rgba(255, 209, 102, 0.3) inset; }
+      .slot.dim { opacity: 0.4; }
+      .slot.on { border-color: var(--accent); background: rgba(46, 116, 240, 0.35); }
+      .slot:active { transform: scale(0.94); }
+
+      /* ── 移動＝改良 d-pad（左親指・半透明・中央=待つ・長押し=連続歩行） ── */
+      #pad {
+        display: none; position: absolute; z-index: 19;
+        left: 12px; bottom: calc(94px + env(safe-area-inset-bottom));
+        grid-template-columns: repeat(3, 50px); grid-auto-rows: 50px; gap: 5px;
+      }
+      #pad .pb {
+        border-radius: 13px; font-size: 19px; color: rgba(238, 242, 248, 0.9); line-height: 1; padding: 0;
+        background: rgba(14, 19, 28, 0.38); border: 1px solid rgba(255, 255, 255, 0.13);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer;
+        touch-action: none; /* ★実機フリック必須：ドラッグをスクロール扱いさせず pointermove を出す（中央フリック/方向フリック） */
+      }
+      #pad .pb:active { background: rgba(46, 116, 240, 0.55); }
+      #pad #pad-center { font-size: 10px; font-weight: 800; color: var(--text-mid); background: rgba(255, 255, 255, 0.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; letter-spacing: -0.3px; }
+      #padopts { display: none; }
+      /* mobile B：中央フリックの放射メニュー（攻撃/射撃/術/特技/持ち物/待つ） */
+      #padradial { position: fixed; left: 0; top: 0; z-index: 30; display: none; pointer-events: none; }
+      #padradial .prc {
+        position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+        font-size: 12px; font-weight: 800; color: #fff; padding: 7px 11px; border-radius: 11px;
+        background: rgba(20, 26, 38, 0.9); border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+      #padradial .prc.on { background: rgba(46, 116, 240, 0.98); border-color: #fff; transform: translate(-50%, -50%) scale(1.14); }
+      #padradial .prc.dim { opacity: 0.45; }
+      #padradial .prc.ready { border-color: #ffd166; box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.45), 0 6px 18px rgba(0, 0, 0, 0.5); }
+      #padradial .prc .g { display: block; height: 3px; margin-top: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.22); overflow: hidden; }
+      #padradial .prc .g i { display: block; height: 100%; background: #ffd166; width: var(--f, 0%); }
+      #padradial .prc .mp { font-size: 10px; opacity: 0.85; margin-left: 3px; }
+      /* 中央＝フリック可のサイン：外向きの小さな三角（上下左右）を背景に薄く。テキストは前面のまま。 */
+      #pad #pad-center.flickable {
+        background-color: rgba(46, 116, 240, 0.22); border-color: rgba(120, 170, 255, 0.45);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3E%3Cg fill='rgb(150,190,255)'%3E%3Cpolygon points='25,2 21,7 29,7'/%3E%3Cpolygon points='25,48 21,43 29,43'/%3E%3Cpolygon points='2,25 7,21 7,29'/%3E%3Cpolygon points='48,25 43,21 43,29'/%3E%3C/g%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: center; background-size: 100% 100%;
+      }
+      /* mobile B：下部 hotbar は中央フリックに畳んだので、モバイルでは隠して盤を広く使う（PC はキー＋バー温存） */
+      body.mode-mobile #quickbar { display: none; }
+
+      /* ── 召喚式パネル（スマホ=bottom sheet／PC=右サイド） ── */
+      #veil { position: fixed; inset: 0; background: rgba(5, 8, 13, 0.45); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.22s; }
+      #veil.on { opacity: 1; pointer-events: auto; }
+      .sheet {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; max-height: 72vh; overflow-y: auto;
+        background: rgba(17, 22, 32, 0.97); border-top: 1px solid var(--glass-line);
+        border-radius: 18px 18px 0 0; padding: 14px 16px calc(18px + env(safe-area-inset-bottom));
+        transform: translateY(102%); transition: transform 0.26s cubic-bezier(0.3, 0.9, 0.35, 1);
+        color: var(--text-hi);
+      }
+      .sheet.on { transform: none; }
+      .sheet h3 { font-size: 15px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; color: var(--text-hi); }
+      .sheet h3 .x { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--text-dim); padding: 6px 10px; border: 1px solid var(--glass-line); border-radius: 8px; background: none; cursor: pointer; }
+      .sheet .sub { font-size: 11.5px; color: var(--text-dim); font-weight: 700; margin-bottom: 10px; line-height: 1.5; }
+      .grab { width: 40px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.22); margin: 0 auto 10px; }
+      .sheet button { color: var(--text-hi); }
+
+      /* 作戦シート（召喚式・1行説明＋現在＋解禁条件・§4 フィードバック） */
+      .strow {
+        display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; text-align: left;
+        width: 100%; padding: 11px 10px; border-radius: 12px; border: 1px solid transparent; margin-bottom: 6px;
+        background: rgba(255, 255, 255, 0.05); cursor: pointer;
+      }
+      .strow .sic { font-size: 21px; text-align: center; }
+      .strow .snm { font-size: 14px; font-weight: 800; color: var(--text-hi); }
+      .strow .sds { display: block; font-size: 11.5px; color: var(--text-mid); font-weight: 700; line-height: 1.5; margin-top: 2px; }
+      .strow .cur { font-size: 10px; font-weight: 800; color: #dcc8ff; background: rgba(185, 140, 255, 0.2); padding: 3px 8px; border-radius: 7px; white-space: nowrap; }
+      .strow.on { border-color: rgba(185, 140, 255, 0.65); background: rgba(185, 140, 255, 0.1); }
+      .strow.lock { opacity: 0.45; cursor: not-allowed; }
+      .strow .lk { font-size: 10px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+      #stfoot { font-size: 11px; color: var(--text-dim); font-weight: 700; line-height: 1.6; margin-top: 6px; }
+      #stfoot b { color: var(--text-mid); }
+
+      /* パーティ詳細シート（TO式＝タップで召喚・個別命令もここから） */
+      .pdet { border: 1px solid var(--glass-line); border-radius: 13px; padding: 11px 12px; margin-bottom: 8px; background: rgba(255, 255, 255, 0.04); }
+      .pdet .hd { display: flex; align-items: center; gap: 9px; }
+      .pdet .g { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; border: 2px solid rgba(255, 255, 255, 0.8); flex: none; }
+      .pdet .nm { font-weight: 800; font-size: 15px; }
+      .pdet .lv { font-size: 11px; color: var(--text-dim); font-weight: 800; }
+      .pdet .stb { margin-left: auto; font-size: 10.5px; font-weight: 800; background: rgba(255, 255, 255, 0.12); color: #b8c0cc; padding: 3px 9px; border-radius: 7px; white-space: nowrap; }
+      .pdet .stb.stance { background: rgba(185, 140, 255, 0.2); color: #dcc8ff; }
+      .pdet .stb.order { background: rgba(46, 116, 240, 0.3); color: #a9c8ff; }
+      .pdet .nums { display: flex; gap: 12px; font-size: 12px; font-weight: 700; color: var(--text-mid); margin: 7px 0 5px; flex-wrap: wrap; }
+      .pdet .nums b { color: var(--text-hi); }
+      .pdet .caps { display: flex; gap: 5px; flex-wrap: wrap; }
+      .pdet .cap { font-size: 9.5px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: rgba(79, 146, 255, 0.2); color: #a9c8ff; }
+      .pdet .cap.heal { background: rgba(49, 179, 107, 0.2); color: #7ee7ab; }
+      .pdet .cap.cast { background: rgba(123, 91, 214, 0.3); color: #cbb8ff; }
+      .pdet .ord { margin-top: 7px; display: flex; gap: 6px; flex-wrap: wrap; }
+      .pdet .ord button { font-size: 11px; font-weight: 800; padding: 7px 12px; border-radius: 9px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); color: var(--text-mid); cursor: pointer; }
+      .pdet .note { font-size: 11px; color: var(--text-dim); font-weight: 700; margin-top: 6px; }
+
+      /* ☰ メニューシート（低頻度を格納・実況の履歴もここ＝全機能温存） */
+      #menupanel .mgroup { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+      #menupanel .mgroup button {
+        font-size: 13px; font-weight: 800; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
+      }
+      /* §showcase G3：遊ぶ→作るの橋（表示専用リンク・見た目はメニューボタンと同格） */
+      #menupanel .mgroup a.mlink {
+        display: inline-flex; align-items: center; gap: 5px; text-decoration: none;
+        font-size: 13px; font-weight: 800; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
+      }
+      #menupanel .mgroup a.mlink:hover { border-color: var(--accent); }
+      /* §玄関：静的配信の 🐙 案内（#makernote＝src/maker-link.ts が出す・表示専用） */
+      #menupanel .mgroup .mnote { flex-basis: 100%; font-size: 11px; font-weight: 700; color: var(--text-dim); padding: 0 2px; }
+      /* §i18n Phase 3：6言語ピッカー（☰）＝ネイティブ select（スマホで使いやすい） */
+      .langpick { display: inline-flex; align-items: center; gap: 5px; color: var(--text-hi); font-size: 13px; }
+      #langmode {
+        font-size: 13px; font-weight: 800; padding: 9px 8px; border-radius: 10px; cursor: pointer; max-width: 46vw;
+        background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); color: var(--text-hi);
+      }
+      #langmode option { background: #1b2030; color: #eef2ff; }
+      /* §i18n Phase 3：翻訳報告シート（🚩→ /api/i18n/report＝proposal 化・truth は書かない） */
+      #reportsheet .rfield { margin-bottom: 8px; }
+      #reportsheet label { display: block; font-size: 11.5px; font-weight: 800; color: var(--text-dim); margin-bottom: 4px; }
+      #reportsheet input, #reportsheet textarea {
+        width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line);
+        border-radius: 8px; color: var(--text-hi); padding: 9px 12px; font-size: 13px; font-family: inherit;
+      }
+      #reportsheet textarea { min-height: 56px; resize: vertical; }
+      #rp-list { max-height: 26vh; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+      #rp-list button {
+        text-align: left; font-size: 12px; font-weight: 600; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+        background: rgba(255, 255, 255, 0.04); border: 1px solid transparent; color: var(--text-mid);
+        overflow-wrap: anywhere;
+      }
+      #rp-list button.sel { border-color: var(--accent); color: var(--text-hi); background: rgba(79, 146, 255, 0.15); }
+      #rp-send { font-size: 13px; font-weight: 800; padding: 10px 14px; border-radius: 10px; cursor: pointer; background: rgba(79, 146, 255, 0.25); border: 1px solid var(--accent); color: var(--text-hi); }
+      #rp-status { font-size: 12px; font-weight: 700; color: var(--text-dim); margin-top: 6px; overflow-wrap: anywhere; }
+      /* §i18n Phase 3：th（分かち書き無し・上下に伸びるスクリプト）と vi（多重ダイアクリティカル）の行組みハードニング。
+         行高を持ち上げ、タイ語は語中の強制分断を避けて自然な語境界で折る（overflow 最終手段は各要素の anywhere が既に持つ）。 */
+      html[lang='th'] body, html[lang='vi'] body { line-height: 1.65; }
+      html[lang='th'] #log, html[lang='vi'] #log { line-height: 1.75; }
+      html[lang='th'] .hint, html[lang='vi'] .hint { line-height: 1.95; }
+      html[lang='th'] body { word-break: normal; line-break: normal; }
+      .depthjump { display: inline-flex; align-items: center; gap: 4px; color: var(--text-dim); font-size: 12px; font-weight: 700; }
+      .depthjump input { width: 46px; background: rgba(255, 255, 255, 0.08); color: var(--text-hi); border: 1px solid var(--glass-line); border-radius: 8px; padding: 6px 6px; font-size: 13px; }
+      .depthjump button { font-size: 12px !important; padding: 8px 10px !important; }
+      #cmdform { display: flex; gap: 8px; margin-bottom: 8px; }
+      #cmdinput {
+        flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); border-radius: 8px;
+        color: var(--text-hi); padding: 9px 12px; font-size: 13px;
+      }
+      #cmdinput::placeholder { color: var(--text-dim); }
+      #cmdinput:focus { outline: none; border-color: var(--accent); }
+      #cmdform button { font-size: 12px; font-weight: 800; padding: 8px 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--glass-line); cursor: pointer; }
+      .loghd { font-size: 12.5px; font-weight: 800; color: var(--text-mid); margin: 4px 0 6px; }
+      #log {
+        max-height: 32vh; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+        font-size: 12.5px; color: var(--text-mid); line-height: 1.5; font-weight: 600;
+        border: 1px solid var(--glass-line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+      #log div { color: var(--text-mid); }
+      #log div:first-child { color: #ffffff; font-weight: 800; } /* 直近イベントを強調 */
+      .hint {
+        font-size: 11.5px; color: var(--text-dim); line-height: 1.7; font-weight: 600;
+        border-top: 1px solid var(--glass-line); padding-top: 9px;
+      }
+      .hint b { color: var(--text-mid); }
+
+      /* §13 持ち物/呪文のポップアップ（t / 🎒）：カーソル＋Enter でもタップでも */
+      #bagpanel {
+        position: absolute; z-index: 22; left: 12px; right: 12px;
+        bottom: calc(90px + env(safe-area-inset-bottom)); max-height: 48vh; overflow-y: auto;
+        background: rgba(14, 19, 28, 0.72); border: 1px solid var(--glass-line); border-radius: 14px;
+        backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+        padding: 10px; display: flex; flex-direction: column; gap: 8px;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.38);
+      }
+      #bagpanel[hidden] { display: none; }
+      #bagpanelhd { display: flex; align-items: center; justify-content: space-between; color: #f2f5fa; font-weight: 800; font-size: 14px; }
+      #bagpanelhd button { font-size: 12px; padding: 6px 10px; }
+
+      /* 装備・持ち物・呪文（白カード＝暗い盤の上で読める） */
+      #bag {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+        padding: 8px 10px; font-size: 12px; color: var(--muted);
+        display: flex; flex-direction: column; gap: 4px;
+      }
+      #bag .baghd { color: var(--text); font-weight: 700; }
+      #bag .bagrow { display: flex; align-items: center; gap: 8px; }
+      #bag .bagn { flex: 1; }
+      #bag .bagbtn { font-size: 11px; padding: 4px 10px; }
+      #bag .eqd { font-size: 11px; color: var(--accent); opacity: 0.85; }
+      #bag .bagrow.kbsel { background: var(--tint); outline: 2px solid var(--accent); border-radius: 8px; } /* §13 カーソル行 */
+
+      /* ボタン（白カード内の既定＝装備/店/持ち物） */
+      button {
+        background: #fff; color: var(--text); border: 1px solid var(--line);
+        border-radius: 10px; padding: 9px 14px; font-size: 14px; cursor: pointer;
+      }
+      button:hover { border-color: #c4d0de; }
+
+      /* 装備オーバーレイ（街でもダンジョンでも同じ画面） */
+      #equip { display: none; position: fixed; inset: 0; background: rgba(5, 8, 13, 0.5); z-index: 50; align-items: center; justify-content: center; }
+      #equippanel { width: min(440px, 92vw); max-height: 86vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+      #equiphd { display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+      #equiphd button { font-size: 12px; padding: 6px 12px; }
+      .eqmembers { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+      .eqm { font-size: 12px; padding: 6px 10px; border-radius: 8px; background: #f5f8fc; border: 1px solid var(--line); color: var(--muted); }
+      .eqm.on { border-color: var(--accent); color: var(--text); }
+      .eqstats { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+      .eqslots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+      .eqslot { font-size: 13px; color: var(--muted); } .eqslot b { color: var(--text); }
+      .eqlist { display: flex; flex-direction: column; gap: 4px; }
+      #equipbody .baghd { color: var(--text); font-weight: 700; margin-top: 6px; }
+      #equipbody .bagrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+      #equipbody .bagn { flex: 1; }
+      #equipbody .bagbtn { font-size: 11px; padding: 4px 10px; }
+      #equipbody .eqd { font-size: 11px; color: var(--accent); opacity: 0.85; }
+
+      /* §gate6 分岐会話 modal（#equip と同じ流儀＝fixed 覆い＋中央カード。GL なし・window リスナなし） */
+      #dlg { display: none; position: fixed; inset: 0; background: rgba(5, 8, 13, 0.5); z-index: 52; align-items: center; justify-content: center; }
+      #dlgpanel { width: min(420px, 92vw); max-height: 80vh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+      #dlghd { display: flex; align-items: center; justify-content: space-between; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+      #dlghd button { font-size: 12px; padding: 6px 12px; }
+      #dlgsay { font-size: 14px; line-height: 1.7; color: var(--text); background: #f5f8fc; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; white-space: pre-wrap; }
+      #dlgchoices { display: flex; flex-direction: column; gap: 8px; }
+      #dlgchoices .dlgc { text-align: left; font-size: 13px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #f5f8fc; color: var(--text); cursor: pointer; font-family: inherit; }
+      #dlgchoices .dlgc:hover { border-color: var(--accent); }
+      #dlgchoices .dlgc:active { transform: scale(0.98); }
+      #dlgchoices .dlgc.kbsel { outline: 3px solid var(--gold); outline-offset: 1px; }
+
+      /* 表示モード（PC ⇄ モバイル手動切替・起動時は自動判定） */
+      body.mode-mobile #pad { display: grid; }
+      body.mode-mobile #feed { max-width: min(70vw, 430px); }
+
+      /* PC＝ミニマル/盤最大（§10 masaru 確定）：d-pad なし・パーティ左下・シートは右サイド */
+      body.mode-pc #pad { display: none; }
+      body.mode-pc #party { left: 14px; right: auto; bottom: 14px; }
+      body.mode-pc .pmini { width: 184px; }
+      body.mode-pc .pmini.rally, .pmini.rally { width: 44px; } /* A-2 ⚑集合＝mode-pc の幅指定にも勝つ（コンパクトな1チップ） */
+      body.mode-pc #quickbar { gap: 8px; }
+      body.mode-pc .slot { width: 62px; height: 64px; }
+      body.mode-pc .slot .key { font-size: 10px; color: var(--gold); }
+      body.mode-pc #contextbar { bottom: 104px; }
+      body.mode-pc #feed { max-width: 470px; top: calc(54px + env(safe-area-inset-top)); }
+      body.mode-pc #ctxbar { top: calc(54px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); }
+      body.mode-pc .sheet {
+        left: auto; right: 14px; bottom: 14px; width: 390px; max-height: 82vh; border-radius: 16px;
+        border: 1px solid var(--glass-line); transform: translateX(112%);
+      }
+      body.mode-pc .sheet.on { transform: none; }
+      body.mode-pc .grab { display: none; }
+      body.mode-pc #bagpanel { left: auto; right: 14px; width: 360px; bottom: 96px; max-height: 60vh; }
+
+      /* 狭幅（≤400px）：状態行をさらに締める */
+      @media (max-width: 400px) {
+        .chip { font-size: 11px; padding: 5px 6px; gap: 3px; }
+        .iconbtn { width: 34px; height: 33px; font-size: 14px; }
+        #topline { gap: 4px; }
+      }
+
+      /* ── §i18n 可変長ハードニング：en の長い訳でも崩れない（省略/折返し/最小幅） ── */
+      #topline { min-width: 0; }
+      .chip { min-width: 0; max-width: 40vw; }
+      #chip-floor, #stancename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; max-width: 34vw; vertical-align: bottom; }
+      #stancechip { min-width: 0; }
+      .pmini .st { max-width: 62%; overflow: hidden; text-overflow: ellipsis; } /* バッジ（Follow/⚑Guard the front…）は帯内で省略 */
+      #contextbar { max-width: 92vw; }
+      #contextbar .ctxbtn { white-space: normal; text-align: center; max-width: 88vw; line-height: 1.3; } /* 長い文脈ラベルは折返す */
+      .pdet .stb { max-width: 46%; overflow: hidden; text-overflow: ellipsis; }
+      .strow .snm { overflow-wrap: anywhere; }
+      #ctxbar { overflow-wrap: anywhere; }
+      #feed .fl { overflow-wrap: anywhere; }
+      .slot .lb { letter-spacing: 0; }
+    </style>
+    <script type="module" crossorigin src="./assets/dungeon-CG_NvPFR.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-B_HPJotp.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-CNdyXHxR.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-types-ah7saRkX.js">
+    <link rel="modulepreload" crossorigin href="./assets/monster-x5Yq99HI.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-C0GaF4bJ.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-Bq1NqM8d.js">
+    <link rel="modulepreload" crossorigin href="./assets/scene-45PRHrjY.js">
+    <link rel="modulepreload" crossorigin href="./assets/three.module-DegpxYfP.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-DGPv831v.js">
+    <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
+  </head>
+  <body>
+    <header id="topbar">
+      <span class="brand">道具屋奇譚</span>
+      <span class="sub">dungeon — 簡易トルネコ（ローグライク本体）</span>
+    </header>
+    <main id="app">
+      <section id="left">
+        <canvas id="board" width="748" height="440"></canvas>
+        <canvas id="minimap" width="208" height="126"></canvas>
+
+        <!-- §OW 世界地図オーバレイ（ノード地図・トルネコ式フロア地図とは別レイヤー・タップで閉じる） -->
+        <div id="worldmapwrap" hidden><canvas id="worldmap" width="380" height="300"></canvas></div>
+
+        <!-- §world-spine ③ 目的の一覧オーバレイ（🎯チップで開閉・goals のあるゲームだけ） -->
+        <div id="goalswrap" hidden><div id="goalslist"></div></div>
+
+        <!-- §win演出：勝利の凱旋1画面（cosmetic＝表示だけ・rng/state 不触・閉じて余生＝フリープレイ続行） -->
+        <div id="winwrap" hidden><div id="winbox"></div></div>
+
+        <!-- 上＝細い glanceable 状態行（階・G・party・現作戦＋🗺☰） -->
+        <div id="topline">
+          <span class="chip" id="chip-floor">…</span>
+          <span class="chip" id="chip-gold">💰 0</span>
+          <span class="chip" id="chip-party">👥 -</span>
+          <span class="chip" id="chip-forecast" hidden></span><!-- A-4 forecast：前線/次波の残り手数（圧がある階だけ現れる） -->
+          <span class="chip" id="chip-return" hidden></span><!-- A-5 帰り支度：📜帰還の書物/🌀帰還装置（地下だけ・所持事実のみ） -->
+          <button class="chip" id="chip-goal" type="button" hidden></button><!-- §world-spine ③ 🎯目的：goals のあるゲームだけ現れる（タップで一覧） -->
+          <button class="chip" id="stancechip" type="button" title="作戦（全員に命じる）" data-i18n-title="ui.html.stancechipTitle"><span class="flag">⚑</span><span id="stancename">作戦</span></button>
+          <span class="spacer"></span>
+          <button class="iconbtn" id="worldbtn" type="button" title="世界地図（m）" data-i18n-title="ui.html.worldBtnTitle" hidden>🌍</button><!-- §OW 世界地図（WORLD のあるゲームだけ現れる） -->
+          <button class="iconbtn" id="mapmode" type="button" title="地図" data-i18n-title="ui.html.mapBtnTitle">🗺</button>
+          <button class="iconbtn" id="menubtn" type="button" title="メニュー" data-i18n-title="ui.html.menuBtnTitle">☰</button>
+        </div>
+
+        <!-- ガイダンス/フラッシュ（選択中の案内・無効手の理由）＝一時表示 -->
+        <div id="ctxbar"><span id="status"></span></div>
+
+        <!-- 実況＝自動フェードのフィード（全文は ☰「実況の履歴」） -->
+        <div id="feed"></div>
+
+        <!-- §13 持ち物/呪文のポップアップ（t / 🎒）：カーソル＋Enter でもタップでも -->
+        <div id="bagpanel" hidden>
+          <div id="bagpanelhd"><span data-i18n="ui.html.bagPanelHd">🎒 持ち物・呪文（t）</span><button id="bagclose" type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
+          <section id="bag"></section>
+        </div>
+        <div id="padopts"></div>
+
+        <!-- 文脈アクション：乗っている対象（階段/宝箱/祠/施設）の「できること」（シレン式） -->
+        <div id="contextbar"></div>
+
+        <!-- §5a 段差射撃の面選択：上下2面に敵がいる時だけ出る（e/q/Tab でも切替） -->
+        <button id="facetoggle" type="button" style="display:none;"></button>
+
+        <!-- パーティ帯（コンパクト・stance 明示・タップで詳細召喚） -->
+        <section id="party"></section>
+
+        <!-- 移動＝改良 d-pad（モバイル・長押し=連続歩行） -->
+        <div id="pad" aria-label="移動パッド">
+          <button class="pb" type="button" data-dx="-1" data-dy="-1">↖</button>
+          <button class="pb" type="button" data-dx="0" data-dy="-1">↑</button>
+          <button class="pb" type="button" data-dx="1" data-dy="-1">↗</button>
+          <button class="pb" type="button" data-dx="-1" data-dy="0">←</button>
+          <button class="pb" id="pad-center" type="button" data-dx="0" data-dy="0" data-i18n="ui.wait">待つ</button>
+          <button class="pb" type="button" data-dx="1" data-dy="0">→</button>
+          <button class="pb" type="button" data-dx="-1" data-dy="1">↙</button>
+          <button class="pb" type="button" data-dx="0" data-dy="1">↓</button>
+          <button class="pb" type="button" data-dx="1" data-dy="1">↘</button>
+        </div>
+
+        <!-- 下部 hotbar＝手（技/呪文/道具・溜め/MP/満タン金縁をスロット内に・キーヒント付き） -->
+        <div id="quickbar">
+          <button class="slot" id="qs-melee" type="button" title="近接：↑/W（正面へ踏み込み）" data-i18n-title="ui.html.qsMeleeTitle"><span class="key">W</span><span class="ic">⚔</span><span class="lb" data-i18n="ui.html.qsMelee">攻撃</span></button>
+          <button class="slot" id="qs-shoot" type="button" title="射撃：f（構えて放つ）" data-i18n-title="ui.html.qsShootTitle"><span class="key">f</span><span class="ic">🏹</span><span class="lb" data-i18n="ui.html.qsShoot">射撃</span></button>
+          <button class="slot" id="qs-spell" type="button" title="魔法：r（装備画面 i で術をセット）"><span class="key">r</span><span class="cost"></span><span class="ic">✦</span><span class="lb">術</span></button>
+          <button class="slot dim" id="qs-tech" type="button" title="特技：g（技を授ける装備が要る・溜めが満ちたら放てる）"><span class="key">g</span><span class="gauge"></span><span class="ic">⚡</span><span class="lb">特技</span></button>
+          <button class="slot" id="qs-bag" type="button" title="持ち物・呪文：t" data-i18n-title="ui.html.qsBagTitle"><span class="key">t</span><span class="ic">🎒</span><span class="lb" data-i18n="ui.html.qsBag">持ち物</span></button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 召喚レイヤ（スマホ=bottom sheet／PC=右サイド） -->
+    <div id="veil"></div>
+
+    <!-- ⚑ 作戦シート（旧 #sakusen 常駐6ボタンの置換＝機能温存・説明＋現在＋解禁条件） -->
+    <div class="sheet" id="sakusensheet">
+      <div class="grab"></div>
+      <h3><span data-i18n="ui.html.sakusenTitle">⚑ 作戦（全員に命じる）</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="sub" data-i18n="ui.html.sakusenSub">構えは仲間全員に効き、毎手の自律判断を傾ける。作戦由来の行動は実況に「⚑」付きで流れる。</div>
+      <section id="sakusen">
+        <button class="strow" type="button" data-stance="guard"><span class="sic">🛡</span><span><span class="snm" data-i18n="stance.guard.name">前で守れ</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="shoot"><span class="sic">🏹</span><span><span class="snm" data-i18n="stance.shoot.name">撃て</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="heal"><span class="sic">💚</span><span><span class="snm" data-i18n="stance.heal.name">回復優先</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="retreat"><span class="sic">🌫</span><span><span class="snm" data-i18n="stance.retreat.name">下がれ</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="conserve"><span class="sic">🕯</span><span><span class="snm" data-i18n="stance.conserve.name">温存</span><span class="sds"></span></span><span class="smeta"></span></button>
+        <button class="strow" type="button" data-stance="allout"><span class="sic">🔥</span><span><span class="snm" data-i18n="stance.allout.name">全力</span><span class="sds"></span></span><span class="smeta"></span></button>
+      </section>
+      <div id="stfoot"></div>
+    </div>
+
+    <!-- 👥 パーティ詳細シート（TO式・個別命令もここから） -->
+    <div class="sheet" id="partysheet">
+      <div class="grab"></div>
+      <h3><span data-i18n="ui.html.partyTitle">👥 パーティ</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="sub" data-i18n="ui.html.partySub">個別の命令もここから（命令はターンを消費しない）。行き先は盤タップで指す。</div>
+      <div id="pdets"></div>
+    </div>
+
+    <!-- ☰ メニューシート（低頻度を格納・実況の履歴もここ＝全機能温存） -->
+    <div class="sheet" id="menupanel">
+      <div class="grab"></div>
+      <h3><span data-i18n="ui.html.menuTitle">☰ メニュー</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="mgroup">
+        <button id="descend" type="button" data-i18n="ui.html.descendBtn">降りる（&gt;）</button>
+        <button id="equipbtn" type="button" data-i18n="ui.html.equipBtn">🛡 装備（i）</button>
+        <button id="composemode" type="button" data-i18n="ui.html.composeBtn">🧑 編成</button>
+        <button id="aimmode" type="button">🏹 狙う: OFF</button>
+      </div>
+      <div class="mgroup">
+        <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
+        <button id="reportbtn" type="button">🚩 <span data-i18n="ui.html.reportBtn">翻訳を報告</span></button>
+        <button id="layoutmode" type="button">🖥 PC</button>
+        <button id="turnmode" type="button">🧭 向きモード: OFF</button>
+        <button id="reset" type="button" data-i18n="ui.html.retryBtn">もう一度</button>
+        <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" /><span data-i18n="ui.html.floorsTo">階へ</span><button id="godepth" type="button" data-i18n="ui.html.go">直行</button></span>
+      </div>
+      <!-- §showcase G3：遊ぶ→作るの橋（cosmetic＝表示専用リンク・engine/決定論/rng に一切触れない）。
+           この世界は作れる＝みんなの世界（ギャラリー）と自分の世界（studio）への1クリック。
+           §玄関：静的配信では #makerlink を hosted studio（Fly）へ向け #makernote（🐙）を出す＝src/maker-link.ts -->
+      <div class="mgroup">
+        <a class="mlink" href="studio.html?panel=gallery">🖼 <span data-i18n="ui.html.galleryLink">みんなの世界（ギャラリー）</span></a>
+        <a class="mlink" id="makerlink" href="studio.html">🛠 <span data-i18n="ui.html.makerLink">自分の世界を作る（studio）</span></a>
+        <span class="mnote" id="makernote" hidden>🐙 <span data-i18n="ui.html.makerLoginNote">作るのは hosted studio で＝GitHub でログインして作る（この配信面は遊ぶ専用）</span></span>
+      </div>
+      <form id="cmdform" autocomplete="off">
+        <input id="cmdinput" placeholder="@リン 待て ／ @ガロ 来い ／ 集合" data-i18n-ph="ui.html.cmdPh" />
+        <button type="submit" data-i18n="ui.html.send">送る</button>
+      </form>
+      <div class="loghd" data-i18n="ui.html.logHd">📜 実況の履歴</div>
+      <section id="log"></section>
+      <div class="hint" data-i18n-html="ui.html.hint">
+        <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
+        <b>攻防のキー</b>＝⚔近接は<b>↑/W</b>（正面へ）・🏹射撃は<b>f</b>・✦術は<b>r</b>（装備画面 i でセット）・⚡特技は<b>g</b>・🎒持ち物/呪文は<b>t</b>。<b>ポップアップ表示中は方向キーで選び Enter で決定・Esc で閉じる</b>（WASD 移動はそのまま生きる）。<br />
+        <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>。同じ仲間をもう一度クリックで<b>追従に戻す</b>。パーティ帯タップ→詳細からも。テキスト：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません。<br />
+        テーマ凡例：🔥火＝火の魔物・❄氷＝水と氷・⛰土＝岩と瓦礫・✨聖＝亡者と祈り。<br />
+        <span style="opacity: 0.7"><b>視点(3D)</b>＝<b>↑前進／↓後退／←→ 回転</b>・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。乗った対象は中央のボタンで操作。</span>
+      </div>
+    </div>
+
+    <!-- 🚩 翻訳報告シート（§i18n Phase 3）：文字列を選んで提案訳を送る＝creator の proposal になる（truth は書かない） -->
+    <div class="sheet" id="reportsheet">
+      <div class="grab"></div>
+      <h3><span data-i18n="ui.html.reportTitle">🚩 翻訳の間違いを報告</span> <button class="x" data-close type="button" data-i18n="ui.html.close">閉じる</button></h3>
+      <div class="rfield">
+        <label data-i18n="ui.report.findLabel">おかしい文を探す（今の言語の文で検索）</label>
+        <input id="rp-find" type="text" data-i18n-ph="ui.report.findPh" placeholder="文の一部を入力…" />
+        <div id="rp-list"></div>
+      </div>
+      <div class="rfield">
+        <label data-i18n="ui.report.proposeLabel">正しい訳の提案</label>
+        <textarea id="rp-propose"></textarea>
+      </div>
+      <div class="rfield">
+        <label data-i18n="ui.report.noteLabel">補足（任意）</label>
+        <input id="rp-note" type="text" />
+      </div>
+      <button id="rp-send" type="button" data-i18n="ui.report.sendBtn">送る</button>
+      <div id="rp-status"></div>
+    </div>
+
+    <div id="equip">
+      <div id="equippanel">
+        <div id="equiphd"><span id="modaltitle">装備を整える</span><button id="equipclose" data-eqclose type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
+        <div id="equipbody"></div>
+      </div>
+    </div>
+    <div id="dlg">
+      <div id="dlgpanel">
+        <div id="dlghd"><span id="dlgtitle"></span><button data-dlgclose type="button" data-i18n="ui.html.closeEsc">閉じる（Esc）</button></div>
+        <div id="dlgsay"></div>
+        <div id="dlgchoices"></div>
+      </div>
+    </div>
+    <!-- §scene(P2)：全画面の演出 veil（fadeScreen 暗転/tint 色被せ）。ナレーション(72)の下・盤の上(71)＝暗転の上に地の文が読める。 -->
+    <div id="scene-fx"></div>
+    <!-- §scene(Phase 0)：冒頭ナレーション overlay。暗い街の上に地の文を流し、面タップ/Enter で送る→尽きたらカメラ引き＋点灯でプレイへ。 -->
+    <div id="scene-narr"><div id="scene-narr-box"><canvas id="scene-portrait" width="128" height="128"></canvas><div id="scene-narr-text"></div><div id="scene-narr-hint">▶</div></div></div>
+    <style>
+      #scene-fx { position: fixed; inset: 0; z-index: 71; pointer-events: none; background: #000000; opacity: 0; }
+      /* §scene(P2 顔グラ)：話者の voxel 頭部＝枠の左上に立つ半身像（透過・枠から少し迫り出す） */
+      #scene-portrait { position: absolute; left: 10px; bottom: calc(100% - 22px); width: 128px; height: 128px;
+        display: none; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.55)); }
+      #scene-portrait.on { display: block; }
+      #scene-narr { position: fixed; inset: 0; z-index: 72; display: none; align-items: flex-end; justify-content: center;
+        padding: 0 20px max(12vh, 96px); pointer-events: auto; opacity: 0; transition: opacity 0.4s ease; cursor: pointer;
+        font-family: system-ui, -apple-system, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; }
+      #scene-narr.on { opacity: 1; }
+      #scene-narr-box { max-width: 760px; width: 100%; position: relative; padding: 20px 24px; border-radius: 12px;
+        background: rgba(8,9,12,0.72); border: 1px solid rgba(210,190,160,0.18); backdrop-filter: blur(4px); }
+      #scene-narr-text { color: #f4ead9; font-size: clamp(15px, 3.6vw, 20px); line-height: 1.75; letter-spacing: 0.02em;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+      #scene-narr-hint { position: absolute; right: 14px; bottom: 8px; color: #cdbfa6; font-size: 12px;
+        animation: narrpulse 1.4s ease-in-out infinite; }
+      @keyframes narrpulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+    </style>
+    <!-- §scene：対話（choice）overlay。Director が選択肢ボタンを流し込む→選ぶと飛び先へ。title のメニューも将来これで組む。 -->
+    <div id="scene-choice"></div>
+    <style>
+      #scene-choice { position: fixed; inset: 0; z-index: 73; display: none; flex-direction: column; align-items: center; justify-content: flex-end;
+        padding: 0 20px max(14vh, 110px); pointer-events: auto; opacity: 0; transition: opacity 0.3s ease; gap: 12px;
+        font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+      #scene-choice.on { opacity: 1; }
+      #scene-choice-prompt { color: #f4ead9; font-size: clamp(15px, 3.6vw, 20px); text-shadow: 0 1px 6px rgba(0,0,0,0.6); margin-bottom: 4px;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; text-align: center; }
+      #scene-choice-list { display: flex; flex-direction: column; gap: 10px; width: min(360px, 84vw); }
+      .scene-choice-btn { font: inherit; font-weight: 700; font-size: 15px; color: #f4ead9; text-align: center; cursor: pointer;
+        padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(210,190,160,0.28); background: rgba(20,16,12,0.62); backdrop-filter: blur(6px);
+        transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
+      .scene-choice-btn:hover { transform: translateY(-1px); background: rgba(48,32,20,0.72); border-color: rgba(243,201,138,0.55); }
+    </style>
+    <!-- §title：起動カバー＝最初のペイントから不透明で被せ、旧2D盤のチラ見え(FOUC)を隠す。voxel タイトルが立つ/2Dフォールバック確定で外す。 -->
+    <div id="bootcover"></div>
+    <style>
+      #bootcover { position: fixed; inset: 0; z-index: 80; background: #0f1015; opacity: 1; transition: opacity 0.45s ease; }
+      #bootcover.gone { opacity: 0; pointer-events: none; }
+    </style>
+    <!-- §title：街シーンをそのままタイトルに（rokuro 既定）。背後で voxel の街が描かれ、これはその上の薄い overlay。 -->
+    <div id="titlescreen" aria-hidden="true">
+      <!-- ロゴは three.js シーン内の voxel（render-voxel の showTitleLogo）。DOM 側はタグライン＋はじめるだけ。 -->
+      <div id="title-tag" data-tt="tag">rokuro でつくられたローグライク</div>
+      <button id="title-continue" type="button" style="display:none">つづきから</button>
+      <button id="title-start" type="button" data-tt="start">はじめる</button>
+    </div>
+    <style>
+      #titlescreen { position: fixed; inset: 0; z-index: 70; display: none;
+        flex-direction: column; align-items: center; justify-content: flex-end; gap: 20px;
+        padding: 10vh 20px max(34px, env(safe-area-inset-bottom)); text-align: center;
+        pointer-events: auto; opacity: 1; transition: opacity 0.7s ease;
+        background: linear-gradient(to bottom, rgba(8,9,14,0.3) 0%, transparent 26%, transparent 58%, rgba(8,9,14,0.74) 100%);
+        font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+      #titlescreen.leaving { opacity: 0; }
+      #title-tag { font-size: clamp(12px, 3.2vw, 15px); letter-spacing: 0.2em; color: #cdbfa6;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+      #title-start { min-width: min(320px, 80vw); font-weight: 800; font-size: 17px; letter-spacing: 0.06em;
+        color: #fff; border: 1px solid #e6a763; border-radius: 12px; padding: 15px 22px; cursor: pointer;
+        background: linear-gradient(180deg, #d8813e, #b5591f); box-shadow: 0 8px 22px rgba(181,89,31,0.34);
+        transition: transform 0.12s ease, filter 0.12s ease; }
+      #title-start:hover { transform: translateY(-1px); filter: brightness(1.06); }
+      #title-continue { min-width: min(320px, 80vw); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; color: #f4ead9; cursor: pointer;
+        padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(210,190,160,0.28); background: rgba(20,16,12,0.5); backdrop-filter: blur(4px);
+        transition: transform 0.12s ease, background 0.12s ease; }
+      #title-continue:hover { transform: translateY(-1px); background: rgba(48,32,20,0.65); }
+      /* §title：タイトル中はゲーム HUD を伏せる（voxel の街＋ロゴだけ見せる）。voxel canvas は id 無し＝巻き込まない。 */
+      body.title-mode #topbar, body.title-mode #topline, body.title-mode #minimap,
+      body.title-mode #ctxbar, body.title-mode #feed, body.title-mode #contextbar,
+      body.title-mode #nameplates, body.title-mode #party, body.title-mode #pad,
+      body.title-mode #quickbar { display: none !important; }
+      /* §scene(P2)：ゲーム中の演出（ending/gameover）中も操作 chrome を退場＝台本が主役 */
+      body.scene-mode #topbar, body.scene-mode #topline, body.scene-mode #minimap,
+      body.scene-mode #ctxbar, body.scene-mode #feed, body.scene-mode #contextbar,
+      body.scene-mode #nameplates, body.scene-mode #party, body.scene-mode #pad,
+      body.scene-mode #quickbar { display: none !important; }
+    </style>
+    <!-- §玄関：静的配信では ☰ の「🛠 作る」を hosted studio へ（表示専用・engine 非依存の別モジュール） -->
+  </body>
+</html>
