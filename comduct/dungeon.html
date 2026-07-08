@@ -568,14 +568,17 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-GhqyU2DJ.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-6gT7-Xrb.js">
-    <link rel="modulepreload" crossorigin href="./assets/tables-ChfHX5yh.js">
-    <link rel="modulepreload" crossorigin href="./assets/three.module-WWCVshk5.js">
-    <link rel="modulepreload" crossorigin href="./assets/monster-CNlJLiEB.js">
-    <link rel="modulepreload" crossorigin href="./assets/voxmodel-Dcp997La.js">
-    <link rel="modulepreload" crossorigin href="./assets/gamepack-CkDy6Wip.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-D-RnNekZ.js">
+    <script type="module" crossorigin src="./assets/dungeon-C4PdLuU9.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-BY60HHrT.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-CwEzLAUT.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-types-ah7saRkX.js">
+    <link rel="modulepreload" crossorigin href="./assets/monster-BOqRzmtd.js">
+    <link rel="modulepreload" crossorigin href="./assets/voxmodel-DnZhnOPx.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-d_8GbKbd.js">
+    <link rel="modulepreload" crossorigin href="./assets/scene-D1vclmsv.js">
+    <link rel="modulepreload" crossorigin href="./assets/three.module-DegpxYfP.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-0HlRJdN8.js">
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -760,6 +763,86 @@
         <div id="dlgchoices"></div>
       </div>
     </div>
+    <!-- §scene(P2)：全画面の演出 veil（fadeScreen 暗転/tint 色被せ）。ナレーション(72)の下・盤の上(71)＝暗転の上に地の文が読める。 -->
+    <div id="scene-fx"></div>
+    <!-- §scene(Phase 0)：冒頭ナレーション overlay。暗い街の上に地の文を流し、面タップ/Enter で送る→尽きたらカメラ引き＋点灯でプレイへ。 -->
+    <div id="scene-narr"><div id="scene-narr-box"><canvas id="scene-portrait" width="128" height="128"></canvas><div id="scene-narr-text"></div><div id="scene-narr-hint">▶</div></div></div>
+    <style>
+      #scene-fx { position: fixed; inset: 0; z-index: 71; pointer-events: none; background: #000000; opacity: 0; }
+      /* §scene(P2 顔グラ)：話者の voxel 頭部＝枠の左上に立つ半身像（透過・枠から少し迫り出す） */
+      #scene-portrait { position: absolute; left: 10px; bottom: calc(100% - 22px); width: 128px; height: 128px;
+        display: none; pointer-events: none; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.55)); }
+      #scene-portrait.on { display: block; }
+      #scene-narr { position: fixed; inset: 0; z-index: 72; display: none; align-items: flex-end; justify-content: center;
+        padding: 0 20px max(12vh, 96px); pointer-events: auto; opacity: 0; transition: opacity 0.4s ease; cursor: pointer;
+        font-family: system-ui, -apple-system, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; }
+      #scene-narr.on { opacity: 1; }
+      #scene-narr-box { max-width: 760px; width: 100%; position: relative; padding: 20px 24px; border-radius: 12px;
+        background: rgba(8,9,12,0.72); border: 1px solid rgba(210,190,160,0.18); backdrop-filter: blur(4px); }
+      #scene-narr-text { color: #f4ead9; font-size: clamp(15px, 3.6vw, 20px); line-height: 1.75; letter-spacing: 0.02em;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+      #scene-narr-hint { position: absolute; right: 14px; bottom: 8px; color: #cdbfa6; font-size: 12px;
+        animation: narrpulse 1.4s ease-in-out infinite; }
+      @keyframes narrpulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+    </style>
+    <!-- §scene：対話（choice）overlay。Director が選択肢ボタンを流し込む→選ぶと飛び先へ。title のメニューも将来これで組む。 -->
+    <div id="scene-choice"></div>
+    <style>
+      #scene-choice { position: fixed; inset: 0; z-index: 73; display: none; flex-direction: column; align-items: center; justify-content: flex-end;
+        padding: 0 20px max(14vh, 110px); pointer-events: auto; opacity: 0; transition: opacity 0.3s ease; gap: 12px;
+        font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+      #scene-choice.on { opacity: 1; }
+      #scene-choice-prompt { color: #f4ead9; font-size: clamp(15px, 3.6vw, 20px); text-shadow: 0 1px 6px rgba(0,0,0,0.6); margin-bottom: 4px;
+        font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; text-align: center; }
+      #scene-choice-list { display: flex; flex-direction: column; gap: 10px; width: min(360px, 84vw); }
+      .scene-choice-btn { font: inherit; font-weight: 700; font-size: 15px; color: #f4ead9; text-align: center; cursor: pointer;
+        padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(210,190,160,0.28); background: rgba(20,16,12,0.62); backdrop-filter: blur(6px);
+        transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
+      .scene-choice-btn:hover { transform: translateY(-1px); background: rgba(48,32,20,0.72); border-color: rgba(243,201,138,0.55); }
+    </style>
+    <!-- §title：起動カバー＝最初のペイントから不透明で被せ、旧2D盤のチラ見え(FOUC)を隠す。voxel タイトルが立つ/2Dフォールバック確定で外す。 -->
+    <div id="bootcover"></div>
+    <style>
+      #bootcover { position: fixed; inset: 0; z-index: 80; background: #0f1015; opacity: 1; transition: opacity 0.45s ease; }
+      #bootcover.gone { opacity: 0; pointer-events: none; }
+    </style>
+    <!-- §title：街シーンをそのままタイトルに（rokuro 既定）。背後で voxel の街が描かれ、これはその上の薄い overlay。 -->
+    <div id="titlescreen" aria-hidden="true">
+      <!-- ロゴは three.js シーン内の voxel（render-voxel の showTitleLogo）。DOM 側はタグライン＋はじめるだけ。 -->
+      <div id="title-tag" data-tt="tag">rokuro でつくられたローグライク</div>
+      <button id="title-continue" type="button" style="display:none">つづきから</button>
+      <button id="title-start" type="button" data-tt="start">はじめる</button>
+    </div>
+    <style>
+      #titlescreen { position: fixed; inset: 0; z-index: 70; display: none;
+        flex-direction: column; align-items: center; justify-content: flex-end; gap: 20px;
+        padding: 10vh 20px max(34px, env(safe-area-inset-bottom)); text-align: center;
+        pointer-events: auto; opacity: 1; transition: opacity 0.7s ease;
+        background: linear-gradient(to bottom, rgba(8,9,14,0.3) 0%, transparent 26%, transparent 58%, rgba(8,9,14,0.74) 100%);
+        font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+      #titlescreen.leaving { opacity: 0; }
+      #title-tag { font-size: clamp(12px, 3.2vw, 15px); letter-spacing: 0.2em; color: #cdbfa6;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+      #title-start { min-width: min(320px, 80vw); font-weight: 800; font-size: 17px; letter-spacing: 0.06em;
+        color: #fff; border: 1px solid #e6a763; border-radius: 12px; padding: 15px 22px; cursor: pointer;
+        background: linear-gradient(180deg, #d8813e, #b5591f); box-shadow: 0 8px 22px rgba(181,89,31,0.34);
+        transition: transform 0.12s ease, filter 0.12s ease; }
+      #title-start:hover { transform: translateY(-1px); filter: brightness(1.06); }
+      #title-continue { min-width: min(320px, 80vw); font-weight: 700; font-size: 15px; letter-spacing: 0.04em; color: #f4ead9; cursor: pointer;
+        padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(210,190,160,0.28); background: rgba(20,16,12,0.5); backdrop-filter: blur(4px);
+        transition: transform 0.12s ease, background 0.12s ease; }
+      #title-continue:hover { transform: translateY(-1px); background: rgba(48,32,20,0.65); }
+      /* §title：タイトル中はゲーム HUD を伏せる（voxel の街＋ロゴだけ見せる）。voxel canvas は id 無し＝巻き込まない。 */
+      body.title-mode #topbar, body.title-mode #topline, body.title-mode #minimap,
+      body.title-mode #ctxbar, body.title-mode #feed, body.title-mode #contextbar,
+      body.title-mode #nameplates, body.title-mode #party, body.title-mode #pad,
+      body.title-mode #quickbar { display: none !important; }
+      /* §scene(P2)：ゲーム中の演出（ending/gameover）中も操作 chrome を退場＝台本が主役 */
+      body.scene-mode #topbar, body.scene-mode #topline, body.scene-mode #minimap,
+      body.scene-mode #ctxbar, body.scene-mode #feed, body.scene-mode #contextbar,
+      body.scene-mode #nameplates, body.scene-mode #party, body.scene-mode #pad,
+      body.scene-mode #quickbar { display: none !important; }
+    </style>
     <!-- §玄関：静的配信では ☰ の「🛠 作る」を hosted studio へ（表示専用・engine 非依存の別モジュール） -->
   </body>
 </html>
