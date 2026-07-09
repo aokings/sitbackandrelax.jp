@@ -3,10 +3,202 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0; url=./dungeon.html" />
-    <title>道具屋奇譚</title>
+    <title>rokuro — ゲームメーカー</title>
+    <meta name="description" content="rokuro — コードなしでゲームをつくって、そのまま公開できるゲームメーカー。" />
+    <style>
+      /* 白基調のモダンなテック系ランディング（Linear/Vercel 系）。色は固定＝ダークでも白のまま。 */
+      :root {
+        --bg: #ffffff; --ink: #0a0a0b; --ink-2: #5b616e; --ink-3: #8b909b;
+        --line: #ececef; --line-2: #e2e3e8; --card: #ffffff;
+        --accent: #5b5bd6; --accent-weak: #eeeefb;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      html, body { margin: 0; }
+      body {
+        background: var(--bg); color: var(--ink);
+        font-family: system-ui, -apple-system, "Inter", "Hiragino Sans", "Noto Sans JP", sans-serif;
+        -webkit-font-smoothing: antialiased; line-height: 1.5;
+        display: flex; flex-direction: column; min-height: 100vh;
+      }
+      a { color: inherit; }
+      /* ── nav ── */
+      nav {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        max-width: 1080px; width: 100%; margin: 0 auto; padding: 18px 24px;
+      }
+      .logo { font-weight: 800; font-size: 20px; letter-spacing: -.01em; text-decoration: none; }
+      .logo .dot { color: var(--accent); }
+      .nav-right { display: flex; align-items: center; gap: 14px; }
+      .lang {
+        appearance: none; -webkit-appearance: none; cursor: pointer;
+        font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-2);
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b909b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+        border: 1px solid var(--line-2); border-radius: 9px; padding: 6px 26px 6px 11px;
+      }
+      .lang:hover { border-color: #c9cbd3; color: var(--ink); }
+      .nav-cta { font-size: 14px; font-weight: 600; color: var(--ink-2); text-decoration: none; white-space: nowrap; }
+      .nav-cta:hover { color: var(--ink); }
+      /* ── hero ── */
+      .hero {
+        position: relative; overflow: hidden; text-align: center;
+        padding: clamp(56px, 12vw, 128px) 24px clamp(40px, 8vw, 72px);
+      }
+      .hero::before {
+        content: ""; position: absolute; left: 50%; top: -120px; transform: translateX(-50%);
+        width: 760px; height: 520px; max-width: 130vw;
+        background: radial-gradient(closest-side, rgba(91,91,214,.16), rgba(91,91,214,0) 70%);
+        pointer-events: none;
+      }
+      .hero::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+        background-image: radial-gradient(circle, #e9e9ef 1px, transparent 1.4px);
+        background-size: 26px 26px;
+        -webkit-mask-image: radial-gradient(closest-side, #000 0%, transparent 72%);
+        mask-image: radial-gradient(closest-side, #000 0%, transparent 72%);
+        opacity: .6;
+      }
+      .hero > * { position: relative; z-index: 1; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+        border: 1px solid var(--line-2); background: #fff; border-radius: 999px; padding: 5px 13px 5px 11px;
+      }
+      .badge .pip { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-weak); }
+      h1 {
+        margin: 22px auto 0; max-width: 16em;
+        font-size: clamp(34px, 7vw, 60px); font-weight: 800; letter-spacing: -.03em; line-height: 1.08;
+      }
+      .lead { margin: 18px auto 0; max-width: 32em; color: var(--ink-2); font-size: clamp(15px, 3.6vw, 18px); }
+      .cta-row { margin-top: 30px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600;
+        font-size: 15px; padding: 12px 22px; border-radius: 11px; transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
+      .btn.primary { background: var(--ink); color: #fff; box-shadow: 0 1px 2px rgba(10,10,11,.4); }
+      .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(10,10,11,.22); }
+      .btn.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line-2); }
+      .btn.ghost:hover { border-color: #c9cbd3; }
+      /* ── works ── */
+      .works { max-width: 1080px; width: 100%; margin: 0 auto; padding: 8px 24px clamp(56px, 10vw, 96px); }
+      .works-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; flex-wrap: wrap; }
+      .works-head h2 { font-size: 15px; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+      .works-head span { font-size: 13px; color: var(--ink-3); }
+      /* 140px＝狭幅（375px）でも必ず2列＝作品が1列で大きく占有しない。 */
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+      .tile { display: flex; flex-direction: column; text-decoration: none; color: inherit;
+        background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+        transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+      .tile:hover { transform: translateY(-2px); border-color: var(--line-2); box-shadow: 0 10px 30px rgba(10,10,11,.08); }
+      .thumb { aspect-ratio: 4 / 3; display: grid; place-items: center;
+        background: linear-gradient(145deg, #f3f3ff 0%, #e8e8fb 100%); }
+      .thumb svg { width: 46%; height: 46%; color: var(--accent); opacity: .9; }
+      .meta { padding: 11px 13px 13px; }
+      .meta .name { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+      .meta .genre { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+      .tile.empty { border-style: dashed; background: #fcfcfd; align-items: center; justify-content: center;
+        color: var(--ink-3); text-align: center; padding: 22px; min-height: 150px; }
+      .tile.empty .big { font-size: 22px; line-height: 1; opacity: .55; }
+      .tile.empty .t { font-size: 12.5px; margin-top: 9px; line-height: 1.5; }
+      /* ── footer ── */
+      footer { margin-top: auto; border-top: 1px solid var(--line); }
+      .foot-in { max-width: 1080px; margin: 0 auto; padding: 22px 24px; display: flex; justify-content: space-between;
+        align-items: center; color: var(--ink-3); font-size: 13px; flex-wrap: wrap; gap: 8px; }
+    </style>
   </head>
   <body>
-    <p><a href="./dungeon.html">道具屋奇譚へ</a></p>
+    <nav>
+      <a class="logo" href="/">rokuro<span class="dot">.</span></a>
+      <div class="nav-right">
+        <select class="lang" id="lang" aria-label="Language"></select>
+        <a class="nav-cta" href="/studio.html" data-i18n="nav_studio">スタジオ</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <span class="badge"><span class="pip"></span><span data-i18n="badge">ノーコード・ゲームメーカー</span></span>
+      <h1 data-i18n="headline">コードなしで、ゲームをつくる。</h1>
+      <p class="lead" data-i18n="lead">部品から世界まで、ブラウザだけで。つくった作品は、そのまま公開できる。</p>
+      <div class="cta-row">
+        <a class="btn primary" href="/studio.html" data-i18n="cta_primary">スタジオを開く</a>
+        <a class="btn ghost" href="#works" data-i18n="cta_ghost">作品を見る</a>
+      </div>
+    </header>
+
+    <main class="works" id="works">
+      <div class="works-head">
+        <h2 data-i18n="works_title">作られたゲーム</h2>
+        <span data-i18n="works_sub">rokuro でつくられた作品</span>
+      </div>
+      <div class="grid">
+        <a class="tile" href="/g/wrfnhb/">
+          <div class="thumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/>
+            </svg>
+          </div>
+          <div class="meta"><div class="name">道具屋奇譚</div><div class="genre" data-i18n="genre_roguelike">ローグライク</div></div>
+        </a>
+        <div class="tile empty">
+          <div class="big">＋</div>
+          <div class="t" data-i18n="empty">つぎは、あなたの作品。</div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="foot-in"><span>rokuro.ai</span><span data-i18n="foot">つくったものが、ここに並ぶ。</span></div>
+    </footer>
+
+    <script>
+      (function () {
+        // 素の静的ランディング用の軽量 i18n（SPA の i18n バンドルとは別レイヤー）。
+        // プロジェクトと同じ 6 言語。ブラウザ言語を自動判定し、切替は localStorage 保存。
+        var I18N = {
+          ja: { title: 'rokuro — ゲームメーカー', nav_studio: 'スタジオ', badge: 'ノーコード・ゲームメーカー',
+            headline: 'コードなしで、ゲームをつくる。', lead: '部品から世界まで、ブラウザだけで。つくった作品は、そのまま公開できる。',
+            cta_primary: 'スタジオを開く', cta_ghost: '作品を見る', works_title: '作られたゲーム', works_sub: 'rokuro でつくられた作品',
+            genre_roguelike: 'ローグライク', empty: 'つぎは、あなたの作品。', foot: 'つくったものが、ここに並ぶ。' },
+          en: { title: 'rokuro — Game maker', nav_studio: 'Studio', badge: 'No-code game maker',
+            headline: 'Make games without code.', lead: 'From parts to whole worlds, right in your browser. Publish the moment you’re done.',
+            cta_primary: 'Open Studio', cta_ghost: 'See games', works_title: 'Games made', works_sub: 'Built with rokuro',
+            genre_roguelike: 'Roguelike', empty: 'Yours could be next.', foot: 'What you make shows up here.' },
+          id: { title: 'rokuro — Pembuat game', nav_studio: 'Studio', badge: 'Pembuat game tanpa kode',
+            headline: 'Buat game tanpa menulis kode.', lead: 'Dari komponen hingga dunia utuh, langsung di browser. Terbitkan begitu selesai.',
+            cta_primary: 'Buka Studio', cta_ghost: 'Lihat game', works_title: 'Game yang dibuat', works_sub: 'Dibuat dengan rokuro',
+            genre_roguelike: 'Roguelike', empty: 'Berikutnya bisa karyamu.', foot: 'Apa yang kamu buat tampil di sini.' },
+          ms: { title: 'rokuro — Pembuat permainan', nav_studio: 'Studio', badge: 'Pembuat permainan tanpa kod',
+            headline: 'Cipta permainan tanpa menulis kod.', lead: 'Daripada komponen hingga dunia lengkap, terus dalam pelayar. Terbitkan sebaik siap.',
+            cta_primary: 'Buka Studio', cta_ghost: 'Lihat permainan', works_title: 'Permainan yang dicipta', works_sub: 'Dibina dengan rokuro',
+            genre_roguelike: 'Roguelike', empty: 'Seterusnya mungkin karya anda.', foot: 'Apa yang anda cipta muncul di sini.' },
+          th: { title: 'rokuro — เครื่องมือสร้างเกม', nav_studio: 'สตูดิโอ', badge: 'สร้างเกมแบบไม่ต้องเขียนโค้ด',
+            headline: 'สร้างเกมได้โดยไม่ต้องเขียนโค้ด', lead: 'ตั้งแต่ชิ้นส่วนไปจนถึงทั้งโลก ทำได้ในเบราว์เซอร์ เผยแพร่ได้ทันทีที่เสร็จ',
+            cta_primary: 'เปิดสตูดิโอ', cta_ghost: 'ดูเกม', works_title: 'เกมที่สร้างแล้ว', works_sub: 'สร้างด้วย rokuro',
+            genre_roguelike: 'โร้กไลก์', empty: 'ผลงานถัดไปอาจเป็นของคุณ', foot: 'สิ่งที่คุณสร้างจะมาอยู่ที่นี่' },
+          vi: { title: 'rokuro — Công cụ tạo game', nav_studio: 'Studio', badge: 'Công cụ tạo game không cần code',
+            headline: 'Tạo game mà không cần viết code.', lead: 'Từ linh kiện đến cả thế giới, ngay trong trình duyệt. Xuất bản ngay khi hoàn thành.',
+            cta_primary: 'Mở Studio', cta_ghost: 'Xem game', works_title: 'Những game đã tạo', works_sub: 'Được tạo bằng rokuro',
+            genre_roguelike: 'Roguelike', empty: 'Tiếp theo có thể là của bạn.', foot: 'Những gì bạn tạo sẽ xuất hiện ở đây.' }
+        };
+        var LANGS = [['ja', '日本語'], ['en', 'English'], ['id', 'Bahasa Indonesia'], ['ms', 'Bahasa Melayu'], ['th', 'ไทย'], ['vi', 'Tiếng Việt']];
+        function pick() {
+          try { var s = localStorage.getItem('rokuro.lang'); if (s && I18N[s]) return s; } catch (e) {}
+          var cands = navigator.languages || [navigator.language || 'ja'];
+          for (var i = 0; i < cands.length; i++) { var l = (cands[i] || '').slice(0, 2).toLowerCase(); if (I18N[l]) return l; }
+          return 'en';
+        }
+        function apply(lang) {
+          var d = I18N[lang] || I18N.en;
+          document.documentElement.lang = lang;
+          var nodes = document.querySelectorAll('[data-i18n]');
+          for (var i = 0; i < nodes.length; i++) { var k = nodes[i].getAttribute('data-i18n'); if (d[k] != null) nodes[i].textContent = d[k]; }
+          if (d.title) document.title = d.title;
+        }
+        var sel = document.getElementById('lang');
+        for (var i = 0; i < LANGS.length; i++) { var o = document.createElement('option'); o.value = LANGS[i][0]; o.textContent = LANGS[i][1]; sel.appendChild(o); }
+        var lang = pick();
+        sel.value = lang;
+        sel.addEventListener('change', function () { lang = sel.value; try { localStorage.setItem('rokuro.lang', lang); } catch (e) {} apply(lang); });
+        apply(lang);
+      })();
+    </script>
   </body>
 </html>
