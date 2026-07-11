@@ -1,4 +1,4 @@
-import{S as Yt,C as dt,P as Jt,W as Wt,f as Xt,H as Vt,D as qt,a as Qt,M as ut,l as Zt,b as te,I as ee,B as ne,d as oe,c as ae,V as se}from"./three.module-B1bP4c5T.js";import{s as Kt,n as ie,m as Pt,o as zt,c as re,v as le,q as ce,b as pe,_ as mt,l as de,r as ue,p as Rt,u as V,w as me,g as fe}from"./render-voxel-ByLZI2rX.js";import{a as Tt}from"./voxmodel-BvUzcFRp.js";import{d as Ht}from"./world-ui-GIWH7IUu.js";const be=`<!-- ============================================================
+import{S as Yt,C as dt,P as Jt,W as Wt,f as Xt,H as Vt,D as qt,a as Qt,M as ut,l as Zt,b as te,I as ee,B as ne,d as oe,c as ae,V as se}from"./three.module-B1bP4c5T.js";import{s as Kt,n as ie,m as Pt,o as zt,c as re,v as le,q as ce,b as pe,_ as mt,l as de,r as ue,p as Rt,u as V,w as me,g as fe}from"./render-voxel-FJ_3_tE3.js";import{a as Tt}from"./voxmodel-BvUzcFRp.js";import{d as Ht}from"./world-ui-GIWH7IUu.js";const be=`<!-- ============================================================
      §parts-workbench — 部品棚の markup（単一実体・?raw import で host へ注入）。
      旧 parts.html body の移植：スタジオの 🧩 部品パネルも旧 parts.html（wrapper）も
      この1枚を mount する（二重持ちゼロ）。
