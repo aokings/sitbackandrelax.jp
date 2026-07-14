@@ -314,6 +314,17 @@
         touch-action: none; /* ★実機フリック必須：ドラッグをスクロール扱いさせず pointermove を出す（中央フリック/方向フリック） */
       }
       #pad .pb:active { background: rgba(46, 116, 240, 0.55); }
+      /* R-CTL：カメラ回転ボタン（⟲⟳）＝右下・盤の操作と別枠（ターンを使わない） */
+      #camrot {
+        position: absolute; z-index: 19; right: 12px; bottom: calc(94px + env(safe-area-inset-bottom));
+        display: flex; gap: 6px;
+      }
+      #camrot button {
+        width: 44px; height: 44px; border-radius: 12px; font-size: 20px; line-height: 1; padding: 0;
+        color: rgba(238, 242, 248, 0.9); background: rgba(14, 19, 28, 0.38); border: 1px solid rgba(255, 255, 255, 0.13);
+        backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); cursor: pointer;
+      }
+      #camrot button:active { background: rgba(46, 116, 240, 0.55); }
       #pad #pad-center { font-size: 10px; font-weight: 800; color: var(--text-mid); background: rgba(255, 255, 255, 0.1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; letter-spacing: -0.3px; }
       #padopts { display: none; }
       /* mobile B：中央フリックの放射メニュー（攻撃/射撃/術/特技/持ち物/待つ） */
@@ -568,15 +579,16 @@
       #feed .fl { overflow-wrap: anywhere; }
       .slot .lb { letter-spacing: 0; }
     </style>
-    <script type="module" crossorigin src="./assets/dungeon-F2C8dMtf.js"></script>
+    <script type="module" crossorigin src="./assets/dungeon-YwMJIsGl.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="modulepreload" crossorigin href="./assets/world-ui-GIWH7IUu.js">
-    <link rel="modulepreload" crossorigin href="./assets/tables-CeMbYj3G.js">
-    <link rel="modulepreload" crossorigin href="./assets/voxmodel-BvUzcFRp.js">
-    <link rel="modulepreload" crossorigin href="./assets/prefab-DsCyDzqv.js">
-    <link rel="modulepreload" crossorigin href="./assets/gamepack-BTweR0v7.js">
-    <link rel="modulepreload" crossorigin href="./assets/three.module-B1bP4c5T.js">
-    <link rel="modulepreload" crossorigin href="./assets/dungeon-DXz4FGgx.js">
+    <link rel="modulepreload" crossorigin href="./assets/status-BFngDnvf.js">
+    <link rel="modulepreload" crossorigin href="./assets/world-ui-D8L0z2Uf.js">
+    <link rel="modulepreload" crossorigin href="./assets/tables-ZTJnINVt.js">
+    <link rel="modulepreload" crossorigin href="./assets/play-input-CvHBVnfg.js">
+    <link rel="modulepreload" crossorigin href="./assets/gamepack-qvEGmjX8.js">
+    <link rel="modulepreload" crossorigin href="./assets/three.module-BAT99Nro.js">
+    <link rel="modulepreload" crossorigin href="./assets/draft-play-channel-CYsjf8sq.js">
+    <link rel="modulepreload" crossorigin href="./assets/dungeon-PnaD68Cx.js">
     <link rel="stylesheet" crossorigin href="./assets/dungeon-Z7MwbL39.css">
   </head>
   <body>
@@ -648,6 +660,12 @@
           <button class="pb" type="button" data-dx="1" data-dy="1">↘</button>
         </div>
 
+        <!-- R-CTL：カメラを回す（明示操作・ターンを使わない）。キーの Shift+←→ と同じ働き（3D の時だけ表示） -->
+        <div id="camrot" hidden>
+          <button id="camrotl" type="button" title="カメラを左へ回す（Shift+←）" data-i18n-title="ui.camRotL">⟲</button>
+          <button id="camrotr" type="button" title="カメラを右へ回す（Shift+→）" data-i18n-title="ui.camRotR">⟳</button>
+        </div>
+
         <!-- 下部 hotbar＝手（技/呪文/道具・溜め/MP/満タン金縁をスロット内に・キーヒント付き） -->
         <div id="quickbar">
           <button class="slot" id="qs-melee" type="button" title="近接：↑/W（正面へ踏み込み）" data-i18n-title="ui.html.qsMeleeTitle"><span class="key">W</span><span class="ic">⚔</span><span class="lb" data-i18n="ui.html.qsMelee">攻撃</span></button>
@@ -700,6 +718,7 @@
         <span class="langpick">🌐<select id="langmode" title="Language / 言語"></select></span>
         <button id="reportbtn" type="button">🚩 <span data-i18n="ui.html.reportBtn">翻訳を報告</span></button>
         <button id="layoutmode" type="button">🖥 PC</button>
+        <button id="ctrlmode" type="button">🎮 操作: 8方向（安定カメラ）</button>
         <button id="turnmode" type="button">🧭 向きモード: OFF</button>
         <button id="reset" type="button" data-i18n="ui.html.retryBtn">もう一度</button>
         <span class="depthjump">🪜<input id="startdepth" type="number" min="1" max="30" value="3" /><span data-i18n="ui.html.floorsTo">階へ</span><button id="godepth" type="button" data-i18n="ui.html.go">直行</button></span>
@@ -718,12 +737,12 @@
       </form>
       <div class="loghd" data-i18n="ui.html.logHd">📜 実況の履歴</div>
       <section id="log"></section>
+      <!-- R-CTL：移動・カメラの説明は操作の台帳（play-input.ts）から導出＝手書きの二重記述を持たない（boot が現在の方式で流し込む） -->
+      <div class="hint" id="ctrlhelp"></div>
       <div class="hint" data-i18n-html="ui.html.hint">
-        <b>主人公</b>＝矢印/WASD/QEZC(斜め)/テンキーで <b>8方向移動</b>（敵に当たると攻撃）・Space＝待つ・&gt;＝階段。<b>Shift＋方向＝その場で向きだけ変える</b>。<br />
         <b>攻防のキー</b>＝⚔近接は<b>↑/W</b>（正面へ）・🏹射撃は<b>f</b>・✦術は<b>r</b>（装備画面 i でセット）・⚡特技は<b>g</b>・🎒持ち物/呪文は<b>t</b>。<b>ポップアップ表示中は方向キーで選び Enter で決定・Esc で閉じる</b>（WASD 移動はそのまま生きる）。<br />
         <b>仲間に命じる</b>＝<b>仲間をクリック→行き先をクリック</b>。同じ仲間をもう一度クリックで<b>追従に戻す</b>。パーティ帯タップ→詳細からも。テキスト：<b>@リン 待て</b> ／ <b>@ガロ 来い</b> ／ <b>集合</b>。命令はターンを消費しません。<br />
-        テーマ凡例：🔥火＝火の魔物・❄氷＝水と氷・⛰土＝岩と瓦礫・✨聖＝亡者と祈り。<br />
-        <span style="opacity: 0.7"><b>視点(3D)</b>＝<b>↑前進／↓後退／←→ 回転</b>・<b>Shift＋↑↓＝仰角</b>・ホイール＝ズーム。乗った対象は中央のボタンで操作。</span>
+        テーマ凡例：🔥火＝火の魔物・❄氷＝水と氷・⛰土＝岩と瓦礫・✨聖＝亡者と祈り。
       </div>
     </div>
 
@@ -797,6 +816,7 @@
         padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(210,190,160,0.28); background: rgba(20,16,12,0.62); backdrop-filter: blur(6px);
         transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease; }
       .scene-choice-btn:hover { transform: translateY(-1px); background: rgba(48,32,20,0.72); border-color: rgba(243,201,138,0.55); }
+      .scene-choice-btn.kbsel { outline: 3px solid var(--gold); outline-offset: 1px; } /* R-CTL §5：キーボード焦点（↑↓/W/S）＝会話 modal の .dlgc.kbsel と同意匠 */
     </style>
     <!-- §title：起動カバー＝最初のペイントから不透明で被せ、旧2D盤のチラ見え(FOUC)を隠す。voxel タイトルが立つ/2Dフォールバック確定で外す。 -->
     <div id="bootcover"></div>
@@ -834,11 +854,13 @@
       body.title-mode #topbar, body.title-mode #topline, body.title-mode #minimap,
       body.title-mode #ctxbar, body.title-mode #feed, body.title-mode #contextbar,
       body.title-mode #nameplates, body.title-mode #party, body.title-mode #pad,
+      body.title-mode #camrot,
       body.title-mode #quickbar { display: none !important; }
       /* §scene(P2)：ゲーム中の演出（ending/gameover）中も操作 chrome を退場＝台本が主役 */
       body.scene-mode #topbar, body.scene-mode #topline, body.scene-mode #minimap,
       body.scene-mode #ctxbar, body.scene-mode #feed, body.scene-mode #contextbar,
       body.scene-mode #nameplates, body.scene-mode #party, body.scene-mode #pad,
+      body.scene-mode #camrot,
       body.scene-mode #quickbar { display: none !important; }
     </style>
     <!-- §玄関：静的配信では ☰ の「🛠 作る」を hosted studio へ（表示専用・engine 非依存の別モジュール） -->
